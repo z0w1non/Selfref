@@ -13,7 +13,7 @@ enum
 {
     state_unused,
     state_used,
-    state_deleted,
+    //state_deleted,
 };
 
 typedef struct tablecell_tag
@@ -150,51 +150,54 @@ void initsym()
 {
     rehash();
 
-    pushsym(L"nil", nil);
-    pushsym(L"t", t);  
-    pushsym(L"quote", quote);
-    pushsym(L"eval", makemacro(eval));
-    pushsym(L"call", makemacro(call));
-    pushsym(L"lambda", makemacro(lambda));
-    pushsym(L"function", makemacro(function));
+    cpushsym(L"nil", nil);
+    cpushsym(L"t", t);  
+    cpushsym(L"quote", quote);
+    cpushsym(L"eval", makemacro(eval));
+    cpushsym(L"call", makemacro(call));
+    cpushsym(L"lambda", makemacro(lambda));
+    cpushsym(L"function", makemacro(function));
 
-    pushsym(L"dumpsym", makefunc(dumpsym));
-    pushsym(L"dumpheap", makefunc(dumpheap));
-    pushsym(L"gc", makefunc(gc));
+    cpushsym(L"dumpsym", makefunc(dumpsym));
+    cpushsym(L"dumpheap", makefunc(dumpheap));
+    cpushsym(L"gc", makefunc(gc));
 
-    pushsym(L"pushargs", makemacro(pushargs));
-    pushsym(L"popargs", makemacro(popargs));
+    cpushsym(L"pushargs", makemacro(pushargs));
+    cpushsym(L"popargs", makemacro(popargs));
 
-    pushsym(L"setcar", makefunc(setcar));
-    pushsym(L"setcdr", makefunc(setcdr));
-    pushsym(L"length", makefunc(length));
+    cpushsym(L"setcar", makefunc(setcar));
+    cpushsym(L"setcdr", makefunc(setcdr));
+    cpushsym(L"length", makefunc(length));
 
-    pushsym(L"if", makemacro(if_));
-    pushsym(L"and", makemacro(and_));
-    pushsym(L"or", makemacro(or_));
-    pushsym(L"not", makefunc(not_));
+    cpushsym(L"if", makemacro(if_));
+    cpushsym(L"and", makemacro(and_));
+    cpushsym(L"or", makemacro(or_));
+    cpushsym(L"not", makefunc(not_));
 
-    pushsym(L"consp", makefunc(consp));
-    pushsym(L"funcp", makefunc(funcp));
-    pushsym(L"macrop", makefunc(macrop));
-    pushsym(L"symp", makefunc(symp));
-    pushsym(L"nilp", makefunc(nilp));
-    pushsym(L"intp", makefunc(intp));
-    pushsym(L"dblp", makefunc(dblp));
-    pushsym(L"nump", makefunc(nump));
-    pushsym(L"strp", makefunc(strp));
-    pushsym(L"zerop", makefunc(zerop));
+    cpushsym(L"consp", makefunc(consp));
+    cpushsym(L"funcp", makefunc(funcp));
+    cpushsym(L"macrop", makefunc(macrop));
+    cpushsym(L"symp", makefunc(symp));
+    cpushsym(L"nilp", makefunc(nilp));
+    cpushsym(L"intp", makefunc(intp));
+    cpushsym(L"dblp", makefunc(dblp));
+    cpushsym(L"nump", makefunc(nump));
+    cpushsym(L"strp", makefunc(strp));
+    cpushsym(L"zerop", makefunc(zerop));
 
-    pushsym(L"add", makefunc(add));
-    pushsym(L"sub", makefunc(sub));
-    pushsym(L"mul", makefunc(mul));
-    pushsym(L"div", makefunc(div_));
-    pushsym(L"mod", makefunc(mod));
+    cpushsym(L"add", makefunc(add));
+    cpushsym(L"sub", makefunc(sub));
+    cpushsym(L"mul", makefunc(mul));
+    cpushsym(L"div", makefunc(div_));
+    cpushsym(L"mod", makefunc(mod));
 
-    pushsym(L"list", makefunc(list));
-    pushsym(L"zipfirst", makefunc(zipfirst));
-    pushsym(L"ziprest", makefunc(ziprest));
-    pushsym(L"zip", makefunc(zip));
+    cpushsym(L"list", makefunc(list));
+    cpushsym(L"zipfirst", makefunc(zipfirst));
+    cpushsym(L"ziprest", makefunc(ziprest));
+    cpushsym(L"zip", makefunc(zip));
+
+    cpushsym(L"pushsym", makemacro(pushsym));
+    cpushsym(L"popsym", makemacro(popsym));
 
     //pushsym(L"less", makemacro(less));
     //pushsym(L"less-equal", makemacro(less_equal));
@@ -209,7 +212,7 @@ void freesym()
     freehashtable(&table);
 }
 
-void pushsym(const wchar_t * key, data value)
+void cpushsym(const wchar_t * key, data value)
 {
     unsigned int hash;
     int i, j;
@@ -237,7 +240,7 @@ void pushsym(const wchar_t * key, data value)
     error(L"pushsymimpl failed.\n");
 }
 
-void popsym(const wchar_t * key)
+void cpopsym(const wchar_t * key)
 {
     unsigned int hash;
     int i, j;
@@ -249,11 +252,12 @@ void popsym(const wchar_t * key)
         j = ((hash + i) % table.len);
         if ((table.data[j].state == state_used) && (wcscmp(table.data[j].key, key) == 0))
         {
-            d = cdr(table.data[j].stack);
-            freedata(table.data[j].stack);
-            table.data[j].stack = d;
-            if (cnilp(table.data[j].stack))
-                table.data[j].state = state_deleted;
+            if (cnnilp(table.data[j].stack))
+            {
+                d = cdr(table.data[j].stack);
+                freedata(table.data[j].stack);
+                table.data[j].stack = d;
+            }
             return;
         }
     }
@@ -269,7 +273,11 @@ data findsym(const wchar_t * key)
     {
         j = ((hash + i) % table.len);
         if ((table.data[j].state == state_used) && (wcscmp(table.data[j].key, key) == 0))
-            return(car(table.data[j].stack));
+        {
+            if (cnnilp(table.data[j].stack))
+                return(car(table.data[j].stack));
+            return(NULL);
+        }
         if (table.data[j].state == state_unused)
             return(NULL);
     }
@@ -313,7 +321,7 @@ data pushargs(data d)
         error(L"pushargs arguments is must be list.\n");
     if ((!csymp(caar(d))) || (!cconsp(cdar(d))))
         error(L"invalid key at pushargs.\n");
-    pushsym(csym(caar(d)), car(cdar(d)));
+    cpushsym(csym(caar(d)), car(cdar(d)));
     return(pushargs(cdr(d)));
 }
 
@@ -325,7 +333,6 @@ data popargs(data d)
         error(L"popargs arguments is must be list.\n");
     if ((!csymp(caar(d))))
         error(L"invalid key at popargs.\n");
-    wprintf(L"key=%s\n", csym(caar(d)));
-    popsym(csym(caar(d)));
+    cpopsym(csym(caar(d)));
     return(popargs(cdr(d)));
 }

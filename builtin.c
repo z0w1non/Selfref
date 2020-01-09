@@ -271,13 +271,13 @@ data call(data d)
     error(L"Call failed\n");
 }
 
-data resolvesym(data d)
+data bindsym(data d)
 {
     data value;
     if (cnilp(d))
         return(nil);
     if (cconsp(d))
-        return(makecons(resolvesym(car(d)), resolvesym(cdr(d))));
+        return(makecons(bindsym(car(d)), bindsym(cdr(d))));
     if (csymp(d))
     {
         value = findsym(d);
@@ -289,16 +289,28 @@ data resolvesym(data d)
 
 data lambda(data d)
 {
-
+    return(makelambda(car(d), bindsym(cadr(d))));
 }
 
 data function(data d)
 {
-
+    if (!csymp(car(d)))
+        error(L"invalid function name.\n");
+    cpushsym(csym(car(d)), lambda(cdr(d)));
+    return(car(d));
 }
 
 data length(data d)
 {
+    int len;
+    len = 0;
+    d = car(d);
+    while (cnnilp(d))
+    {
+        len += 1;
+        d = cdr(d);
+    }
+    return(makeint(len));
 }
 
 data setcar(data d)
@@ -343,4 +355,20 @@ data zip(data d)
     if (cnilp(d))
         return(nil);
     return(makecons(zipfirst(d), zip(ziprest(d))));
+}
+
+data pushsym(data d)
+{
+    if (!csymp(car(d)))
+        error(L"pushsym failed.\n");
+    cpushsym(csym(car(d)), cadr(d));
+    return(d);
+}
+
+data popsym(data d)
+{
+    if (!csymp(car(d)))
+        error(L"popsym failed.\n");
+    cpopsym(csym(car(d)));
+    return(d);
 }

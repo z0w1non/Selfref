@@ -47,13 +47,15 @@ data expandmacro(data d)
     return(cmacro(car(d))(cdr(d)));
 }
 
+// call dummyargs actualargs
 data calllambda(data d)
 {
     data args, ret;
     if(!clambdap(car(d)))
         error(L"invalid calllambda call.\n");
-    args = zip(makecons(getargs(car(d)) ,makecons(cadr(d), nil)));
+    args = zip(makecons(getargs(car(d)), makecons(cdr(d), nil)));
     pushargs(args);
     ret = eval(getimpl(car(d)));
     popargs(args);
+    return(ret);
 }

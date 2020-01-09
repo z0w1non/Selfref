@@ -294,18 +294,14 @@ int parsesym(context * c)
 {
     wint_t lastchar;
     while ((!iseof(lastchar = readchar(c))) && (isletter(lastchar)))
-    {
         pushchar(c, (wchar_t)lastchar);
-    }
     if(c->tkn.length > 0)
     {
         settokenkind(c, token_symbol);
         settokendata(c, makesym(tokenstr(c)));
     }
     else
-    {
         return(0);
-    }
     readback(c);
     return(1);
 }

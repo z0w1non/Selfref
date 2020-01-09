@@ -9,8 +9,8 @@
 /***********************/
 void initsym();
 void freesym();
-void pushsym(const wchar_t * key, data value);
-void popsym(const wchar_t * key);
+void cpushsym(const wchar_t * key, data value);
+void cpopsym(const wchar_t * key);
 data findsym(const wchar_t * key);
 void marksym();
 data dumpsym(data);

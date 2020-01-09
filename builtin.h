@@ -13,7 +13,7 @@ data mod(data);
 
 data if_(data);
 data call(data);
-data resolvesym(data);
+data bindsym(data);
 data lambda(data);
 data function(data);
 
@@ -29,5 +29,8 @@ data list(data);
 data zipfirst(data);
 data ziprest(data);
 data zip(data);
+
+data pushsym(data);
+data popsym(data);
 
 #endif

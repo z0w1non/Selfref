@@ -37,7 +37,7 @@ loop:
 
             if (d)
             {
-                d = listize(d);
+                //d = listize(d);
                 print(eval(d));
                 wprintf(L"\n"); fflush(stdout);
             }

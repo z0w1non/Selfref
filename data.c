@@ -146,7 +146,7 @@ data maket()
 
 data quoteimpl(data d)
 {
-    return(d);
+    return(car(d));
 }
 
 data makequote()

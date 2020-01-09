@@ -33,4 +33,7 @@ data zip(data);
 data pushsym(data);
 data popsym(data);
 
+data tocharcode(data);
+data fromcharcode(data);
+
 #endif

@@ -372,3 +372,38 @@ data popsym(data d)
     cpopsym(csym(car(d)));
     return(d);
 }
+
+data tocharcode(data d)
+{
+    data list;
+    wchar_t * first, * last;
+
+    list = nil;
+    if (!cstrp(car(d)))
+        error(L"charcode source is must be a string literal.\n");
+    first = cstr(car(d));
+    for (last = first; *last; ++last);
+    --last;
+    while (first <= last)
+    {
+        list = makecons(makeint((int)(*last)), list);
+        --last;
+    }
+    return(list);
+}
+
+data fromcharcode(data d)
+{
+    wchar_t buf[1024];
+    wchar_t * s;
+    s = buf;
+    while ((cintp(car(d))))
+    {
+        if (s - buf < 1024 - 1)
+            error(L"fromcharcode buffer overrun");
+        *(s++) = (wchar_t)cint(car(d));
+        d = cdr(d);
+    }
+    *s = L'\0';
+    return(makestr(buf));
+}

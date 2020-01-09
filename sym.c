@@ -199,6 +199,9 @@ void initsym()
     cpushsym(L"pushsym", makemacro(pushsym));
     cpushsym(L"popsym", makemacro(popsym));
 
+    cpushsym(L"tocharcode", makefunc(tocharcode));
+    cpushsym(L"fromcharcode", makefunc(fromcharcode));
+
     //pushsym(L"less", makemacro(less));
     //pushsym(L"less-equal", makemacro(less_equal));
     //pushsym(L"greater", makemacro(greater));

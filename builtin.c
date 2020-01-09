@@ -306,6 +306,11 @@ data function(data d)
 /**********************/
 /* Cons-cell function */
 /**********************/
+data cons(data d)
+{
+    return(makecons(car(d), cadr(d)));
+}
+
 data setcar(data d)
 {
     if (!cconsp(car(d)))

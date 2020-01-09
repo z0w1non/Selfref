@@ -154,9 +154,6 @@ void initsym()
     cpushsym(L"t", t);  
     cpushsym(L"quote", quote);
     cpushsym(L"eval", makemacro(eval));
-    cpushsym(L"call", makemacro(call));
-    cpushsym(L"lambda", makemacro(lambda));
-    cpushsym(L"function", makemacro(function));
 
     cpushsym(L"dumpsym", makefunc(dumpsym));
     cpushsym(L"dumpheap", makefunc(dumpheap));
@@ -165,14 +162,22 @@ void initsym()
     cpushsym(L"pushargs", makemacro(pushargs));
     cpushsym(L"popargs", makemacro(popargs));
 
+    cpushsym(L"cons", makefunc(cons));
     cpushsym(L"setcar", makefunc(setcar));
     cpushsym(L"setcdr", makefunc(setcdr));
+
+    cpushsym(L"list", makefunc(list));
     cpushsym(L"length", makefunc(length));
 
     cpushsym(L"if", makemacro(if_));
     cpushsym(L"and", makemacro(and_));
     cpushsym(L"or", makemacro(or_));
     cpushsym(L"not", makefunc(not_));
+
+    cpushsym(L"call", makemacro(call));
+    cpushsym(L"bindsym", makemacro(bindsym));
+    cpushsym(L"lambda", makemacro(lambda));
+    cpushsym(L"function", makemacro(function));
 
     cpushsym(L"consp", makefunc(consp));
     cpushsym(L"funcp", makefunc(funcp));
@@ -191,7 +196,6 @@ void initsym()
     cpushsym(L"div", makefunc(div_));
     cpushsym(L"mod", makefunc(mod));
 
-    cpushsym(L"list", makefunc(list));
     cpushsym(L"zipfirst", makefunc(zipfirst));
     cpushsym(L"ziprest", makefunc(ziprest));
     cpushsym(L"zip", makefunc(zip));

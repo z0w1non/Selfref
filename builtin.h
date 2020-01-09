@@ -27,6 +27,7 @@ data function(data);
 /**********************/
 /* Cons-cell function */
 /**********************/
+data cons(data);
 data setcar(data);
 data setcdr(data);
 

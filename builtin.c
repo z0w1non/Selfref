@@ -264,6 +264,9 @@ data not_(data d)
     return(nilp(d));
 }
 
+/**************/
+/* Functional */
+/**************/
 data call(data d)
 {
     if (cfuncp(car(d)))
@@ -300,19 +303,9 @@ data function(data d)
     return(car(d));
 }
 
-data length(data d)
-{
-    int len;
-    len = 0;
-    d = car(d);
-    while (cnnilp(d))
-    {
-        len += 1;
-        d = cdr(d);
-    }
-    return(makeint(len));
-}
-
+/**********************/
+/* Cons-cell function */
+/**********************/
 data setcar(data d)
 {
     if (!cconsp(car(d)))
@@ -329,11 +322,30 @@ data setcdr(data d)
     return(cadr(d));
 }
 
+/*****************/
+/* List function */
+/*****************/
 data list(data d)
 {
     return(d);
 }
 
+data length(data d)
+{
+    int len;
+    len = 0;
+    d = car(d);
+    while (cnnilp(d))
+    {
+        len += 1;
+        d = cdr(d);
+    }
+    return(makeint(len));
+}
+
+/******************/
+/* Zip algorithm */
+/******************/
 data zipfirst(data d)
 {
     if (cnilp(caar(d)))
@@ -357,6 +369,9 @@ data zip(data d)
     return(makecons(zipfirst(d), zip(ziprest(d))));
 }
 
+/*************************/
+/* Symbol stack function */
+/*************************/
 data pushsym(data d)
 {
     if (!csymp(car(d)))
@@ -373,6 +388,9 @@ data popsym(data d)
     return(d);
 }
 
+/****************************/
+/* String integer interface */
+/****************************/
 data tocharcode(data d)
 {
     data list;

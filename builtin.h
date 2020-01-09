@@ -12,27 +12,46 @@ data div_(data);
 data mod(data);
 
 data if_(data);
+data and_(data);
+data or_(data);
+data not_(data);
+
+/**************/
+/* Functional */
+/**************/
 data call(data);
 data bindsym(data);
 data lambda(data);
 data function(data);
 
-data and_(data);
-data or_(data);
-data not_(data);
-
-data length(data);
+/**********************/
+/* Cons-cell function */
+/**********************/
 data setcar(data);
 data setcdr(data);
 
+/*****************/
+/* List function */
+/*****************/
 data list(data);
+data length(data);
+
+/******************/
+/* Zip algorithm */
+/******************/
 data zipfirst(data);
 data ziprest(data);
 data zip(data);
 
+/*************************/
+/* Symbol stack function */
+/*************************/
 data pushsym(data);
 data popsym(data);
 
+/****************************/
+/* String integer interface */
+/****************************/
 data tocharcode(data);
 data fromcharcode(data);
 

@@ -19,8 +19,8 @@ void init_builtin()
     cpush_symbol(L"pop_args", make_builtin_macro(_pop_args));
 
     cpush_symbol(L"cons", make_builtin_function(_cons));
-    cpush_symbol(L"setcar", make_builtin_function(_setcar));
-    cpush_symbol(L"setcdr", make_builtin_function(_setcdr));
+    cpush_symbol(L"set_car", make_builtin_function(_set_car));
+    cpush_symbol(L"set_cdr", make_builtin_function(_set_cdr));
 
     cpush_symbol(L"list", make_builtin_function(_list));
     cpush_symbol(L"length", make_builtin_function(_length));
@@ -389,7 +389,7 @@ data _cons(data d)
     return(makecons(car(d), cadr(d)));
 }
 
-data _setcar(data d)
+data _set_car(data d)
 {
     if (!is_cons(car(d)))
         error(L"setcar failed.\n");
@@ -397,7 +397,7 @@ data _setcar(data d)
     return(cadr(d));
 }
 
-data _setcdr(data d)
+data _set_cdr(data d)
 {
     if (!is_cons(car(d)))
         error(L"setcdr failed.\n");

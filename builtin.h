@@ -32,8 +32,8 @@ data _function(data);
 /* Cons-cell function */
 /**********************/
 data _cons(data);
-data _setcar(data);
-data _setcdr(data);
+data _set_car(data);
+data _set_cdr(data);
 
 /*****************/
 /* List function */

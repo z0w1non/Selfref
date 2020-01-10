@@ -15,8 +15,8 @@ void init_builtin()
     cpush_symbol(L"dump_heap", make_builtin_function(_dump_heap));
     cpush_symbol(L"gc", make_builtin_function(_gc));
 
-    cpush_symbol(L"pushargs", make_builtin_macro(_push_args));
-    cpush_symbol(L"popargs", make_builtin_macro(_pop_args));
+    cpush_symbol(L"push_args", make_builtin_macro(_push_args));
+    cpush_symbol(L"pop_args", make_builtin_macro(_pop_args));
 
     cpush_symbol(L"cons", make_builtin_function(_cons));
     cpush_symbol(L"setcar", make_builtin_function(_setcar));
@@ -32,7 +32,7 @@ void init_builtin()
 
     cpush_symbol(L"eval", make_builtin_macro(eval));
     cpush_symbol(L"call", make_builtin_macro(_call));
-    cpush_symbol(L"bindsym", make_builtin_macro(_bindsym));
+    cpush_symbol(L"bind_symbol", make_builtin_macro(_bind_symbol));
     cpush_symbol(L"unnamed_macro", make_builtin_macro(_unnamed_macro));
     cpush_symbol(L"unnamed_function", make_builtin_macro(_unnamed_function));
     cpush_symbol(L"macro", make_builtin_macro(_macro));
@@ -51,27 +51,29 @@ void init_builtin()
     cpush_symbol(L"is_string", make_builtin_function(_is_string));
     cpush_symbol(L"is_zero", make_builtin_function(_is_zero));
 
+    cpush_symbol(L"inc", make_builtin_function(_inc));
+    cpush_symbol(L"dec", make_builtin_function(_dec));
     cpush_symbol(L"add", make_builtin_function(_add));
     cpush_symbol(L"sub", make_builtin_function(_sub));
     cpush_symbol(L"mul", make_builtin_function(_mul));
     cpush_symbol(L"div", make_builtin_function(_div));
     cpush_symbol(L"mod", make_builtin_function(_mod));
 
-    cpush_symbol(L"zipfirst", make_builtin_function(_zipfirst));
-    cpush_symbol(L"ziprest", make_builtin_function(_ziprest));
+    cpush_symbol(L"zip_first", make_builtin_function(_zip_first));
+    cpush_symbol(L"zip_rest", make_builtin_function(_zip_rest));
     cpush_symbol(L"zip", make_builtin_function(_zip));
 
-    cpush_symbol(L"pushsym", make_builtin_macro(_pushsym));
-    cpush_symbol(L"popsym", make_builtin_macro(_popsym));
+    cpush_symbol(L"push_symbol", make_builtin_macro(_push_symbol));
+    cpush_symbol(L"pop_symbol", make_builtin_macro(_pop_symbol));
 
-    cpush_symbol(L"tocharcode", make_builtin_function(_to_char_code));
-    cpush_symbol(L"fromcharcode", make_builtin_function(_from_char_code));
+    cpush_symbol(L"to_char_code", make_builtin_function(_to_char_code));
+    cpush_symbol(L"from_char_code", make_builtin_function(_from_char_code));
 }
 
 /**************/
 /* Arithmetic */
 /**************/
-data inc(data d)
+data _inc(data d)
 {
     if (is_int(car(d)))
         return(make_int(cint(car(d)) + 1));
@@ -80,7 +82,7 @@ data inc(data d)
     error(L"invalid argument type.\n");
 }
 
-data dec(data d)
+data _dec(data d)
 {
     if (is_int(car(d)))
         return(make_int(cint(car(d)) - 1));
@@ -338,13 +340,13 @@ data _call(data d)
     error(L"Call failed\n");
 }
 
-data _bindsym(data d)
+data _bind_symbol(data d)
 {
     data value;
     if (is_nil(d))
         return(nil);
     if (is_cons(d))
-        return(makecons(_bindsym(car(d)), _bindsym(cdr(d))));
+        return(makecons(_bind_symbol(car(d)), _bind_symbol(cdr(d))));
     if (is_symbol(d))
     {
         value = find_symbol(d);
@@ -356,7 +358,7 @@ data _bindsym(data d)
 
 data _unnamed_function(data d)
 {
-    return(make_function(car(d), _bindsym(cadr(d))));
+    return(make_function(car(d), _bind_symbol(cadr(d))));
 }
 
 data _function(data d)
@@ -369,14 +371,14 @@ data _function(data d)
 
 data _unnamed_macro(data d)
 {
-    return(make_builtin_macro(car(d), _bindsym(cadr(d))));
+    return(make_builtin_macro(car(d), _bind_symbol(cadr(d))));
 }
 
 data _macro(data d)
 {
     if (!is_symbol(car(d)))
         error(L"invalid macro name.\n");
-    cpush_symbol(csym(car(d)), _bindsym(cadr(d)));
+    cpush_symbol(csym(car(d)), _bind_symbol(cadr(d)));
 }
 
 /**********************/
@@ -427,18 +429,18 @@ data _length(data d)
 /******************/
 /* Zip algorithm */
 /******************/
-data _zipfirst(data d)
+data _zip_first(data d)
 {
     if (is_nil(caar(d)))
         return(nil);
-    return(makecons(caar(d), _zipfirst(cdr(d))));
+    return(makecons(caar(d), _zip_first(cdr(d))));
 }
 
-data _ziprest(data d)
+data _zip_rest(data d)
 {
     if (is_nil(cdar(d)))
         return(nil);
-    return(makecons(cdar(d), _ziprest(cdr(d))));
+    return(makecons(cdar(d), _zip_rest(cdr(d))));
 }
 
 // (zip (a b c) (1 2 3))
@@ -447,13 +449,13 @@ data _zip(data d)
 {
     if (is_nil(d))
         return(nil);
-    return(makecons(_zipfirst(d), _zip(_ziprest(d))));
+    return(makecons(_zip_first(d), _zip(_zip_rest(d))));
 }
 
 /*************************/
 /* Symbol stack function */
 /*************************/
-data _pushsym(data d)
+data _push_symbol(data d)
 {
     if (!is_symbol(car(d)))
         error(L"pushsym failed.\n");
@@ -461,7 +463,7 @@ data _pushsym(data d)
     return(d);
 }
 
-data _popsym(data d)
+data _pop_symbol(data d)
 {
     if (!is_symbol(car(d)))
         error(L"popsym failed.\n");

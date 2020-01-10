@@ -5,8 +5,8 @@
 
 void init_builtin();
 
-data inc(data);
-data dec(data);
+data _inc(data);
+data _dec(data);
 data _add(data);
 data _sub(data);
 data _mul(data);
@@ -22,7 +22,7 @@ data _not(data);
 /* Functional */
 /**************/
 data _call(data);
-data _bindsym(data);
+data _bind_symbol(data);
 data _unnamed_macro(data);
 data _unnamed_function(data);
 data _macro(data);
@@ -44,15 +44,15 @@ data _length(data);
 /******************/
 /* Zip algorithm */
 /******************/
-data _zipfirst(data);
-data _ziprest(data);
+data _zip_first(data);
+data _zip_rest(data);
 data _zip(data);
 
 /*************************/
 /* Symbol stack function */
 /*************************/
-data _pushsym(data);
-data _popsym(data);
+data _push_symbol(data);
+data _pop_symbol(data);
 
 /****************************/
 /* String integer interface */

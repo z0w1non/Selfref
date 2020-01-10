@@ -42,16 +42,17 @@ void * getbuf(data);
 /* Make function */
 /*****************/
 data makecons(data, data);
-data makefunc(func_t);
-data makemacro(func_t);
-data makelambda(data, data);
-data makesym(const wchar_t *);
-data makenil();
-data maket();
-data makequote();
-data makeint(int);
-data makedbl(double);
-data makestr(const wchar_t *);
+data make_builtin_macro(func_t);
+data make_builtin_function(func_t);
+data make_macro(data, data);
+data make_function(data, data);
+data make_symbol(const wchar_t *);
+data make_nil();
+data make_t();
+data make_quote();
+data make_int(int);
+data make_double(double);
+data make_string(const wchar_t *);
 
 /**********************/
 /* Cons-cell accesser */
@@ -91,44 +92,45 @@ data quote;
 /**********************/
 /* Predicate function */
 /**********************/
-data consp(data);
-data funcp(data);
-data macrop(data);
-data lambdap(data);
-data symp(data);
-data nilp(data);
-data nnilp(data);
-data intp(data);
-data dblp(data);
-data nump(data);
-data strp(data);
-data ufuncp(data);
-data zerop(data);
+data _is_cons(data);
+data _is_builtin_macro(data);
+data _is_builtin_function(data);
+data _is_unnamed_macro(data);
+data _is_unnamed_function(data);
+data _is_symbol(data);
+data _is_nil(data);
+data _is_not_nil(data);
+data _is_int(data);
+data _is_double(data);
+data _is_number(data);
+data _is_string(data);
+data _is_zero(data);
 
 /****************************/
 /* Predicate function for C */
 /****************************/
-int cconsp(data);
-int cfuncp(data);
-int cmacrop(data);
-int clambdap(data);
-int csymp(data);
-int cnilp(data);
-int ctp(data);
-int cnnilp(data);
-int cintp(data);
-int cdblp(data);
-int cnump(data);
-int cstrp(data);
+int is_cons(data);
+int is_builtin_macro(data);
+int is_builtin_function(data);
+int is_unnamed_function(data);
+int is_unnamed_macro(data);
+int is_symbol(data);
+int is_nil(data);
+int is_t(data);
+int is_not_nil(data);
+int is_int(data);
+int is_double(data);
+int is_number(data);
+int is_string(data);
 int cufuncp(data);
-int czerop(data);
+int is_zero(data);
 
 /**************************************/
 /* Bidirectional linked list function */
 /**************************************/
-void linknode(data a, data b);
-data insertnode(data list, data node);
-data pullnode(data * list);
+void link_node(data a, data b);
+data insert_node(data list, data node);
+data pull_node(data * list);
 
 /***********/
 /* Utility */

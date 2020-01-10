@@ -6,7 +6,7 @@
 #include "data.h"
 
 data print(data);
-data printlist(data);
+data print_list(data);
 void error(const wchar_t * format, ...);
 
 #endif

@@ -12,7 +12,7 @@ data restheap;
 int heaplen;
 int heapcnt;
 
-void initheap(int len)
+void init_heap(int len)
 {
     int i;
     heap = (data)malloc(sizeof(dataimpl) * len);
@@ -29,16 +29,16 @@ void initheap(int len)
         csetcar(&heap[i], &heap[((i - 1 + len) % len)]);
         csetcdr(&heap[i], &heap[((i + 1) % len)]);
     }
-    nil = makenil();
-    t = maket();
-    quote = makequote();
+    nil = make_nil();
+    t = make_t();
+    quote = make_quote();
 }
 
-void freeheap()
+void cleanup_heap()
 {
     int i;
     for (i = 0; i < heaplen; ++i)
-        freedata(&heap[i]);
+        free_data(&heap[i]);
     free(heap);
     heap = NULL;
     restheap = NULL;
@@ -46,18 +46,18 @@ void freeheap()
     heapcnt = 0;
 }
 
-void freedata(data d)
+void free_data(data d)
 {
     if (!used(d))
         error(L"Invalid freedata to unused heap\n");
-    if (csymp(d) || cstrp(d))
+    if (is_symbol(d) || is_string(d))
         free(((wchar_t **)getbuf(d))[0]);
     initdata(d);
-    insertnode(restheap, d);
+    insert_node(restheap, d);
     heapcnt -= 1;
 }
 
-data dumpheap(data d)
+data _dump_heap(data d)
 {
     wprintf(L"%05.1lf%% (%d/%d)\n", ((double)heapcnt / heaplen * 100), heapcnt, heaplen);
     wprintf(L"   addr info\n");
@@ -70,31 +70,31 @@ data dumpheap(data d)
     return(t);
 }
 
-void markdata(data d)
+void mark_data(data d)
 {
     setmarked(d, 1);
-    if (cconsp(d))
+    if (is_cons(d))
     {
-        if (cnnilp(car(d)))
-            markdata(car(d));
-        if (cnnilp(cdr(d)))
-            markdata(cdr(d));
+        if (is_not_nil(car(d)))
+            mark_data(car(d));
+        if (is_not_nil(cdr(d)))
+            mark_data(cdr(d));
     }
-    else if (clambdap(d))
+    else if (is_unnamed_function(d))
     {
-        markdata(getargs(d));
-        markdata(getimpl(d));
+        mark_data(getargs(d));
+        mark_data(getimpl(d));
     }
 }
 
-void unmarkheap()
+void unmark_heap()
 {
     int i;
     for (i = 0; i < heaplen; ++i)
         setmarked(&heap[i], 0);
 }
 
-data sweep(data d)
+data sweep_unmarked(data d)
 {
     int i, cnt;
     cnt = 0;
@@ -102,25 +102,25 @@ data sweep(data d)
     {
         if (used(&heap[i]) && !marked(&heap[i]))
         {
-            freedata(&heap[i]);
+            free_data(&heap[i]);
             cnt += 1;
         }
     }
-    return(makeint(cnt));
+    return(make_int(cnt));
 }
 
-data requestgc(data d)
+data request_gc(data d)
 {
     if (((double)heapcnt / heaplen) > 0.75)
-        return(gc(d));
+        return(_gc(d));
     return(nil);
 }
 
-data gc(data d)
+data _gc(data d)
 {
-    unmarkheap();
-    marksym();
-    return(sweep(nil));
+    unmark_heap();
+    mark_symbol();
+    return(sweep_unmarked(nil));
 }
 
 data alloc()
@@ -128,7 +128,7 @@ data alloc()
     if (heapcnt == heaplen)
         error(L"Heap memory allocation failed.\n");
 
-    data newdata = pullnode(&restheap);
+    data newdata = pull_node(&restheap);
     heapcnt += 1;
 
     memset((void *)newdata, 0, sizeof(dataimpl));
@@ -136,7 +136,7 @@ data alloc()
     return(newdata);
 }
 
-int heapaddr(data d)
+int heap_addr(data d)
 {
     return((int)(heap - d));
 }

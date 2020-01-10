@@ -5,45 +5,45 @@
 
 data print(data d)
 {
-    if (cconsp(d))
+    if (is_cons(d))
     {
         if (!used(d))
             wprintf(L"<unused heap>");
         else
         {
             wprintf(L"(");
-            printlist(d);
+            print_list(d);
             wprintf(L")");
         }
     }
-    else if (cnilp(d))
+    else if (is_nil(d))
         wprintf(L"nil");
-    else if (ctp(d))
+    else if (is_t(d))
         wprintf(L"t");
-    else if (csymp(d))
+    else if (is_symbol(d))
         wprintf(L"<symbol %s>", csym(d));
-    else if (cfuncp(d))
-        wprintf(L"<function %04x>", heapaddr(d));
-    else if (cmacrop(d))
-        wprintf(L"<macro %04x>", heapaddr(d));
-    else if (cintp(d))
+    else if (is_builtin_function(d))
+        wprintf(L"<function %04x>", heap_addr(d));
+    else if (is_builtin_macro(d))
+        wprintf(L"<macro %04x>", heap_addr(d));
+    else if (is_int(d))
         wprintf(L"%d", cint(d));
-    else if (cdblp(d))
+    else if (is_double(d))
         wprintf(L"%lf", cdbl(d));
-    else if (cstrp(d))
+    else if (is_string(d))
         wprintf(L"\"%s\"", cstr(d));
-    else if (clambdap(d))
-        wprintf(L"<lambda %04x>", heapaddr(d));
+    else if (is_unnamed_function(d))
+        wprintf(L"<lambda %04x>", heap_addr(d));
     return(d);
 }
 
-data printlist(data d)
+data print_list(data d)
 {
     print(car(d));
-    if(cnnilp(cdr(d)))
+    if(is_not_nil(cdr(d)))
     {
         wprintf(L" ");
-        printlist(cdr(d));
+        print_list(cdr(d));
     }
     return(d);
 }

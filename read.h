@@ -4,34 +4,33 @@
 #include <wchar.h>
 #include "data.h"
 
-typedef wint_t(*getchar_t)();
-
 struct context_tag;
 typedef struct context_tag context;
 
-void   initcontext(context *, getchar_t);
-wint_t readchar(context *);
-void   readback(context *);
-void   pushchar(context *);
-void   popchar(context *);
-void cleartoken(context * c);
+void   init_context(context *);
+wint_t read_char(context *);
+void   read_back(context *);
+void   push_char(context *);
+void   pop_char(context *);
+void clear_token(context * c);
 
-int             tokenkind(context *);
-const wchar_t * tokenstr(context *);
-data            tokendata(context *);
-void            settokenkind(context *, int);
-void            settokendata(context *, data);
+int             token_kind(context *);
+const wchar_t * token_str(context *);
+data            token_data(context *);
+void            set_token_kind(context *, int);
+void            set_token_data(context *, data);
 
-data readstdin();
+data read_stdin();
+data read_file(const wchar_t * filename);
 data read(context *);
-void readtoken(context *);
-data readlist(context *);
+void read_token(context *);
+data read_list(context *);
 
-int parselparen(context * c);
-int parserparen(context * c);
-int parsenum(context *);
-int parsestr(context *);
-int parsesym(context *);
+int parse_lparen(context * c);
+int parse_rparen(context * c);
+int parse_number(context *);
+int parse_string(context *);
+int parse_symbol(context *);
 
 enum
 {

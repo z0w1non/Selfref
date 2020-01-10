@@ -18,8 +18,8 @@ int repl()
     int jmp = setjmp(jmpbuf);
     if (!jmp)
     {
-        initheap(0x400);
-        initsym();
+        init_heap(0x400);
+        init_symbol_stack();
     }
 
 loop:
@@ -27,7 +27,7 @@ loop:
         while (1)
         {
             wprintf(L"> "); fflush(stdout); fflush(stdin);
-            d = readstdin();
+            d = read_stdin();
 
 #if 0
             wprintf(L"read: ");
@@ -41,7 +41,7 @@ loop:
                 print(eval(d));
                 wprintf(L"\n"); fflush(stdout);
             }
-            requestgc(nil);
+            request_gc(nil);
         }
     else
     {
@@ -52,8 +52,8 @@ loop:
         }
     }
 
-    freesym();
-    freeheap();
+    cleanup_symbol_stack();
+    cleanup_heap();
     return(0);
 }
 

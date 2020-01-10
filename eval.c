@@ -11,51 +11,51 @@ data eval(data d)
 {
     data value;
 
-    if (csymp(d))
+    if (is_symbol(d))
     {
-        value = findsym(csym(d));
+        value = find_symbol(csym(d));
         if (!value)
             error(L"<symbol %s> is not found.\n", csym(d));
         return(value);
     }
-    else if (cconsp(d))
+    else if (is_cons(d))
     {
         value = eval(car(d));
-        if (cfuncp(value))
-            return(call(makecons(value, evallist(cdr(d)))));
-        else if (cmacrop(value))
-            return(expandmacro(makecons(value, cdr(d))));
-        else if (clambdap(value))
-            return(calllambda(makecons(value, cdr(d))));
+        if (is_builtin_function(value))
+            return(_call(makecons(value, eval_list(cdr(d)))));
+        else if (is_builtin_macro(value))
+            return(expand_macro(makecons(value, cdr(d))));
+        else if (is_unnamed_function(value))
+            return(call_function(makecons(value, cdr(d))));
     }
    return(d);
 }
 
-data evallist(data d)
+data eval_list(data d)
 {
-    if (cnilp(d))
+    if (is_nil(d))
         return(nil);
-    if (!cconsp(d))
+    if (!is_cons(d))
         error(L"evallist failed.\n");
-    return(makecons(eval(car(d)), evallist(cdr(d))));
+    return(makecons(eval(car(d)), eval_list(cdr(d))));
 }
 
-data expandmacro(data d)
+data expand_macro(data d)
 {
-    if (!cmacrop(car(d)))
+    if (!is_builtin_macro(car(d)))
         error(L"invalid expandmacro call.\n");
     return(cmacro(car(d))(cdr(d)));
 }
 
 // call dummyargs actualargs
-data calllambda(data d)
+data call_function(data d)
 {
     data args, ret;
-    if(!clambdap(car(d)))
+    if(!is_unnamed_function(car(d)))
         error(L"invalid calllambda call.\n");
-    args = zip(makecons(getargs(car(d)), makecons(cdr(d), nil)));
-    pushargs(args);
+    args = _zip(makecons(getargs(car(d)), makecons(cdr(d), nil)));
+    _push_args(args);
     ret = eval(getimpl(car(d)));
-    popargs(args);
+    _pop_args(args);
     return(ret);
 }

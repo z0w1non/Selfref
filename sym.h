@@ -7,15 +7,15 @@
 /***********************/
 /* Symbol map operator */
 /***********************/
-void initsym();
-void freesym();
-void cpushsym(const wchar_t * key, data value);
-void cpopsym(const wchar_t * key);
-data findsym(const wchar_t * key);
-void marksym();
-data dumpsym(data);
+void init_symbol_stack();
+void cleanup_symbol_stack();
+void cpush_symbol(const wchar_t * key, data value);
+void cpop_symbol(const wchar_t * key);
+data find_symbol(const wchar_t * key);
+void mark_symbol();
+data _dump_symbol(data);
 
-data pushargs(data);
-data popargs(data);
+data _push_args(data);
+data _pop_args(data);
 
 #endif

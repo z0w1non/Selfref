@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="builtin.h">
-      <Filter>ソース ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="sym.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -40,6 +37,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="data.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="builtin.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

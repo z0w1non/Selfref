@@ -7,8 +7,8 @@
 /* Eval */
 /********/
 data eval(data);
-data evallist(data);
-data expandmacro(data);
-data calllambda(data);
+data eval_list(data);
+data expand_macro(data);
+data call_function(data);
 
 #endif

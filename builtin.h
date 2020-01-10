@@ -3,57 +3,61 @@
 
 #include "data.h"
 
+void init_builtin();
+
 data inc(data);
 data dec(data);
-data add(data);
-data sub(data);
-data mul(data);
-data div_(data);
-data mod(data);
+data _add(data);
+data _sub(data);
+data _mul(data);
+data _div(data);
+data _mod(data);
 
-data if_(data);
-data and_(data);
-data or_(data);
-data not_(data);
+data _if(data);
+data _and(data);
+data _or(data);
+data _not(data);
 
 /**************/
 /* Functional */
 /**************/
-data call(data);
-data bindsym(data);
-data lambda(data);
-data function(data);
+data _call(data);
+data _bindsym(data);
+data _unnamed_macro(data);
+data _unnamed_function(data);
+data _macro(data);
+data _function(data);
 
 /**********************/
 /* Cons-cell function */
 /**********************/
-data cons(data);
-data setcar(data);
-data setcdr(data);
+data _cons(data);
+data _setcar(data);
+data _setcdr(data);
 
 /*****************/
 /* List function */
 /*****************/
-data list(data);
-data length(data);
+data _list(data);
+data _length(data);
 
 /******************/
 /* Zip algorithm */
 /******************/
-data zipfirst(data);
-data ziprest(data);
-data zip(data);
+data _zipfirst(data);
+data _ziprest(data);
+data _zip(data);
 
 /*************************/
 /* Symbol stack function */
 /*************************/
-data pushsym(data);
-data popsym(data);
+data _pushsym(data);
+data _popsym(data);
 
 /****************************/
 /* String integer interface */
 /****************************/
-data tocharcode(data);
-data fromcharcode(data);
+data _to_char_code(data);
+data _from_char_code(data);
 
 #endif

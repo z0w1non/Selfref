@@ -3,16 +3,16 @@
 
 #include "data.h"
 
-void initheap(int len);
-void freeheap();
-void freedata(data);
-data dumpheap(data);
-void markdata(data);
-void unmarkheap();
-data requestgc(data);
-data sweep(data);
-data gc(data);
+void init_heap(int len);
+void cleanup_heap();
+void free_data(data);
+data _dump_heap(data);
+void mark_data(data);
+void unmark_heap();
+data request_gc(data);
+data sweep_unmarked(data);
+data _gc(data);
 data alloc();
-int heapaddr(data);
+int heap_addr(data);
 
 #endif

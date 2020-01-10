@@ -4,62 +4,62 @@
 
 int chartype(wint_t wi)
 {
-    if (isdigit(wi))
+    if (is_digit(wi))
         return(wctype_digit);
-    if (isletter(wi))
+    if (is_letter(wi))
         return(wctype_letter);
-    if (islparen(wi))
+    if (is_lparen(wi))
         return(wctype_lparen);
-    if (isrparen(wi))
+    if (is_rparen(wi))
         return(wctype_rparen);
-    if (isdot(wi))
+    if (is_dot(wi))
         return(wctype_dot);
-    if (isspace(wi))
+    if (is_space(wi))
         return(wctype_space);
     return(wctype_other);
 }
 
-int isdigit(wint_t wi)
+int is_digit(wint_t wi)
 {
     return((wi >= L'0') && (wi <= L'9'));
 }
 
-int iseof(wint_t wi)
+int is_eof(wint_t wi)
 {
     return(wi == WEOF);
 }
 
-int isspace(wint_t wi)
+int is_space(wint_t wi)
 {
     return((wi == L' ') || (wi == L'\t'));
 }
 
-int islparen(wint_t wi)
+int is_lparen(wint_t wi)
 {
     return(wi == L'(');
 }
 
-int isrparen(wint_t wi)
+int is_rparen(wint_t wi)
 {
     return(wi == L')');
 }
 
-int isletter(wint_t wi)
+int is_letter(wint_t wi)
 {
     return(((wi >= L'a') && (wi <= L'z')) || ((wi >= L'A') && (wi <= L'Z')) || (wi == L'_'));
 }
 
-int isdot(wint_t wi)
+int is_dot(wint_t wi)
 {
     return(wi == L'.');
 }
 
-int isprint(wint_t wi)
+int is_print(wint_t wi)
 {
     return(iswprint(wi));
 }
 
-int iscrlf(wint_t wi)
+int is_crlf(wint_t wi)
 {
     return(wi == L'\n' || wi == L'\r');
 }

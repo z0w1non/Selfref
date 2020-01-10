@@ -15,14 +15,14 @@ enum
 };
 
 int chartype(wint_t);
-int isdigit(wint_t);
-int iseof(wint_t);
-int isspace(wint_t);
-int islparen(wint_t);
-int isrparen(wint_t);
-int isletter(wint_t);
-int isdot(wint_t);
-int isprint(wint_t);
-int iscrlf(wint_t);
+int is_digit(wint_t);
+int is_eof(wint_t);
+int is_space(wint_t);
+int is_lparen(wint_t);
+int is_rparen(wint_t);
+int is_letter(wint_t);
+int is_dot(wint_t);
+int is_print(wint_t);
+int is_crlf(wint_t);
 
 #endif

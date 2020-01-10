@@ -146,80 +146,18 @@ void movestack(hashtable * table, const wchar_t * key, data stack)
 /***********************/
 /* Symbol map operator */
 /***********************/
-void initsym()
+void init_symbol_stack()
 {
     rehash();
-
-    cpushsym(L"nil", nil);
-    cpushsym(L"t", t);  
-    cpushsym(L"quote", quote);
-    cpushsym(L"eval", makemacro(eval));
-
-    cpushsym(L"dumpsym", makefunc(dumpsym));
-    cpushsym(L"dumpheap", makefunc(dumpheap));
-    cpushsym(L"gc", makefunc(gc));
-
-    cpushsym(L"pushargs", makemacro(pushargs));
-    cpushsym(L"popargs", makemacro(popargs));
-
-    cpushsym(L"cons", makefunc(cons));
-    cpushsym(L"setcar", makefunc(setcar));
-    cpushsym(L"setcdr", makefunc(setcdr));
-
-    cpushsym(L"list", makefunc(list));
-    cpushsym(L"length", makefunc(length));
-
-    cpushsym(L"if", makemacro(if_));
-    cpushsym(L"and", makemacro(and_));
-    cpushsym(L"or", makemacro(or_));
-    cpushsym(L"not", makefunc(not_));
-
-    cpushsym(L"call", makemacro(call));
-    cpushsym(L"bindsym", makemacro(bindsym));
-    cpushsym(L"lambda", makemacro(lambda));
-    cpushsym(L"function", makemacro(function));
-
-    cpushsym(L"consp", makefunc(consp));
-    cpushsym(L"funcp", makefunc(funcp));
-    cpushsym(L"macrop", makefunc(macrop));
-    cpushsym(L"symp", makefunc(symp));
-    cpushsym(L"nilp", makefunc(nilp));
-    cpushsym(L"intp", makefunc(intp));
-    cpushsym(L"dblp", makefunc(dblp));
-    cpushsym(L"nump", makefunc(nump));
-    cpushsym(L"strp", makefunc(strp));
-    cpushsym(L"zerop", makefunc(zerop));
-
-    cpushsym(L"add", makefunc(add));
-    cpushsym(L"sub", makefunc(sub));
-    cpushsym(L"mul", makefunc(mul));
-    cpushsym(L"div", makefunc(div_));
-    cpushsym(L"mod", makefunc(mod));
-
-    cpushsym(L"zipfirst", makefunc(zipfirst));
-    cpushsym(L"ziprest", makefunc(ziprest));
-    cpushsym(L"zip", makefunc(zip));
-
-    cpushsym(L"pushsym", makemacro(pushsym));
-    cpushsym(L"popsym", makemacro(popsym));
-
-    cpushsym(L"tocharcode", makefunc(tocharcode));
-    cpushsym(L"fromcharcode", makefunc(fromcharcode));
-
-    //pushsym(L"less", makemacro(less));
-    //pushsym(L"less-equal", makemacro(less_equal));
-    //pushsym(L"greater", makemacro(greater));
-    //pushsym(L"greater-equal", makemacro(greater_equal));
-    //pushsym(L"equal", makemacro(equal));
-    //pushsym(L"not-equal", makemacro(not_equal));
+    init_builtin();
 }
 
-void freesym()
+void cleanup_symbol_stack()
 {
     freehashtable(&table);
 }
 
-void cpushsym(const wchar_t * key, data value)
+void cpush_symbol(const wchar_t * key, data value)
 {
     unsigned int hash;
     int i, j;
@@ -247,7 +185,7 @@ void cpushsym(const wchar_t * key, data value)
     error(L"pushsymimpl failed.\n");
 }
 
-void cpopsym(const wchar_t * key)
+void cpop_symbol(const wchar_t * key)
 {
     unsigned int hash;
     int i, j;
@@ -259,10 +197,10 @@ void cpopsym(const wchar_t * key)
         j = ((hash + i) % table.len);
         if ((table.data[j].state == state_used) && (wcscmp(table.data[j].key, key) == 0))
         {
-            if (cnnilp(table.data[j].stack))
+            if (is_not_nil(table.data[j].stack))
             {
                 d = cdr(table.data[j].stack);
-                freedata(table.data[j].stack);
+                free_data(table.data[j].stack);
                 table.data[j].stack = d;
             }
             return;
@@ -271,7 +209,7 @@ void cpopsym(const wchar_t * key)
     error(L"popsym failed.\n");
 }
 
-data findsym(const wchar_t * key)
+data find_symbol(const wchar_t * key)
 {
     unsigned int hash;
     int i, j;
@@ -281,7 +219,7 @@ data findsym(const wchar_t * key)
         j = ((hash + i) % table.len);
         if ((table.data[j].state == state_used) && (wcscmp(table.data[j].key, key) == 0))
         {
-            if (cnnilp(table.data[j].stack))
+            if (is_not_nil(table.data[j].stack))
                 return(car(table.data[j].stack));
             return(NULL);
         }
@@ -291,7 +229,7 @@ data findsym(const wchar_t * key)
     return(NULL);
 }
 
-void marksym()
+void mark_symbol()
 {
     int i;
     data d;
@@ -299,15 +237,15 @@ void marksym()
         if (table.data[i].state == state_used)
         {
             d = table.data[i].stack;
-            while(cnnilp(d))
+            while(is_not_nil(d))
             {
-                markdata(car(d));
+                mark_data(car(d));
                 d = cdr(d);
             }
         }
 }
 
-data dumpsym(data d)
+data _dump_symbol(data d)
 {
     int i;
     for (i = 0; i < table.len; ++i)
@@ -320,26 +258,26 @@ data dumpsym(data d)
     return(t);
 }
 
-data pushargs(data d)
+data _push_args(data d)
 {
-    if (cnilp(d))
+    if (is_nil(d))
         return(d);
-    if (!cconsp(car(d)))
+    if (!is_cons(car(d)))
         error(L"pushargs arguments is must be list.\n");
-    if ((!csymp(caar(d))) || (!cconsp(cdar(d))))
+    if ((!is_symbol(caar(d))) || (!is_cons(cdar(d))))
         error(L"invalid key at pushargs.\n");
-    cpushsym(csym(caar(d)), car(cdar(d)));
-    return(pushargs(cdr(d)));
+    cpush_symbol(csym(caar(d)), car(cdar(d)));
+    return(_push_args(cdr(d)));
 }
 
-data popargs(data d)
+data _pop_args(data d)
 {
-    if (cnilp(d))
+    if (is_nil(d))
         return(d);
-    if (!cconsp(car(d)))
+    if (!is_cons(car(d)))
         error(L"popargs arguments is must be list.\n");
-    if ((!csymp(caar(d))))
+    if ((!is_symbol(caar(d))))
         error(L"invalid key at popargs.\n");
-    cpopsym(csym(caar(d)));
-    return(popargs(cdr(d)));
+    cpop_symbol(csym(caar(d)));
+    return(_pop_args(cdr(d)));
 }

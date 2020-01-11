@@ -45,7 +45,7 @@ void tryrehash();
 /* Internal function */
 /*********************/
 int strhash(const wchar_t * s);
-wchar_t * copystr(const wchar_t * s);
+wchar_t * clone_string(const wchar_t * s);
 void movestack(hashtable * table, const wchar_t * key, data stack);
 
 /**************/
@@ -121,18 +121,6 @@ unsigned int strhash(const wchar_t * s)
     return(i);
 }
 
-wchar_t * copystr(const wchar_t * s)
-{
-    int len;
-    wchar_t * newstr;
-    len = wcslen(s) + 1;
-    newstr = (wchar_t *)malloc(sizeof(wchar_t) * len);
-    if (!newstr)
-        error(L"Heap memory allocation failed.\n");
-    wcscpy_s(newstr, len, s);
-    return(newstr);
-}
-
 void movestack(hashtable * table, const wchar_t * key, data stack)
 {
     int i;
@@ -172,7 +160,7 @@ void cpush_symbol(const wchar_t * key, data value)
         if ((table.data[j].state == state_unused))
         {
             table.data[j].state = state_used;
-            table.data[j].key = copystr(key);
+            table.data[j].key = clone_string(key);
             table.data[j].stack = make_pair(value, table.data[j].stack);
             table.usedcnt += 1;
             return;

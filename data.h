@@ -141,5 +141,6 @@ data pull_node(data * list);
 /* Utility */
 /***********/
 data nilort(int);
+wchar_t * clone_string(const wchar_t * s);
 
 #endif

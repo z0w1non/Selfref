@@ -17,14 +17,13 @@ enum
     id_int,
     id_double,
     id_string,
- 
-    mask_used       = 0x0010,
-    mask_marked     = 0x0020,
+    id_operator        = 0x0010,
+    id_binary_operator = 0x0020 | id_operator,
+    id_prefix_operator = 0x0040 | id_operator,
+    id_suffix_operator = 0x0080 | id_operator,
 
-    operator        = 0x0040,
-    binary_operator = 0x0080 | operator,
-    prefix_operator = 0x0100 | operator,
-    suffix_operator = 0x0200 | operator,
+    mask_used       = 0x0100,
+    mask_marked     = 0x0200,
 };
 
 /****************************/
@@ -114,16 +113,10 @@ data make_function(data args, data impl)
 
 data make_symbol(const wchar_t * name)
 {
-    wchar_t * newname;
     data d;
     d = alloc();
     d->info |= id_symbol;
-    int buflen = wcslen(name) + 1;
-    newname = (wchar_t *)malloc(sizeof(wchar_t) * buflen);
-    if (!newname)
-        error(L"bad alloc.\n");
-    wcscpy_s(newname, buflen, name);
-    d->buffer._string = newname;
+    d->buffer._string = clone_string(name);
     return(d);
 }
 
@@ -170,16 +163,37 @@ data make_double(double value)
 
 data make_string(const wchar_t * name)
 {
-    wchar_t * newname;
     data d;
     d = alloc();
     d->info |= id_string;
-    int buflen = wcslen(name) + 1;
-    newname = (wchar_t *)malloc(sizeof(wchar_t) * buflen);
-    if (!newname)
-        error(L"bad alloc.\n");
-    wcscpy_s(newname, buflen, name);
-    d->buffer._string = newname;
+    d->buffer._string = clone_string(name);
+    return(d);
+}
+
+data make_binary_operator(const wchar_t * name)
+{
+    data d;
+    d = alloc();
+    d->info |= id_binary_operator;
+    d->buffer._string = clone_string(name);
+    return(d);
+}
+
+data make_prefix_operator(const wchar_t * name)
+{
+    data d;
+    d = alloc();
+    d->info |= id_prefix_operator;
+    d->buffer._string = clone_string(name);
+    return(d);
+}
+
+data make_suffix_operator(const wchar_t * name)
+{
+    data d;
+    d = alloc();
+    d->info |= id_suffix_operator;
+    d->buffer._string = clone_string(name);
     return(d);
 }
 
@@ -366,22 +380,22 @@ data _is_zero(data d)
 
 data _is_operator(data d)
 {
-    return(nilort(d->info | operator));
+    return(nilort(d->info | id_operator));
 }
 
 data _is_binary_operator(data d)
 {
-    return(nilort(d->info | binary_operator));
+    return(nilort(d->info | id_binary_operator));
 }
 
 data _is_prefix_operator(data d)
 {
-    return(nilort(d->info | prefix_operator));
+    return(nilort(d->info | id_prefix_operator));
 }
 
 data _is_suffix_operator(data d)
 {
-    return(nilort(d->info | suffix_operator));
+    return(nilort(d->info | id_suffix_operator));
 }
 
 /****************************/
@@ -463,22 +477,22 @@ int is_zero(data d)
 
 int is_operator(data d)
 {
-    return(d->info | operator);
+    return(d->info | id_operator);
 }
 
 int is_binary_operator(data d)
 {
-    return(d->info | binary_operator);
+    return(d->info | id_binary_operator);
 }
 
 int is_prefix_operator(data d)
 {
-    return(d->info | prefix_operator);
+    return(d->info | id_prefix_operator);
 }
 
 int is_suffix_operator(data d)
 {
-    return(d->info | suffix_operator);
+    return(d->info | id_suffix_operator);
 }
 
 /**************************************/
@@ -521,4 +535,16 @@ data pull_node(data * list)
 data nilort(int b)
 {
     return(b ? t : nil);
+}
+
+wchar_t * clone_string(const wchar_t * s)
+{
+    int len;
+    wchar_t * newstr;
+    len = wcslen(s) + 1;
+    newstr = (wchar_t *)malloc(sizeof(wchar_t) * len);
+    if (!newstr)
+        error(L"Heap memory allocation failed.\n");
+    wcscpy_s(newstr, len, s);
+    return(newstr);
 }

@@ -42,9 +42,6 @@
     <ClInclude Include="builtin.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="operator.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="data.c">
@@ -75,9 +72,6 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="char.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="operator.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>

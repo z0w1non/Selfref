@@ -385,8 +385,6 @@ data _macro(data d)
 {
     if (!is_symbol(car(d)))
         error(L"invalid macro name.\n");
-    data test = _unnamed_macro(cdr(d));
-    debug(test);
     cpush_symbol(raw_string(car(d)), _unnamed_macro(cdr(d)));
     _dump_symbol(nil);
 }

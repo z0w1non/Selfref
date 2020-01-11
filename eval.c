@@ -3,6 +3,7 @@
 #include "sym.h"
 #include "builtin.h"
 #include "print.h"
+#include "heap.h"
 
 /********/
 /* Eval */
@@ -79,4 +80,58 @@ data call_unnamed_function(data d)
     if (is_not_nil(car(args)))
         _pop_args(args);
     return(ret);
+}
+
+/*****************/
+/* Operator list */
+/*****************/
+data operator_list;
+
+void init_operator_list()
+{
+    operator_list = nil;
+
+    add_operator(make_binary_operator(L"=>", _unnamed_function));
+
+    add_operator(make_binary_operator(L"=", _push_symbol));
+
+    add_operator(make_binary_operator(L"+", _add));
+    add_operator(make_binary_operator(L"-", _sub));
+
+    add_operator(make_binary_operator(L"*", _mul));
+    add_operator(make_binary_operator(L"/", _div));
+    add_operator(make_binary_operator(L"%", _mod));
+}
+
+void add_operator(data d)
+{
+    operator_list = make_pair(d, operator_list);
+}
+
+void remove_operator(const wchar_t * name)
+{
+    data list, temp;
+    list = operator_list;
+    while (is_not_nil(list))
+    {
+        if (wcscmp(raw_string(car(list)), name) == 0)
+        {
+            //TODO
+        }
+        list = cdr(list);
+    }
+    error(L"<operator %s> not found.\n", name);
+}
+
+data find_operator(const wchar_t * name)
+{
+    data list;
+    list = operator_list;
+    while (is_not_nil(list))
+    {
+        if (wcscmp(raw_string(car(list)), name) == 0)
+            return(car(list));
+        list = cdr(list);
+    }
+    error(L"<operator %s> not found.\n", name);
 }

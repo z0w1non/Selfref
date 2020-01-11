@@ -12,4 +12,12 @@ data call_macro(data);
 data call_unnamed_macro(data);
 data call_unnamed_function(data);
 
+/*****************/
+/* Operator list */
+/*****************/
+void init_operator_list();
+void add_operator(data);
+void remove_operator(const wchar_t *);
+data find_operator(const wchar_t *);
+
 #endif

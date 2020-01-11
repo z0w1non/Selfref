@@ -170,30 +170,33 @@ data make_string(const wchar_t * name)
     return(d);
 }
 
-data make_binary_operator(const wchar_t * name)
+data make_binary_operator(const wchar_t * name, data impl)
 {
     data d;
     d = alloc();
     d->info |= id_binary_operator;
     d->buffer._string = clone_string(name);
+    d->buffer.impl = impl;
     return(d);
 }
 
-data make_prefix_operator(const wchar_t * name)
+data make_prefix_operator(const wchar_t * name, data impl)
 {
     data d;
     d = alloc();
     d->info |= id_prefix_operator;
     d->buffer._string = clone_string(name);
+    d->buffer.impl = impl;
     return(d);
 }
 
-data make_suffix_operator(const wchar_t * name)
+data make_suffix_operator(const wchar_t * name, data impl)
 {
     data d;
     d = alloc();
     d->info |= id_suffix_operator;
     d->buffer._string = clone_string(name);
+    d->buffer.impl = impl;
     return(d);
 }
 

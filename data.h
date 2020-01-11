@@ -18,7 +18,11 @@ typedef struct dataimpl_tag
         func_t function;
         int _int;
         double _double;
-        wchar_t * _string;
+        struct
+        {
+            wchar_t * _string;
+            data impl;
+        };
         struct
         {
             data first;
@@ -52,6 +56,9 @@ data make_quote();
 data make_int(int);
 data make_double(double);
 data make_string(const wchar_t *);
+data make_binary_operator(const wchar_t *, data);
+data make_prefix_operator(const wchar_t *, data);
+data make_suffix_operator(const wchar_t *, data);
 
 /**********************/
 /* Cons-cell accesser */

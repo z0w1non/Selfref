@@ -39,10 +39,10 @@ typedef struct context_tag
 /********************/
 /* Private function */
 /********************/
-void setgetchar(context * c, wint_t(*getchar)(void *));
-void seteofcallback(context * c, void (*callback)(void *));
-void setimpldata(context * c, void * impldata);
-void calleofcallback(context * c);
+void   setgetchar(context * c, wint_t(*getchar)(void *));
+void   seteofcallback(context * c, void (*callback)(void *));
+void   setimpldata(context * c, void * impldata);
+void * calleofcallback(context * c);
 wint_t callgetchar(context * c);
 void * callback_fclose(void * impldata);
 wint_t getchar_from_file(void * impldata);
@@ -365,7 +365,7 @@ void setimpldata(context * c, void * impldata)
     c->impldata = impldata;
 }
 
-void calleofcallback(context * c)
+void * calleofcallback(context * c)
 {
     void * ret;
     ret = NULL;

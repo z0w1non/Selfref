@@ -19,7 +19,7 @@ void init_operator_list();
 void add_operator(data);
 void remove_operator(const wchar_t *);
 data find_operator(const wchar_t *);
-int compare_operator_priority(data, data);
+int compare_operator_priority(const wchar_t *, const wchar_t *);
 data sort_operator(data);
 
 #endif

@@ -136,22 +136,19 @@ data find_operator(const wchar_t * name)
     error(L"<operator %s> not found.\n", name);
 }
 
-int compare_operator_priority(data a, data b)
+int compare_operator_priority(const wchar_t * a, const wchar_t * b)
 {
-    const wchar_t * a_str, * b_str;
-    a_str = raw_string(a);
-    b_str = raw_string(b);
-    if (wcscmp(a_str, b_str) == 0)
+    if (wcscmp(a, b) == 0)
         return(0);
     data list;
     list = operator_list;
     while (is_not_nil(list))
     {
-        if (wcscmp(raw_string(car(list)), a_str) == 0)
+        if (wcscmp(raw_string(car(list)), a) == 0)
             return(1);
-        if (wcscmp(raw_string(car(list)), b_str) == 0)
+        if (wcscmp(raw_string(car(list)), b) == 0)
             return(-1);
         list = cdr(list);
     }
-    error(L"<operator %s> and <operator %s> not found.\n", a_str, b_str);
+    error(L"<operator %s> and <operator %s> not found.\n", a, b);
 }

@@ -5,7 +5,7 @@
 
 data print(data d)
 {
-    if (is_cons(d))
+    if (is_pair(d))
     {
         if (!used(d))
             wprintf(L"<unused heap>");

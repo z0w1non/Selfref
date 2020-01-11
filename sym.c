@@ -262,9 +262,9 @@ data _push_args(data d)
 {
     if (is_nil(d))
         return(d);
-    if (!is_cons(car(d)))
+    if (!is_pair(car(d)))
         error(L"pushargs arguments is must be list.\n");
-    if ((!is_symbol(caar(d))) || (!is_cons(cdar(d))))
+    if ((!is_symbol(caar(d))) || (!is_pair(cdar(d))))
         error(L"invalid key at pushargs.\n");
     cpush_symbol(raw_string(caar(d)), car(cdar(d)));
     return(_push_args(cdr(d)));
@@ -274,7 +274,7 @@ data _pop_args(data d)
 {
     if (is_nil(d))
         return(d);
-    if (!is_cons(car(d)))
+    if (!is_pair(car(d)))
         error(L"popargs arguments is must be list.\n");
     if ((!is_symbol(caar(d))))
         error(L"invalid key at popargs.\n");

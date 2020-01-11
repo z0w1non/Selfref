@@ -51,7 +51,7 @@ void free_data(data d)
     if (!used(d))
         error(L"Invalid freedata to unused heap\n");
     if (is_symbol(d) || is_string(d))
-        free(((wchar_t **)get_buf(d))[0]);
+        free(d->buffer._string);
     init_data(d);
     insert_node(restheap, d);
     heapcnt -= 1;
@@ -73,7 +73,7 @@ data _dump_heap(data d)
 void mark_data(data d)
 {
     set_marked(d, 1);
-    if (is_cons(d))
+    if (is_pair(d))
     {
         if (is_not_nil(car(d)))
             mark_data(car(d));

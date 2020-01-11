@@ -21,6 +21,8 @@ data _not(data);
 /**************/
 /* Functional */
 /**************/
+data _eval(data);
+data _print(data);
 data _call(data);
 data _bind_symbol(data);
 data _unnamed_macro(data);
@@ -31,9 +33,9 @@ data _function(data);
 /**********************/
 /* Cons-cell function */
 /**********************/
-data _cons(data);
-data _set_car(data);
-data _set_cdr(data);
+data _pair(data);
+data _set_first(data);
+data _set_rest(data);
 
 /*****************/
 /* List function */
@@ -59,5 +61,7 @@ data _pop_symbol(data);
 /****************************/
 data _to_char_code(data);
 data _from_char_code(data);
+
+data _progn(data);
 
 #endif

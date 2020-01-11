@@ -11,6 +11,9 @@ void init_builtin()
     cpush_symbol(L"t", t);
     cpush_symbol(L"quote", quote);
 
+    cpush_symbol(L"eval", make_builtin_function(_eval));
+    cpush_symbol(L"print", make_builtin_function(_print));
+
     cpush_symbol(L"dump_symbol", make_builtin_function(_dump_symbol));
     cpush_symbol(L"dump_heap", make_builtin_function(_dump_heap));
     cpush_symbol(L"gc", make_builtin_function(_gc));
@@ -18,9 +21,9 @@ void init_builtin()
     cpush_symbol(L"push_args", make_builtin_macro(_push_args));
     cpush_symbol(L"pop_args", make_builtin_macro(_pop_args));
 
-    cpush_symbol(L"cons", make_builtin_function(_cons));
-    cpush_symbol(L"set_car", make_builtin_function(_set_car));
-    cpush_symbol(L"set_cdr", make_builtin_function(_set_cdr));
+    cpush_symbol(L"pair", make_builtin_function(_pair));
+    cpush_symbol(L"set_first", make_builtin_function(_set_first));
+    cpush_symbol(L"set_rest", make_builtin_function(_set_rest));
 
     cpush_symbol(L"list", make_builtin_function(_list));
     cpush_symbol(L"length", make_builtin_function(_length));
@@ -38,7 +41,7 @@ void init_builtin()
     cpush_symbol(L"macro", make_builtin_macro(_macro));
     cpush_symbol(L"function", make_builtin_macro(_function));
 
-    cpush_symbol(L"is_cons", make_builtin_function(_is_cons));
+    cpush_symbol(L"is_cons", make_builtin_function(_is_pair));
     cpush_symbol(L"is_builtin_macro", make_builtin_function(_is_builtin_macro));
     cpush_symbol(L"is_builtin_function", make_builtin_function(_is_builtin_function));
     cpush_symbol(L"is_unnamed_macro", make_builtin_function(_is_unnamed_macro));
@@ -68,6 +71,8 @@ void init_builtin()
 
     cpush_symbol(L"to_char_code", make_builtin_function(_to_char_code));
     cpush_symbol(L"from_char_code", make_builtin_function(_from_char_code));
+
+    cpush_symbol(L"progn", make_builtin_macro(_progn));
 }
 
 /**************/
@@ -296,7 +301,7 @@ data _mod(data d)
 
 data _if(data d)
 {
-    if (is_not_nil(car(d)))
+    if (is_not_nil(eval(car(d))))
         return(eval(car(cdr(d))));
     return(eval(car(cdr(cdr(d)))));
 }
@@ -333,6 +338,16 @@ data _not(data d)
 /**************/
 /* Functional */
 /**************/
+data _eval(data d)
+{
+    return(car(d));
+}
+
+data _print(data d)
+{
+    return(car(d));
+}
+
 data _call(data d)
 {
     if (is_builtin_function(car(d)))
@@ -345,7 +360,7 @@ data _bind_symbol(data d)
     data value;
     if (is_nil(d))
         return(nil);
-    if (is_cons(d))
+    if (is_pair(d))
         return(make_pair(_bind_symbol(car(d)), _bind_symbol(cdr(d))));
     if (is_symbol(d))
     {
@@ -356,9 +371,21 @@ data _bind_symbol(data d)
     return(d);
 }
 
+data _unnamed_macro(data d)
+{
+    return(make_builtin_macro(car(d), _bind_symbol(cadr(d))));
+}
+
 data _unnamed_function(data d)
 {
     return(make_function(car(d), _bind_symbol(cadr(d))));
+}
+
+data _macro(data d)
+{
+    if (!is_symbol(car(d)))
+        error(L"invalid macro name.\n");
+    cpush_symbol(raw_string(car(d)), cadr(d));
 }
 
 data _function(data d)
@@ -369,37 +396,25 @@ data _function(data d)
     return(car(d));
 }
 
-data _unnamed_macro(data d)
-{
-    return(make_builtin_macro(car(d), _bind_symbol(cadr(d))));
-}
-
-data _macro(data d)
-{
-    if (!is_symbol(car(d)))
-        error(L"invalid macro name.\n");
-    cpush_symbol(raw_string(car(d)), _bind_symbol(cadr(d)));
-}
-
 /**********************/
 /* Cons-cell function */
 /**********************/
-data _cons(data d)
+data _pair(data d)
 {
     return(make_pair(car(d), cadr(d)));
 }
 
-data _set_car(data d)
+data _set_first(data d)
 {
-    if (!is_cons(car(d)))
+    if (!is_pair(car(d)))
         error(L"setcar failed.\n");
     set_car(car(d), cadr(d));
     return(cadr(d));
 }
 
-data _set_cdr(data d)
+data _set_rest(data d)
 {
-    if (!is_cons(car(d)))
+    if (!is_pair(car(d)))
         error(L"setcdr failed.\n");
     set_cdr(car(d), cadr(d));
     return(cadr(d));
@@ -507,4 +522,22 @@ data _from_char_code(data d)
     }
     *s = L'\0';
     return(make_string(buf));
+}
+
+data _progn(data d)
+{
+    data last;
+    last = nil;
+    while (is_not_nil(car(d)))
+    {
+        last = eval(car(d));
+        d = cdr(d);
+    }
+    return(last);
+}
+
+// (binary_operator => (args impl) ())
+data _binary_opeartor(data d)
+{
+
 }

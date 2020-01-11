@@ -6,12 +6,12 @@
 
 enum
 {
-    id_cons,
+    id_pair,
     id_builtin_macro,
     id_builtin_function,
     id_unnamed_macro,
     id_unnamed_function,
-    id_sym,
+    id_symbol,
     id_nil,
     id_t,
     id_int,
@@ -60,38 +60,15 @@ int type_id(data d)
     return(d->info & 15);
 }
 
-const wchar_t * tstr(data d)
-{
-    static const wchar_t * str[] =
-    {
-        L"cons",
-        L"function",
-        L"macro",
-        L"symbol",
-        L"nil",
-        L"t",
-        L"quote",
-        L"int",
-        L"double",
-        L"string",
-    };
-    return(str[type_id(d)]);
-}
-
-void * get_buf(data d)
-{
-    return((void **)(&d->buf));
-}
-
 /*****************/
 /* Make function */
 /*****************/
-data make_pair(data car, data cdr)
+data make_pair(data first, data rest)
 {
     data d = alloc();
-    d->info |= id_cons;
-    ((data *)get_buf(d))[0] = car;
-    ((data *)get_buf(d))[1] = cdr;
+    d->info |= id_pair;
+    d->buffer.first = first;
+    d->buffer.rest = rest;
     return(d);
 }
 
@@ -99,7 +76,7 @@ data make_builtin_macro(func_t f)
 {
     data d = alloc();
     d->info |= id_builtin_macro;
-    ((func_t *)get_buf(d))[0] = f;
+    d->buffer.function = f;
     return(d);
 }
 
@@ -107,7 +84,7 @@ data make_builtin_function(func_t f)
 {
     data d = alloc();
     d->info |= id_builtin_function;
-    ((func_t *)get_buf(d))[0] = f;
+    d->buffer.function = f;
     return(d);
 }
 
@@ -115,8 +92,8 @@ data make_macro(data args, data impl)
 {
     data d = alloc();
     d->info |= id_unnamed_macro;
-    (((data *)get_buf(d))[0]) = args;
-    (((data *)get_buf(d))[1]) = impl;
+    d->buffer.first = args;
+    d->buffer.rest = impl;
     return(d);
 }
 
@@ -124,19 +101,23 @@ data make_function(data args, data impl)
 {
     data d = alloc();
     d->info |= id_unnamed_function;
-    (((data *)get_buf(d))[0]) = args;
-    (((data *)get_buf(d))[1]) = impl;
+    d->buffer.first = args;
+    d->buffer.rest = impl;
     return(d);
 }
 
 data make_symbol(const wchar_t * name)
 {
-    int buflen;
-    data d = alloc();
-    d->info |= id_sym;
-    buflen = wcslen(name) + 1;
-    (((wchar_t **)get_buf(d))[0]) = (wchar_t *)malloc(sizeof(wchar_t) * buflen);
-    wcscpy_s((((wchar_t **)get_buf(d))[0]), buflen, name);
+    wchar_t * newname;
+    data d;
+    d = alloc();
+    d->info |= id_symbol;
+    int buflen = wcslen(name) + 1;
+    newname = (wchar_t *)malloc(sizeof(wchar_t) * buflen);
+    if (!newname)
+        error(L"bad alloc.\n");
+    wcscpy_s(newname, buflen, name);
+    d->buffer._string = newname;
     return(d);
 }
 
@@ -169,7 +150,7 @@ data make_int(int value)
 {
     data d = alloc();
     d->info |= id_int;
-    ((int *)get_buf(d))[0] = value;
+    d->buffer._int = value;
     return(d);
 }
 
@@ -177,17 +158,22 @@ data make_double(double value)
 {
     data d = alloc();
     d->info |= id_double;
-    ((double *)get_buf(d))[0] = value;
+    d->buffer._double = value;
     return(d);
 }
 
 data make_string(const wchar_t * name)
 {
-    data d = alloc();
+    wchar_t * newname;
+    data d;
+    d = alloc();
     d->info |= id_string;
     int buflen = wcslen(name) + 1;
-    (((wchar_t **)get_buf(d))[0]) = (wchar_t *)malloc(sizeof(wchar_t) * buflen);
-    wcscpy_s((((wchar_t **)get_buf(d))[0]), buflen, name);
+    newname = (wchar_t *)malloc(sizeof(wchar_t) * buflen);
+    if (!newname)
+        error(L"bad alloc.\n");
+    wcscpy_s(newname, buflen, name);
+    d->buffer._string = newname;
     return(d);
 }
 
@@ -196,16 +182,16 @@ data make_string(const wchar_t * name)
 /**********************/
 data car(data d)
 {
-    if (!is_cons(d))
+    if (!is_pair(d))
         return(nil);
-    return(((data *)get_buf(d))[0]);
+    return(d->buffer.first);
 }
 
 data cdr(data d)
 {
-    if (!is_cons(d))
+    if (!is_pair(d))
         return(nil);
-    return(((data *)get_buf(d))[1]);
+    return(d->buffer.rest);
 }
 
 data cadr(data d)
@@ -253,59 +239,59 @@ data cdar(data d)
 /*********************/
 func_t raw_function(data d)
 {
-    return(*((func_t *)get_buf(d)));
+    return(d->buffer.function);
 }
 
 func_t raw_macro(data d)
 {
-    return(*((func_t *)get_buf(d)));
+    return(d->buffer.function);
 }
 
 data get_args(data d)
 {
     if (!is_unnamed_function(d))
         error(L"getargs failed.\n");
-    return(((data *)get_buf(d))[0]);
+    return(d->buffer.first);
 }
 
 data get_impl(data d)
 {
     if (!is_unnamed_function(d))
         error(L"getargs failed.\n");
-    return(((data *)get_buf(d))[1]);
+    return(d->buffer.rest);
 }
 
 int raw_int(data d)
 {
-    return(*(int *)get_buf(d));
+    return(d->buffer._int);
 }
 
 double raw_double(data d)
 {
-    return(*(double *)get_buf(d));
+    return(d->buffer._double);
 }
 
 const wchar_t * raw_string(data d)
 {
-    return((const wchar_t **)get_buf(d))[0];
+    return(d->buffer._string);
 }
 
 void set_car(data d, data car)
 {
-    ((data *)get_buf(d))[0] = car;
+    d->buffer.first = car;
 }
 
 void set_cdr(data d, data cdr)
 {
-    ((data *)get_buf(d))[1] = cdr;
+    d->buffer.rest = cdr;
 }
 
 /**********************/
 /* Predicate function */
 /**********************/
-data _is_cons(data d)
+data _is_pair(data d)
 {
-    return(nilort(type_id(car(d)) == id_cons));
+    return(nilort(type_id(car(d)) == id_pair));
 }
 
 data _is_builtin_macro(data d)
@@ -330,7 +316,7 @@ data _is_unnamed_function(data d)
 
 data _is_symbol(data d)
 {
-    return(nilort(type_id(car(d)) == id_sym));
+    return(nilort(type_id(car(d)) == id_symbol));
 }
 
 data _is_nil(data d)
@@ -375,9 +361,9 @@ data _is_zero(data d)
 /****************************/
 /* Predicate function for C */
 /****************************/
-int is_cons(data d)
+int is_pair(data d)
 {
-    return(type_id(d) == id_cons);
+    return(type_id(d) == id_pair);
 }
 
 int is_builtin_macro(data d)
@@ -402,7 +388,7 @@ int is_unnamed_function(data d)
 
 int is_symbol(data d)
 {
-    return(type_id(d) == id_sym);
+    return(type_id(d) == id_symbol);
 }
 
 int is_nil(data d)

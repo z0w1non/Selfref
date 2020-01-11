@@ -6,37 +6,34 @@
 struct dataimpl_tag;
 typedef struct dataimpl_tag * data;
 
-typedef union databuf_tag
-{
-    void * _ptr[2];
-    int _int;
-    double _double;
-    wchar_t * _string[2];
-    struct pair_
-    {
-        data _car;
-        data _cdr;
-    };
-} databuf;
+typedef data(*func_t)(data);
 
 typedef struct dataimpl_tag
 {
     int info;
-    databuf buf;
+    union
+    {
+        func_t function;
+        int _int;
+        double _double;
+        wchar_t * _string;
+        struct
+        {
+            data first;
+            data rest;
+        };
+    } buffer;
 } dataimpl;
-
-typedef data(*func_t)(data);
 
 /****************************/
 /* Data infomation accesser */
 /****************************/
-void            init_data(data);
-int             used(data);
-void            set_used(data, int);
-int             marked(data);
-void            set_marked(data, int);
-int             type_id(data);
-void *          get_buf(data);
+void init_data(data);
+int  used(data);
+void set_used(data, int);
+int  marked(data);
+void set_marked(data, int);
+int  type_id(data);
 
 /*****************/
 /* Make function */
@@ -91,7 +88,7 @@ data quote;
 /**********************/
 /* Predicate function */
 /**********************/
-data _is_cons(data);
+data _is_pair(data);
 data _is_builtin_macro(data);
 data _is_builtin_function(data);
 data _is_unnamed_macro(data);
@@ -108,7 +105,7 @@ data _is_zero(data);
 /****************************/
 /* Predicate function for C */
 /****************************/
-int is_cons(data);
+int is_pair(data);
 int is_builtin_macro(data);
 int is_builtin_function(data);
 int is_unnamed_function(data);

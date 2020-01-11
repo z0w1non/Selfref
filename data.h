@@ -103,6 +103,10 @@ data _is_double(data);
 data _is_number(data);
 data _is_string(data);
 data _is_zero(data);
+data _is_operator(data);
+data _is_binary_operator(data);
+data _is_prefix_operator(data);
+data _is_suffix_operator(data);
 
 /****************************/
 /* Predicate function for C */
@@ -121,6 +125,10 @@ int is_double(data);
 int is_number(data);
 int is_string(data);
 int is_zero(data);
+int is_operator(data);
+int is_binary_operator(data);
+int is_prefix_operator(data);
+int is_suffix_operator(data);
 
 /**************************************/
 /* Bidirectional linked list function */

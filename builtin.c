@@ -386,7 +386,6 @@ data _macro(data d)
     if (!is_symbol(car(d)))
         error(L"invalid macro name.\n");
     cpush_symbol(raw_string(car(d)), _unnamed_macro(cdr(d)));
-    _dump_symbol(nil);
 }
 
 data _function(data d)
@@ -537,7 +536,7 @@ data _progn(data d)
     return(last);
 }
 
-// (binary_operator => (args impl) ())
+// (binary_operator operator (leftarg rightarg) (impl))
 data _binary_opeartor(data d)
 {
 

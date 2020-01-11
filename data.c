@@ -17,8 +17,14 @@ enum
     id_int,
     id_double,
     id_string,
-    mask_used = 16,
-    mask_marked = 32,
+ 
+    mask_used       = 0x0010,
+    mask_marked     = 0x0020,
+
+    operator        = 0x0040,
+    binary_operator = 0x0080 | operator,
+    prefix_operator = 0x0100 | operator,
+    suffix_operator = 0x0200 | operator,
 };
 
 /****************************/
@@ -358,6 +364,26 @@ data _is_zero(data d)
     return(nil);
 }
 
+data _is_operator(data d)
+{
+    return(nilort(d->info | operator));
+}
+
+data _is_binary_operator(data d)
+{
+    return(nilort(d->info | binary_operator));
+}
+
+data _is_prefix_operator(data d)
+{
+    return(nilort(d->info | prefix_operator));
+}
+
+data _is_suffix_operator(data d)
+{
+    return(nilort(d->info | suffix_operator));
+}
+
 /****************************/
 /* Predicate function for C */
 /****************************/
@@ -433,6 +459,26 @@ int is_zero(data d)
     else if (is_double(d))
         return(raw_double(d) == 0.0);
     return(0);
+}
+
+int is_operator(data d)
+{
+    return(d->info | operator);
+}
+
+int is_binary_operator(data d)
+{
+    return(d->info | binary_operator);
+}
+
+int is_prefix_operator(data d)
+{
+    return(d->info | prefix_operator);
+}
+
+int is_suffix_operator(data d)
+{
+    return(d->info | suffix_operator);
 }
 
 /**************************************/

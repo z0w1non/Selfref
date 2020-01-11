@@ -128,6 +128,7 @@
     <ClInclude Include="data.h" />
     <ClInclude Include="eval.h" />
     <ClInclude Include="heap.h" />
+    <ClInclude Include="operator.h" />
     <ClInclude Include="print.h" />
     <ClInclude Include="read.h" />
     <ClInclude Include="repl.h" />
@@ -140,6 +141,7 @@
     <ClCompile Include="eval.c" />
     <ClCompile Include="heap.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="operator.c" />
     <ClCompile Include="print.c" />
     <ClCompile Include="read.c" />
     <ClCompile Include="repl.c" />

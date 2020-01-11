@@ -24,7 +24,7 @@ enum
 /****************************/
 /* Data infomation accesser */
 /****************************/
-void initdata(data d)
+void init_data(data d)
 {
     memset(d, 0, sizeof(dataimpl));
 }
@@ -34,7 +34,7 @@ int used(data d)
     return((d->info & mask_used) != 0);
 }
 
-void setused(data d, int used)
+void set_used(data d, int used)
 {
     if (used)
         d->info |= mask_used;
@@ -47,7 +47,7 @@ int marked(data d)
     return((d->info & mask_marked) != 0);
 }
 
-void setmarked(data d, int marked)
+void set_marked(data d, int marked)
 {
     if (marked)
         d->info |= mask_marked;
@@ -55,7 +55,7 @@ void setmarked(data d, int marked)
         d->info &= ~((int)mask_marked);
 }
 
-int tid(data d)
+int type_id(data d)
 {
     return(d->info & 15);
 }
@@ -75,10 +75,10 @@ const wchar_t * tstr(data d)
         L"double",
         L"string",
     };
-    return(str[tid(d)]);
+    return(str[type_id(d)]);
 }
 
-void * getbuf(data d)
+void * get_buf(data d)
 {
     return((void **)(&d->buf));
 }
@@ -86,12 +86,12 @@ void * getbuf(data d)
 /*****************/
 /* Make function */
 /*****************/
-data makecons(data car, data cdr)
+data make_pair(data car, data cdr)
 {
     data d = alloc();
     d->info |= id_cons;
-    ((data *)getbuf(d))[0] = car;
-    ((data *)getbuf(d))[1] = cdr;
+    ((data *)get_buf(d))[0] = car;
+    ((data *)get_buf(d))[1] = cdr;
     return(d);
 }
 
@@ -99,7 +99,7 @@ data make_builtin_macro(func_t f)
 {
     data d = alloc();
     d->info |= id_builtin_macro;
-    ((func_t *)getbuf(d))[0] = f;
+    ((func_t *)get_buf(d))[0] = f;
     return(d);
 }
 
@@ -107,7 +107,7 @@ data make_builtin_function(func_t f)
 {
     data d = alloc();
     d->info |= id_builtin_function;
-    ((func_t *)getbuf(d))[0] = f;
+    ((func_t *)get_buf(d))[0] = f;
     return(d);
 }
 
@@ -115,8 +115,8 @@ data make_macro(data args, data impl)
 {
     data d = alloc();
     d->info |= id_unnamed_macro;
-    (((data *)getbuf(d))[0]) = args;
-    (((data *)getbuf(d))[1]) = impl;
+    (((data *)get_buf(d))[0]) = args;
+    (((data *)get_buf(d))[1]) = impl;
     return(d);
 }
 
@@ -124,8 +124,8 @@ data make_function(data args, data impl)
 {
     data d = alloc();
     d->info |= id_unnamed_function;
-    (((data *)getbuf(d))[0]) = args;
-    (((data *)getbuf(d))[1]) = impl;
+    (((data *)get_buf(d))[0]) = args;
+    (((data *)get_buf(d))[1]) = impl;
     return(d);
 }
 
@@ -135,8 +135,8 @@ data make_symbol(const wchar_t * name)
     data d = alloc();
     d->info |= id_sym;
     buflen = wcslen(name) + 1;
-    (((wchar_t **)getbuf(d))[0]) = (wchar_t *)malloc(sizeof(wchar_t) * buflen);
-    wcscpy_s((((wchar_t **)getbuf(d))[0]), buflen, name);
+    (((wchar_t **)get_buf(d))[0]) = (wchar_t *)malloc(sizeof(wchar_t) * buflen);
+    wcscpy_s((((wchar_t **)get_buf(d))[0]), buflen, name);
     return(d);
 }
 
@@ -169,7 +169,7 @@ data make_int(int value)
 {
     data d = alloc();
     d->info |= id_int;
-    ((int *)getbuf(d))[0] = value;
+    ((int *)get_buf(d))[0] = value;
     return(d);
 }
 
@@ -177,7 +177,7 @@ data make_double(double value)
 {
     data d = alloc();
     d->info |= id_double;
-    ((double *)getbuf(d))[0] = value;
+    ((double *)get_buf(d))[0] = value;
     return(d);
 }
 
@@ -186,8 +186,8 @@ data make_string(const wchar_t * name)
     data d = alloc();
     d->info |= id_string;
     int buflen = wcslen(name) + 1;
-    (((wchar_t **)getbuf(d))[0]) = (wchar_t *)malloc(sizeof(wchar_t) * buflen);
-    wcscpy_s((((wchar_t **)getbuf(d))[0]), buflen, name);
+    (((wchar_t **)get_buf(d))[0]) = (wchar_t *)malloc(sizeof(wchar_t) * buflen);
+    wcscpy_s((((wchar_t **)get_buf(d))[0]), buflen, name);
     return(d);
 }
 
@@ -198,14 +198,14 @@ data car(data d)
 {
     if (!is_cons(d))
         return(nil);
-    return(((data *)getbuf(d))[0]);
+    return(((data *)get_buf(d))[0]);
 }
 
 data cdr(data d)
 {
     if (!is_cons(d))
         return(nil);
-    return(((data *)getbuf(d))[1]);
+    return(((data *)get_buf(d))[1]);
 }
 
 data cadr(data d)
@@ -251,58 +251,53 @@ data cdar(data d)
 /*********************/
 /* Raw data accesser */
 /*********************/
-func_t cfunc(data d)
+func_t raw_function(data d)
 {
-    return(*((func_t *)getbuf(d)));
+    return(*((func_t *)get_buf(d)));
 }
 
-func_t cmacro(data d)
+func_t raw_macro(data d)
 {
-    return(*((func_t *)getbuf(d)));
+    return(*((func_t *)get_buf(d)));
 }
 
-data getargs(data d)
+data get_args(data d)
 {
     if (!is_unnamed_function(d))
         error(L"getargs failed.\n");
-    return(((data *)getbuf(d))[0]);
+    return(((data *)get_buf(d))[0]);
 }
 
-data getimpl(data d)
+data get_impl(data d)
 {
     if (!is_unnamed_function(d))
         error(L"getargs failed.\n");
-    return(((data *)getbuf(d))[1]);
+    return(((data *)get_buf(d))[1]);
 }
 
-const wchar_t * csym(data d)
+int raw_int(data d)
 {
-    return((const wchar_t **)getbuf(d))[0];
+    return(*(int *)get_buf(d));
 }
 
-int cint(data d)
+double raw_double(data d)
 {
-    return(*(int *)getbuf(d));
+    return(*(double *)get_buf(d));
 }
 
-double cdbl(data d)
+const wchar_t * raw_string(data d)
 {
-    return(*(double *)getbuf(d));
+    return((const wchar_t **)get_buf(d))[0];
 }
 
-const wchar_t * cstr(data d)
+void set_car(data d, data car)
 {
-    return((const wchar_t **)getbuf(d))[0];
+    ((data *)get_buf(d))[0] = car;
 }
 
-void csetcar(data d, data car)
+void set_cdr(data d, data cdr)
 {
-    ((data *)getbuf(d))[0] = car;
-}
-
-void csetcdr(data d, data cdr)
-{
-    ((data *)getbuf(d))[1] = cdr;
+    ((data *)get_buf(d))[1] = cdr;
 }
 
 /**********************/
@@ -310,70 +305,70 @@ void csetcdr(data d, data cdr)
 /**********************/
 data _is_cons(data d)
 {
-    return(nilort(tid(car(d)) == id_cons));
+    return(nilort(type_id(car(d)) == id_cons));
 }
 
 data _is_builtin_macro(data d)
 {
-    return(nilort(tid(car(d)) == id_builtin_macro));
+    return(nilort(type_id(car(d)) == id_builtin_macro));
 }
 
 data _is_builtin_function(data d)
 {
-    return(nilort(tid(car(d)) == id_builtin_function));
+    return(nilort(type_id(car(d)) == id_builtin_function));
 }
 
 data _is_unnamed_macro(data d)
 {
-    return(nilort(tid(car(d)) == id_unnamed_macro));
+    return(nilort(type_id(car(d)) == id_unnamed_macro));
 }
 
 data _is_unnamed_function(data d)
 {
-    return(nilort(tid(car(d)) == id_unnamed_function));
+    return(nilort(type_id(car(d)) == id_unnamed_function));
 }
 
 data _is_symbol(data d)
 {
-    return(nilort(tid(car(d)) == id_sym));
+    return(nilort(type_id(car(d)) == id_sym));
 }
 
 data _is_nil(data d)
 {
-    return(nilort(tid(car(d)) == id_nil));
+    return(nilort(type_id(car(d)) == id_nil));
 }
 
 data _is_not_nil(data d)
 {
-    return(nilort(tid(car(d)) != id_nil));
+    return(nilort(type_id(car(d)) != id_nil));
 }
 
 data _is_int(data d)
 {
-    return(nilort(tid(car(d)) == id_int));
+    return(nilort(type_id(car(d)) == id_int));
 }
 
 data _is_double(data d)
 {
-    return(nilort(tid(car(d)) == id_double));
+    return(nilort(type_id(car(d)) == id_double));
 }
 
 data _is_number(data d)
 {
-    return(nilort((tid(car(d)) == id_int) || (tid(car(d)) == id_double)));
+    return(nilort((type_id(car(d)) == id_int) || (type_id(car(d)) == id_double)));
 }
 
 data _is_string(data d)
 {
-    return(nilort(tid(car(d)) == id_string));
+    return(nilort(type_id(car(d)) == id_string));
 }
 
 data _is_zero(data d)
 {
     if (is_int(car(d)))
-        return(nilort(cint(car(d)) == 0));
+        return(nilort(raw_int(car(d)) == 0));
     else if (is_double(car(d)))
-        return(nilort(cdbl(car(d)) == 0.0));
+        return(nilort(raw_double(car(d)) == 0.0));
     return(nil);
 }
 
@@ -382,75 +377,75 @@ data _is_zero(data d)
 /****************************/
 int is_cons(data d)
 {
-    return(tid(d) == id_cons);
+    return(type_id(d) == id_cons);
 }
 
 int is_builtin_macro(data d)
 {
-    return(tid(d) == id_builtin_macro);
+    return(type_id(d) == id_builtin_macro);
 }
 
 int is_builtin_function(data d)
 {
-    return(tid(d) == id_builtin_function);
+    return(type_id(d) == id_builtin_function);
 }
 
 int is_unnamed_macro(data d)
 {
-    return(tid(d) == id_unnamed_macro);
+    return(type_id(d) == id_unnamed_macro);
 }
 
 int is_unnamed_function(data d)
 {
-    return(tid(d) == id_unnamed_function);
+    return(type_id(d) == id_unnamed_function);
 }
 
 int is_symbol(data d)
 {
-    return(tid(d) == id_sym);
+    return(type_id(d) == id_sym);
 }
 
 int is_nil(data d)
 {
-    return(tid(d) == id_nil);
+    return(type_id(d) == id_nil);
 }
 
 int is_not_nil(data d)
 {
-    return(tid(d) != id_nil);
+    return(type_id(d) != id_nil);
 }
 
 int is_t(data d)
 {
-    return(tid(d) == id_t);
+    return(type_id(d) == id_t);
 }
 
 int is_int(data d)
 {
-    return(tid(d) == id_int);
+    return(type_id(d) == id_int);
 }
 
 int is_double(data d)
 {
-    return(tid(d) == id_double);
+    return(type_id(d) == id_double);
 }
 
 int is_number(data d)
 {
-    return((tid(d) == id_int) || (tid(d) == id_double));
+    return((type_id(d) == id_int) || (type_id(d) == id_double));
 }
 
 int is_string(data d)
 {
-    return(tid(d) == id_string);
+    return(type_id(d) == id_string);
 }
 
 int is_zero(data d)
 {
     if (is_int(d))
-        return(cint(d) == 0);
+        return(raw_int(d) == 0);
     else if (is_double(d))
-        return(cdbl(d) == 0.0);
+        return(raw_double(d) == 0.0);
     return(0);
 }
 
@@ -461,8 +456,8 @@ void link_node(data a, data b)
 {
     if (a == b)
         error(L"linknode failed.\n");
-    csetcdr(a, b);
-    csetcar(b, a);
+    set_cdr(a, b);
+    set_car(b, a);
 }
 
 data insert_node(data list, data node)

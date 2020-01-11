@@ -26,8 +26,8 @@ void init_heap(int len)
     heapcnt = 0;
     for (i = 0; i < len; ++i)
     {
-        csetcar(&heap[i], &heap[((i - 1 + len) % len)]);
-        csetcdr(&heap[i], &heap[((i + 1) % len)]);
+        set_car(&heap[i], &heap[((i - 1 + len) % len)]);
+        set_cdr(&heap[i], &heap[((i + 1) % len)]);
     }
     nil = make_nil();
     t = make_t();
@@ -51,8 +51,8 @@ void free_data(data d)
     if (!used(d))
         error(L"Invalid freedata to unused heap\n");
     if (is_symbol(d) || is_string(d))
-        free(((wchar_t **)getbuf(d))[0]);
-    initdata(d);
+        free(((wchar_t **)get_buf(d))[0]);
+    init_data(d);
     insert_node(restheap, d);
     heapcnt -= 1;
 }
@@ -63,7 +63,7 @@ data _dump_heap(data d)
     wprintf(L"   addr info\n");
     for (int i = 0; i < heaplen; ++i)
     {
-        wprintf(L"%c%c %04x ", (used(&heap[i]) ? L'u' : L' '), (marked(&heap[i]) ? L'm' : L' '), (int)(&heap[i] - heap));
+        wprintf(L"%c%c %04x ", (used(&heap[i]) ? L'u' : L' '), (marked(&heap[i]) ? L'm' : L' '), (int)heap_addr(&heap[i]));
         print(&heap[i]);
         wprintf(L"\n");
     }
@@ -72,7 +72,7 @@ data _dump_heap(data d)
 
 void mark_data(data d)
 {
-    setmarked(d, 1);
+    set_marked(d, 1);
     if (is_cons(d))
     {
         if (is_not_nil(car(d)))
@@ -82,8 +82,8 @@ void mark_data(data d)
     }
     else if (is_unnamed_function(d))
     {
-        mark_data(getargs(d));
-        mark_data(getimpl(d));
+        mark_data(get_args(d));
+        mark_data(get_impl(d));
     }
 }
 
@@ -91,7 +91,7 @@ void unmark_heap()
 {
     int i;
     for (i = 0; i < heaplen; ++i)
-        setmarked(&heap[i], 0);
+        set_marked(&heap[i], 0);
 }
 
 data sweep_unmarked(data d)
@@ -132,11 +132,11 @@ data alloc()
     heapcnt += 1;
 
     memset((void *)newdata, 0, sizeof(dataimpl));
-    setused(newdata, 1);
+    set_used(newdata, 1);
     return(newdata);
 }
 
 int heap_addr(data d)
 {
-    return((int)(heap - d));
+    return((int)(d - heap));
 }

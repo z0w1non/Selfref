@@ -194,10 +194,10 @@ data read_list(context * c)
     else if (token_kind(c) == token_lparen)
     {
         car = read_list(c);
-        return(makecons(car, read_list(c)));
+        return(make_pair(car, read_list(c)));
     }
     car = token_data(c);
-    return(makecons(car, read_list(c)));
+    return(make_pair(car, read_list(c)));
 }
 
 int skipnprint(context * c)
@@ -343,7 +343,7 @@ int parse_symbol(context * c)
 data listize(data d)
 {
     if (is_symbol(d))
-        return(makecons(d, nil));
+        return(make_pair(d, nil));
     return(d);
 }
 

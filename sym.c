@@ -173,13 +173,13 @@ void cpush_symbol(const wchar_t * key, data value)
         {
             table.data[j].state = state_used;
             table.data[j].key = copystr(key);
-            table.data[j].stack = makecons(value, table.data[j].stack);
+            table.data[j].stack = make_pair(value, table.data[j].stack);
             table.usedcnt += 1;
             return;
         }
         else if(((table.data[j].state == state_used) && (wcscmp(table.data[j].key, key) == 0)))
         {
-            table.data[j].stack = makecons(value, table.data[j].stack);
+            table.data[j].stack = make_pair(value, table.data[j].stack);
         }
     }
     error(L"pushsymimpl failed.\n");
@@ -266,7 +266,7 @@ data _push_args(data d)
         error(L"pushargs arguments is must be list.\n");
     if ((!is_symbol(caar(d))) || (!is_cons(cdar(d))))
         error(L"invalid key at pushargs.\n");
-    cpush_symbol(csym(caar(d)), car(cdar(d)));
+    cpush_symbol(raw_string(caar(d)), car(cdar(d)));
     return(_push_args(cdr(d)));
 }
 
@@ -278,6 +278,6 @@ data _pop_args(data d)
         error(L"popargs arguments is must be list.\n");
     if ((!is_symbol(caar(d))))
         error(L"invalid key at popargs.\n");
-    cpop_symbol(csym(caar(d)));
+    cpop_symbol(raw_string(caar(d)));
     return(_pop_args(cdr(d)));
 }

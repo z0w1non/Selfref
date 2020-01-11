@@ -76,18 +76,18 @@ void init_builtin()
 data _inc(data d)
 {
     if (is_int(car(d)))
-        return(make_int(cint(car(d)) + 1));
+        return(make_int(raw_int(car(d)) + 1));
     else if (is_double(car(d)))
-        return(make_double(cdbl(car(d)) + 1.0));
+        return(make_double(raw_double(car(d)) + 1.0));
     error(L"invalid argument type.\n");
 }
 
 data _dec(data d)
 {
     if (is_int(car(d)))
-        return(make_int(cint(car(d)) - 1));
+        return(make_int(raw_int(car(d)) - 1));
     else if (is_double(car(d)))
-        return(make_double(cdbl(car(d)) - 1.0));
+        return(make_double(raw_double(car(d)) - 1.0));
     error(L"invalid argument type.\n");
 }
 
@@ -101,20 +101,20 @@ data _add(data d)
         if (contains_float)
         {
             if (is_int(car(d)))
-                f += (double)cint(car(d));
+                f += (double)raw_int(car(d));
             else if (is_double(car(d)))
-                f += cdbl(car(d));
+                f += raw_double(car(d));
             else
                 error(L"invalid argument type.\n");
         }
         else
         {
             if (is_int(car(d)))
-                i += cint(car(d));
+                i += raw_int(car(d));
             else if (is_double(car(d)))
             {
                 f = (double)i;
-                f += cdbl(car(d));
+                f += raw_double(car(d));
                 contains_float = 1;
             }
             else
@@ -139,11 +139,11 @@ data _sub(data d)
 
     if (is_int(car(d)))
     {
-        i = cint(car(d));
+        i = raw_int(car(d));
     }
     else if (is_double(car(d)))
     {
-        f = cdbl(car(d));
+        f = raw_double(car(d));
         contains_float = 1;
     }
     d = cdr(d);
@@ -153,20 +153,20 @@ data _sub(data d)
         if (contains_float)
         {
             if (is_int(car(d)))
-                f -= (double)cint(car(d));
+                f -= (double)raw_int(car(d));
             else if (is_double(car(d)))
-                f -= cdbl(car(d));
+                f -= raw_double(car(d));
             else
                 error(L"invalid argument type.\n");
         }
         else
         {
             if (is_int(car(d)))
-                i -= cint(car(d));
+                i -= raw_int(car(d));
             else if (is_double(car(d)))
             {
                 f = (double)i;
-                f -= cdbl(car(d));
+                f -= raw_double(car(d));
                 contains_float = 1;
             }
             else
@@ -190,20 +190,20 @@ data _mul(data d)
         if (contains_float)
         {
             if (is_int(car(d)))
-                f *= (double)cint(car(d));
+                f *= (double)raw_int(car(d));
             else if (is_double(car(d)))
-                f *= cdbl(car(d));
+                f *= raw_double(car(d));
             else
                 error(L"invalid argument type.\n");
         }
         else
         {
             if (is_int(car(d)))
-                i *= cint(car(d));
+                i *= raw_int(car(d));
             else if (is_double(car(d)))
             {
                 f = (double)i;
-                f *= cdbl(car(d));
+                f *= raw_double(car(d));
                 contains_float = 1;
             }
             else
@@ -227,10 +227,10 @@ data _div(data d)
     int contains_float = 0;
 
     if (is_int(car(d)))
-        i = cint(car(d));
+        i = raw_int(car(d));
     else if (is_double(car(d)))
     {
-        f = cdbl(car(d));
+        f = raw_double(car(d));
         contains_float = 1;
     }
     else
@@ -242,20 +242,20 @@ data _div(data d)
         if (contains_float)
         {
             if (is_int(car(d)))
-                f /= (double)cint(car(d));
+                f /= (double)raw_int(car(d));
             else if (is_double(car(d)))
-                f /= cdbl(car(d));
+                f /= raw_double(car(d));
             else
                 error(L"invalid argument type.\n");
         }
         else
         {
             if (is_int(car(d)))
-                i /= cint(car(d));
+                i /= raw_int(car(d));
             else if (is_double(car(d)))
             {
                 f = (double)i;
-                f /= cdbl(car(d));
+                f /= raw_double(car(d));
                 contains_float = 1;
             }
             else
@@ -277,7 +277,7 @@ data _mod(data d)
     int i = 0;
 
     if (is_int(car(d)))
-        i = cint(car(d));
+        i = raw_int(car(d));
     else
         error(L"invalid argument type.\n");
     d = cdr(d);
@@ -285,7 +285,7 @@ data _mod(data d)
     while (is_not_nil(car(d)))
     {
         if (is_int(car(d)))
-            i /= cint(car(d));
+            i /= raw_int(car(d));
         else
             error(L"invalid argument type.\n");
         d = cdr(d);
@@ -336,7 +336,7 @@ data _not(data d)
 data _call(data d)
 {
     if (is_builtin_function(car(d)))
-        return(cfunc(car(d))(cdr(d)));
+        return(raw_function(car(d))(cdr(d)));
     error(L"Call failed\n");
 }
 
@@ -346,7 +346,7 @@ data _bind_symbol(data d)
     if (is_nil(d))
         return(nil);
     if (is_cons(d))
-        return(makecons(_bind_symbol(car(d)), _bind_symbol(cdr(d))));
+        return(make_pair(_bind_symbol(car(d)), _bind_symbol(cdr(d))));
     if (is_symbol(d))
     {
         value = find_symbol(d);
@@ -365,7 +365,7 @@ data _function(data d)
 {
     if (!is_symbol(car(d)))
         error(L"invalid function name.\n");
-    cpush_symbol(csym(car(d)), _unnamed_function(cdr(d)));
+    cpush_symbol(raw_string(car(d)), _unnamed_function(cdr(d)));
     return(car(d));
 }
 
@@ -378,7 +378,7 @@ data _macro(data d)
 {
     if (!is_symbol(car(d)))
         error(L"invalid macro name.\n");
-    cpush_symbol(csym(car(d)), _bind_symbol(cadr(d)));
+    cpush_symbol(raw_string(car(d)), _bind_symbol(cadr(d)));
 }
 
 /**********************/
@@ -386,14 +386,14 @@ data _macro(data d)
 /**********************/
 data _cons(data d)
 {
-    return(makecons(car(d), cadr(d)));
+    return(make_pair(car(d), cadr(d)));
 }
 
 data _set_car(data d)
 {
     if (!is_cons(car(d)))
         error(L"setcar failed.\n");
-    csetcar(car(d), cadr(d));
+    set_car(car(d), cadr(d));
     return(cadr(d));
 }
 
@@ -401,7 +401,7 @@ data _set_cdr(data d)
 {
     if (!is_cons(car(d)))
         error(L"setcdr failed.\n");
-    csetcdr(car(d), cadr(d));
+    set_cdr(car(d), cadr(d));
     return(cadr(d));
 }
 
@@ -433,14 +433,14 @@ data _zip_first(data d)
 {
     if (is_nil(caar(d)))
         return(nil);
-    return(makecons(caar(d), _zip_first(cdr(d))));
+    return(make_pair(caar(d), _zip_first(cdr(d))));
 }
 
 data _zip_rest(data d)
 {
     if (is_nil(cdar(d)))
         return(nil);
-    return(makecons(cdar(d), _zip_rest(cdr(d))));
+    return(make_pair(cdar(d), _zip_rest(cdr(d))));
 }
 
 // (zip (a b c) (1 2 3))
@@ -449,7 +449,7 @@ data _zip(data d)
 {
     if (is_nil(d))
         return(nil);
-    return(makecons(_zip_first(d), _zip(_zip_rest(d))));
+    return(make_pair(_zip_first(d), _zip(_zip_rest(d))));
 }
 
 /*************************/
@@ -459,7 +459,7 @@ data _push_symbol(data d)
 {
     if (!is_symbol(car(d)))
         error(L"pushsym failed.\n");
-    cpush_symbol(csym(car(d)), cadr(d));
+    cpush_symbol(raw_string(car(d)), cadr(d));
     return(d);
 }
 
@@ -467,7 +467,7 @@ data _pop_symbol(data d)
 {
     if (!is_symbol(car(d)))
         error(L"popsym failed.\n");
-    cpop_symbol(csym(car(d)));
+    cpop_symbol(raw_string(car(d)));
     return(d);
 }
 
@@ -482,12 +482,12 @@ data _to_char_code(data d)
     list = nil;
     if (!is_string(car(d)))
         error(L"charcode source is must be a string literal.\n");
-    first = cstr(car(d));
+    first = raw_string(car(d));
     for (last = first; *last; ++last);
     --last;
     while (first <= last)
     {
-        list = makecons(make_int((int)(*last)), list);
+        list = make_pair(make_int((int)(*last)), list);
         --last;
     }
     return(list);
@@ -502,7 +502,7 @@ data _from_char_code(data d)
     {
         if (s - buf < 1024 - 1)
             error(L"fromcharcode buffer overrun");
-        *(s++) = (wchar_t)cint(car(d));
+        *(s++) = (wchar_t)raw_int(car(d));
         d = cdr(d);
     }
     *s = L'\0';

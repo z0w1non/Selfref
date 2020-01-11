@@ -21,17 +21,17 @@ data print(data d)
     else if (is_t(d))
         wprintf(L"t");
     else if (is_symbol(d))
-        wprintf(L"<symbol %s>", csym(d));
+        wprintf(L"<symbol %s>", raw_string(d));
     else if (is_builtin_function(d))
         wprintf(L"<function %04x>", heap_addr(d));
     else if (is_builtin_macro(d))
         wprintf(L"<macro %04x>", heap_addr(d));
     else if (is_int(d))
-        wprintf(L"%d", cint(d));
+        wprintf(L"%d", raw_int(d));
     else if (is_double(d))
-        wprintf(L"%lf", cdbl(d));
+        wprintf(L"%lf", raw_double(d));
     else if (is_string(d))
-        wprintf(L"\"%s\"", cstr(d));
+        wprintf(L"\"%s\"", raw_string(d));
     else if (is_unnamed_function(d))
         wprintf(L"<lambda %04x>", heap_addr(d));
     return(d);

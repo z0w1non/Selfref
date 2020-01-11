@@ -8,13 +8,14 @@ typedef struct dataimpl_tag * data;
 
 typedef union databuf_tag
 {
-    void * ptr_[2];
-    int int_;
-    double dbl_;
-    wchar_t * str_[2];
-    struct cons_{
-        data car_;
-        data cdr_;
+    void * _ptr[2];
+    int _int;
+    double _double;
+    wchar_t * _string[2];
+    struct pair_
+    {
+        data _car;
+        data _cdr;
     };
 } databuf;
 
@@ -29,19 +30,18 @@ typedef data(*func_t)(data);
 /****************************/
 /* Data infomation accesser */
 /****************************/
-void initdata(data);
-int used(data);
-void setused(data, int);
-int marked(data);
-void setmarked(data, int);
-int tid(data);
-const wchar_t * tstr(data);
-void * getbuf(data);
+void            init_data(data);
+int             used(data);
+void            set_used(data, int);
+int             marked(data);
+void            set_marked(data, int);
+int             type_id(data);
+void *          get_buf(data);
 
 /*****************/
 /* Make function */
 /*****************/
-data makecons(data, data);
+data make_pair(data, data);
 data make_builtin_macro(func_t);
 data make_builtin_function(func_t);
 data make_macro(data, data);
@@ -71,16 +71,15 @@ data cdar(data);
 /*********************/
 /* Raw data accesser */
 /*********************/
-func_t          cfunc(data);
-func_t          cmacro(data);
-data getargs(data);
-data getimpl(data);
-const wchar_t * csym(data);
-int             cint(data);
-double          cdbl(data);
-const wchar_t * cstr(data);
-void csetcar(data, data);
-void csetcdr(data, data);
+func_t          raw_function(data);
+func_t          raw_macro(data);
+data            get_args(data);
+data            get_impl(data);
+int             raw_int(data);
+double          raw_double(data);
+const wchar_t * raw_string(data);
+void            set_car(data, data);
+void            set_cdr(data, data);
 
 /*******************/
 /* Constant symbol */

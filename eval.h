@@ -8,7 +8,7 @@
 /********/
 data eval(data);
 data eval_list(data);
-data expand_macro(data);
+data call_macro(data);
 data call_function(data);
 
 #endif

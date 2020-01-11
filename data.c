@@ -415,14 +415,14 @@ int is_nil(data d)
     return(tid(d) == id_nil);
 }
 
-int is_t(data d)
-{
-    return(tid(d) == id_t);
-}
-
 int is_not_nil(data d)
 {
     return(tid(d) != id_nil);
+}
+
+int is_t(data d)
+{
+    return(tid(d) == id_t);
 }
 
 int is_int(data d)

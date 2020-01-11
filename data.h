@@ -116,13 +116,12 @@ int is_unnamed_function(data);
 int is_unnamed_macro(data);
 int is_symbol(data);
 int is_nil(data);
-int is_t(data);
 int is_not_nil(data);
+int is_t(data);
 int is_int(data);
 int is_double(data);
 int is_number(data);
 int is_string(data);
-int cufuncp(data);
 int is_zero(data);
 
 /**************************************/

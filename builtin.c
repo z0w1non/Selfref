@@ -364,7 +364,7 @@ data _bind_symbol(data d)
         return(make_pair(_bind_symbol(car(d)), _bind_symbol(cdr(d))));
     if (is_symbol(d))
     {
-        value = find_symbol(d);
+        value = find_symbol(raw_string(d));
         if (value)
             return(value);
     }
@@ -373,7 +373,7 @@ data _bind_symbol(data d)
 
 data _unnamed_macro(data d)
 {
-    return(make_builtin_macro(car(d), _bind_symbol(cadr(d))));
+    return(make_macro(car(d), _bind_symbol(cadr(d))));
 }
 
 data _unnamed_function(data d)
@@ -385,7 +385,10 @@ data _macro(data d)
 {
     if (!is_symbol(car(d)))
         error(L"invalid macro name.\n");
-    cpush_symbol(raw_string(car(d)), cadr(d));
+    data test = _unnamed_macro(cdr(d));
+    debug(test);
+    cpush_symbol(raw_string(car(d)), _unnamed_macro(cdr(d)));
+    _dump_symbol(nil);
 }
 
 data _function(data d)

@@ -9,6 +9,7 @@
 data eval(data);
 data _eval_list(data);
 data call_macro(data);
-data call_function(data);
+data call_unnamed_macro(data);
+data call_unnamed_function(data);
 
 #endif

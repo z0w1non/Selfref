@@ -22,10 +22,14 @@ data print(data d)
         wprintf(L"t");
     else if (is_symbol(d))
         wprintf(L"<symbol %s>", raw_string(d));
-    else if (is_builtin_function(d))
-        wprintf(L"<function %04x>", heap_addr(d));
     else if (is_builtin_macro(d))
+        wprintf(L"<builtin_macro %04x>", heap_addr(d));
+    else if (is_builtin_function(d))
+        wprintf(L"<builtin_function %04x>", heap_addr(d));
+    else if (is_unnamed_macro(d))
         wprintf(L"<macro %04x>", heap_addr(d));
+    else if (is_unnamed_function(d))
+        wprintf(L"<function %04x>", heap_addr(d));
     else if (is_int(d))
         wprintf(L"%d", raw_int(d));
     else if (is_double(d))

@@ -26,9 +26,9 @@ data eval(data d)
         else if (is_builtin_macro(value))
             return(call_macro(make_pair(value, cdr(d))));
         else if (is_unnamed_macro(value))
-            return(call_macro(make_pair(value, cdr(d))));
+            return(call_unnamed_macro(make_pair(value, cdr(d))));
         else if (is_unnamed_function(value))
-            return(call_function(make_pair(value, cdr(d))));
+            return(call_unnamed_function(make_pair(value, cdr(d))));
         return(value); //???
     }
    return(d);
@@ -51,13 +51,28 @@ data call_macro(data d)
     return(raw_macro(car(d))(cdr(d)));
 }
 
+// (call_macro actualargs)
+data call_unnamed_macro(data d)
+{
+    data args, ret;
+    if (!is_unnamed_macro(car(d)))
+        error(L"invalid unnnamed macro call.\n");
+    args = _zip(make_pair(get_args(car(d)), make_pair(cdr(d), nil)));
+    if (is_not_nil(car(args)))
+        _push_args(args);
+    ret = eval(get_impl(car(d)));
+    if (is_not_nil(car(args)))
+        _pop_args(args);
+    return(ret);
+}
+
 // (call_function actualargs)
-data call_function(data d)
+data call_unnamed_function(data d)
 {
     data args, ret;
     if(!is_unnamed_function(car(d)))
         error(L"invalid function call.\n");
-    args = _zip(make_pair(get_args(car(d)), make_pair(cdr(d), nil)));
+    args = _zip(make_pair(get_args(car(d)), make_pair(_eval_list(cdr(d)), nil)));
     if (is_not_nil(car(args)))
         _push_args(args);
     ret = eval(get_impl(car(d)));

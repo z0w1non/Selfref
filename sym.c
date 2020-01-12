@@ -16,45 +16,45 @@ enum
     //state_deleted,
 };
 
-typedef struct tablecell_tag
+typedef struct table_cell_tag
 {
     int state;
     wchar_t * key;
     data stack;
-} tablecell;
+} table_cell;
 
-typedef struct hashtable_tag
+typedef struct hash_table_tag
 {
-    tablecell * data;
+    table_cell * data;
     int len;
     int usedcnt;
-} hashtable;
+} hash_table;
 
-void inithashtable(hashtable * table, int len);
-void freehashtable(hashtable * table);
+void hash_table_init(hash_table * table, int len);
+void hash_table_cleanup(hash_table * table);
 
-hashtable table;
+hash_table table;
 
 /**********/
 /* Rehash */
 /**********/
 void rehash();
-void tryrehash();
+void try_rehash();
 
 /*********************/
 /* Internal function */
 /*********************/
 unsigned int string_hash(const wchar_t * s);
 wchar_t * clone_string(const wchar_t * s);
-void move_stack(hashtable * table, wchar_t * key, data stack);
+void move_stack(hash_table * table, wchar_t * key, data stack);
 
 /**************/
 /* Hash table */
 /**************/
-void inithashtable(hashtable * table, int len)
+void hash_table_init(hash_table * table, int len)
 {
     int i;
-    table->data = malloc(sizeof(tablecell) * len);
+    table->data = malloc(sizeof(table_cell) * len);
     if (!table->data)
         error(L"bad alloc.\n");
     for (i = 0; i < len; ++i)
@@ -67,7 +67,7 @@ void inithashtable(hashtable * table, int len)
     table->usedcnt = 0;
 }
 
-void freehashtable(hashtable * table)
+void hash_table_cleanup(hash_table * table)
 {
     int i;
     for (i = 0; i < table->len; ++i)
@@ -80,7 +80,7 @@ void freehashtable(hashtable * table)
 /**********/
 void rehash()
 {
-    hashtable newtable;
+    hash_table newtable;
     int newlen, i;
 
     if (table.len == 0)
@@ -88,7 +88,7 @@ void rehash()
     else
         newlen = table.len * 2;
 
-    inithashtable(&newtable, newlen);
+    hash_table_init(&newtable, newlen);
 
     for (i = 0; i < table.len; ++i)
         if (table.data[i].state == state_used)
@@ -97,11 +97,11 @@ void rehash()
             table.data[i].key = NULL;
         }
 
-    freehashtable(&table);
+    hash_table_cleanup(&table);
     table = newtable;
 }
 
-void tryrehash()
+void try_rehash()
 {
     if (((double)table.usedcnt / table.len) >= 0.75)
         rehash();
@@ -121,10 +121,9 @@ unsigned int string_hash(const wchar_t * s)
     return(i);
 }
 
-void move_stack(hashtable * table, wchar_t * key, data stack)
+void move_stack(hash_table * table, wchar_t * key, data stack)
 {
     int i;
-    data d;
     i = (string_hash(key) % table->len);
     table->data[i].state = state_used;
     table->data[i].key = key;
@@ -142,16 +141,15 @@ void init_symbol_stack()
 
 void cleanup_symbol_stack()
 {
-    freehashtable(&table);
+    hash_table_cleanup(&table);
 }
 
 void cpush_symbol(const wchar_t * key, data value)
 {
     unsigned int hash;
     int i, j;
-    data d;
 
-    tryrehash();
+    try_rehash();
 
     hash = string_hash(key);
     for (i = 0; i < table.len; ++i)

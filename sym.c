@@ -44,9 +44,9 @@ void tryrehash();
 /*********************/
 /* Internal function */
 /*********************/
-int strhash(const wchar_t * s);
+unsigned int string_hash(const wchar_t * s);
 wchar_t * clone_string(const wchar_t * s);
-void movestack(hashtable * table, wchar_t * key, data stack);
+void move_stack(hashtable * table, wchar_t * key, data stack);
 
 /**************/
 /* Hash table */
@@ -93,7 +93,7 @@ void rehash()
     for (i = 0; i < table.len; ++i)
         if (table.data[i].state == state_used)
         {
-            movestack(&newtable, table.data[i].key, table.data[i].stack);
+            move_stack(&newtable, table.data[i].key, table.data[i].stack);
             table.data[i].key = NULL;
         }
 
@@ -110,7 +110,7 @@ void tryrehash()
 /*********************/
 /* Internal function */
 /*********************/
-unsigned int strhash(const wchar_t * s)
+unsigned int string_hash(const wchar_t * s)
 {
     unsigned int i = 0;
     while (*s)
@@ -121,11 +121,11 @@ unsigned int strhash(const wchar_t * s)
     return(i);
 }
 
-void movestack(hashtable * table, wchar_t * key, data stack)
+void move_stack(hashtable * table, wchar_t * key, data stack)
 {
     int i;
     data d;
-    i = (strhash(key) % table->len);
+    i = (string_hash(key) % table->len);
     table->data[i].state = state_used;
     table->data[i].key = key;
     table->data[i].stack = stack;
@@ -153,7 +153,7 @@ void cpush_symbol(const wchar_t * key, data value)
 
     tryrehash();
 
-    hash = strhash(key);
+    hash = string_hash(key);
     for (i = 0; i < table.len; ++i)
     {
         j = ((hash + i) % table.len);
@@ -179,7 +179,7 @@ void cpop_symbol(const wchar_t * key)
     int i, j;
     data d;
 
-    hash = strhash(key);
+    hash = string_hash(key);
     for (i = 0; i < table.len; ++i)
     {
         j = ((hash + i) % table.len);
@@ -201,7 +201,7 @@ data find_symbol(const wchar_t * key)
 {
     unsigned int hash;
     int i, j;
-    hash = strhash(key);
+    hash = string_hash(key);
     for (i = 0; i < table.len; ++i)
     {
         j = ((hash + i) % table.len);

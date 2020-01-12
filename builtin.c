@@ -492,7 +492,7 @@ data _pop_symbol(data d)
 data _to_char_code(data d)
 {
     data list;
-    wchar_t * first, * last;
+    const wchar_t * first, * last;
 
     list = nil;
     if (!is_string(car(d)))

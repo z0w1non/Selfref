@@ -46,7 +46,7 @@ void tryrehash();
 /*********************/
 int strhash(const wchar_t * s);
 wchar_t * clone_string(const wchar_t * s);
-void movestack(hashtable * table, const wchar_t * key, data stack);
+void movestack(hashtable * table, wchar_t * key, data stack);
 
 /**************/
 /* Hash table */
@@ -121,7 +121,7 @@ unsigned int strhash(const wchar_t * s)
     return(i);
 }
 
-void movestack(hashtable * table, const wchar_t * key, data stack)
+void movestack(hashtable * table, wchar_t * key, data stack)
 {
     int i;
     data d;

@@ -17,10 +17,11 @@ enum
     id_int,
     id_double,
     id_string,
-    id_operator        = 0x0010,
-    id_binary_operator = 0x0020 | id_operator,
-    id_prefix_operator = 0x0040 | id_operator,
-    id_suffix_operator = 0x0080 | id_operator,
+    id_operator                   = 0x0010,
+    id_left_associative_operator  = 0x0020 | id_operator,
+    id_right_associative_operator = 0x0040 | id_operator,
+    id_prefix_operator            = 0x0080 | id_operator,
+    id_suffix_operator            = 0x0100 | id_operator,
 
     mask_used       = 0x0100,
     mask_marked     = 0x0200,
@@ -170,11 +171,21 @@ data make_string(const wchar_t * name)
     return(d);
 }
 
-data make_binary_operator(const wchar_t * name, data impl)
+data make_left_associative_operator(const wchar_t * name, data impl)
 {
     data d;
     d = alloc();
-    d->info |= id_binary_operator;
+    d->info |= id_left_associative_operator;
+    d->buffer._string = clone_string(name);
+    d->buffer.impl = impl;
+    return(d);
+}
+
+data make_right_associative_operator(const wchar_t * name, data impl)
+{
+    data d;
+    d = alloc();
+    d->info |= id_right_associative_operator;
     d->buffer._string = clone_string(name);
     d->buffer.impl = impl;
     return(d);
@@ -386,9 +397,14 @@ data _is_operator(data d)
     return(nilort(d->info | id_operator));
 }
 
-data _is_binary_operator(data d)
+data _is_left_associative_operator(data d)
 {
-    return(nilort(d->info | id_binary_operator));
+    return(nilort(d->info | id_left_associative_operator));
+}
+
+data _is_right_associative_operator(data d)
+{
+    return(nilort(d->info | id_right_associative_operator));
 }
 
 data _is_prefix_operator(data d)
@@ -483,9 +499,14 @@ int is_operator(data d)
     return(d->info | id_operator);
 }
 
-int is_binary_operator(data d)
+int is_left_associative_operator(data d)
 {
-    return(d->info | id_binary_operator);
+    return(d->info | id_left_associative_operator);
+}
+
+int is_right_associative_operator(data d)
+{
+    return(d->info | id_right_associative_operator);
 }
 
 int is_prefix_operator(data d)
@@ -550,4 +571,137 @@ wchar_t * clone_string(const wchar_t * s)
         error(L"Heap memory allocation failed.\n");
     wcscpy_s(newstr, len, s);
     return(newstr);
+}
+
+/*********/
+/* Queue */
+/*********/
+typedef struct queue_tag
+{
+    void * data;
+    int size;
+    int head;
+    int count;
+    int typesize;
+} * queue;
+
+queue queue_create(int typesize)
+{
+    queue q;
+    q = malloc(sizeof(struct queue_tag));
+    if (!q)
+        return(NULL);
+    q->size = 32;
+    q->data = malloc(typesize * q->size);
+    q->head = 0;
+    q->count = 0;
+    q->typesize = typesize;
+    return(q);
+}
+
+void queue_cleanup(queue q)
+{
+    if(q)
+    {
+        free(q->data);
+        free(q);
+    }
+}
+
+int queue_enqueue(queue q, const void * data)
+{
+    if (q->count + 1 >= q->size)
+        if (!(q->data = realloc(q->data, q->typesize * (q->size *= 2))))
+            return(0);
+    q->count += 1;
+    memcpy(((char *)(q->data) + q->typesize * q->head), data, q->typesize);
+    return(1);
+}
+
+int queue_dequeue(queue q, void * data)
+{
+    if (q->count <= 0)
+        return(0);
+    memcpy(data, ((char *)(q->data) + q->typesize * q->count), q->typesize);
+    q->count -= 1;
+    q->head = (q->head + 1) % q->size;
+    return(1);
+}
+
+int queue_front(queue q, void * data)
+{
+    if (q->count <= 0)
+        return(0);
+    memcpy(data, ((char *)(q->data) + q->typesize * q->count), q->typesize);
+    return(1);
+}
+
+int queue_is_empty(queue q)
+{
+    return(q->count == 0);
+}
+
+/*********/
+/* Stack */
+/*********/
+typedef struct stack_tag
+{
+    void * data;
+    int size;
+    int count;
+    int typesize;
+} * stack;
+
+stack stack_create(int typesize)
+{
+    stack s;
+    s = (stack)malloc(sizeof(struct stack_tag));
+    if (!s)
+        return(NULL);
+    s->size = 32;
+    s->data = malloc(typesize * s->size);
+    s->count = 0;
+    s->typesize = typesize;
+    return(s->data != NULL);
+}
+
+void stack_cleanup(stack s)
+{
+    if (s)
+    {
+        free(s->data);
+        free(s);
+    }
+}
+
+int stack_push(stack s, const void * data)
+{
+    if (s->count + 1 >= s->size)
+        if (!(s->data = realloc(s->data, s->typesize * (s->size *= 2))))
+            return(0);
+    s->count += 1;
+    memcpy(((char *)(s->data) + s->typesize * s->count), data, s->typesize);
+    return(1);
+}
+
+int stack_pop(stack s, void * data)
+{
+    if (s->count <= 0)
+        return(0);
+    memcpy(data, ((char *)(s->data) + s->typesize * s->count), s->typesize);
+    s->count -= 1;
+    return(1);
+}
+
+int stack_front(stack s, void * data)
+{
+    if (s->count <= 0)
+        return(0);
+    memcpy(data, ((char *)(s->data) + s->typesize * s->count), s->typesize);
+    return(1);
+}
+
+int stack_is_empty(stack s)
+{
+    return(s->count == 0);
 }

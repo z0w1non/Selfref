@@ -10,7 +10,7 @@ typedef struct context_tag context;
 void   init_context(context *);
 wint_t read_char(context *);
 void   read_back(context *);
-void   push_char(context *);
+void   push_char(context *, wchar_t);
 void   pop_char(context *);
 void clear_token(context * c);
 

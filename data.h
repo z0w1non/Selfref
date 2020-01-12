@@ -18,12 +18,12 @@ typedef struct dataimpl_tag
         func_t function;
         int _int;
         double _double;
-        struct
+        struct named
         {
             wchar_t * _string;
             data impl;
         };
-        struct
+        struct pair
         {
             data first;
             data rest;
@@ -56,7 +56,8 @@ data make_quote();
 data make_int(int);
 data make_double(double);
 data make_string(const wchar_t *);
-data make_binary_operator(const wchar_t *, data);
+data make_left_associative_operator(const wchar_t *, data);
+data make_right_associative_operator(const wchar_t *, data);
 data make_prefix_operator(const wchar_t *, data);
 data make_suffix_operator(const wchar_t *, data);
 
@@ -111,7 +112,8 @@ data _is_number(data);
 data _is_string(data);
 data _is_zero(data);
 data _is_operator(data);
-data _is_binary_operator(data);
+data _is_left_associative_operator(data);
+data _is_right_associative_operator(data);
 data _is_prefix_operator(data);
 data _is_suffix_operator(data);
 
@@ -133,7 +135,8 @@ int is_number(data);
 int is_string(data);
 int is_zero(data);
 int is_operator(data);
-int is_binary_operator(data);
+int is_left_associative_operator(data);
+int is_right_associative_operator(data);
 int is_prefix_operator(data);
 int is_suffix_operator(data);
 
@@ -149,5 +152,29 @@ data pull_node(data * list);
 /***********/
 data nilort(int);
 wchar_t * clone_string(const wchar_t * s);
+
+/*********/
+/* Queue */
+/*********/
+struct queue_tag;
+typedef struct queue_tag * queue;
+queue queue_create(int);
+void queue_cleanup(queue);
+int queue_enqueue(queue, const void *);
+int queue_dequeue(queue, void *);
+int queue_front(queue, void *);
+int queue_is_empty(queue);
+
+/*********/
+/* Stack */
+/*********/
+struct stack_tag;
+typedef struct stack_tag * stack;
+stack stack_create(int);
+void stack_cleanup(stack);
+int stack_push(stack, const void *);
+int stack_pop(stack, void *);
+int stack_front(stack, void *);
+int stack_is_empty(stack);
 
 #endif

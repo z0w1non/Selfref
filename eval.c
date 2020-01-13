@@ -13,8 +13,6 @@ data eval(data d)
 {
     data value;
 
-    d = sort_operator(d);
-
     if (is_symbol(d))
     {
         value = find_symbol(raw_string(d));
@@ -24,17 +22,16 @@ data eval(data d)
     }
     else if (is_pair(d))
     {
+        d = sort_operator(d);
         value = eval(car(d));
         if (is_builtin_macro(value))
             return(call_macro(make_pair(value, cdr(d))));
         else if (is_builtin_function(value))
-        {
             return(_call(make_pair(value, _eval_list(cdr(d)))));
-        }
         else if (is_unnamed_macro(value))
             return(call_unnamed_macro(make_pair(value, cdr(d))));
         else if (is_unnamed_function(value))
-            return(call_unnamed_function(make_pair(value, cdr(d))));
+            return(call_unnamed_function(make_pair(value, _eval_list(cdr(d)))));
         return(value); //???
     }
    return(d);
@@ -270,6 +267,7 @@ data sort_operator(data d)
             goto error;
     }
 
+    sorted = nil;
     while (!queue_is_empty(output_queue))
     {
         queue_dequeue(output_queue, &front_token);
@@ -287,19 +285,23 @@ data sort_operator(data d)
             if (!op1)
                 goto error;
 
-            sorted = make_pair(get_operator_impl(op1), make_pair(left, make_pair(right, nil)));
-            if (queue_is_empty(output_queue))
-                return(sorted);
-
-            if (!stack_push(stack_machine, &sorted))
+            temp = make_pair(get_operator_impl(op1), make_pair(left, make_pair(right, nil)));
+            if (!stack_push(stack_machine, &temp))
                 goto error;
         }
         else
         {
-            stack_push(stack_machine, &front_token);
+            if (!stack_push(stack_machine, &front_token))
+                goto error;
         }
     }
-    return(d);
+
+    while (!stack_is_empty(stack_machine))
+    {
+        stack_pop(stack_machine, &temp);
+        sorted = make_pair(temp, sorted);
+    }
+    return(sorted);
 
 error:
     stack_cleanup(operator_stack);

@@ -66,12 +66,6 @@ void init_builtin()
     cpush_symbol(L"div", make_builtin_function(_div));
     cpush_symbol(L"mod", make_builtin_function(_mod));
 
-    cpush_symbol(L"+", make_left_associative_operator(L"+", _add_2op));
-    cpush_symbol(L"-", make_left_associative_operator(L"-", _sub_2op));
-    cpush_symbol(L"*", make_left_associative_operator(L"*", _mul_2op));
-    cpush_symbol(L"/", make_left_associative_operator(L"/", _div_2op));
-    cpush_symbol(L"%", make_left_associative_operator(L"%", _mod_2op));
-
     cpush_symbol(L"zip_first", make_builtin_function(_zip_first));
     cpush_symbol(L"zip_rest", make_builtin_function(_zip_rest));
     cpush_symbol(L"zip", make_builtin_function(_zip));

@@ -50,7 +50,7 @@ void free_data(data d)
 {
     if (!used(d))
         error(L"Invalid freedata to unused heap\n");
-    if (is_symbol(d) || is_string(d) || is_operator(d))
+    if (is_symbol(d) || is_string(d) || is_left_associative_operator(d) || is_right_associative_operator(d))
         free(d->buffer._string);
     init_data(d);
     insert_node(restheap, d);

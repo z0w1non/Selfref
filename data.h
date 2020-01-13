@@ -8,14 +8,14 @@
 struct dataimpl_tag;
 typedef struct dataimpl_tag * data;
 
-typedef data(*func_t)(data);
+typedef data(*function_t)(data);
 
 typedef struct dataimpl_tag
 {
     int info;
     union
     {
-        func_t function;
+        function_t function;
         int _int;
         double _double;
         struct named
@@ -45,8 +45,8 @@ int  type_id(data);
 /* Make function */
 /*****************/
 data make_pair(data, data);
-data make_builtin_macro(func_t);
-data make_builtin_function(func_t);
+data make_builtin_macro(function_t);
+data make_builtin_function(function_t);
 data make_macro(data, data);
 data make_function(data, data);
 data make_symbol(const wchar_t *);
@@ -78,8 +78,8 @@ data cdar(data);
 /*********************/
 /* Raw data accesser */
 /*********************/
-func_t          raw_function(data);
-func_t          raw_macro(data);
+function_t          raw_function(data);
+function_t          raw_macro(data);
 data            get_args(data);
 data            get_impl(data);
 int             raw_int(data);
@@ -112,7 +112,6 @@ data _is_double(data);
 data _is_number(data);
 data _is_string(data);
 data _is_zero(data);
-data _is_operator(data);
 data _is_left_associative_operator(data);
 data _is_right_associative_operator(data);
 data _is_prefix_operator(data);
@@ -135,7 +134,6 @@ int is_double(data);
 int is_number(data);
 int is_string(data);
 int is_zero(data);
-int is_operator(data);
 int is_left_associative_operator(data);
 int is_right_associative_operator(data);
 int is_prefix_operator(data);

@@ -22,11 +22,12 @@ data eval(data d)
     }
     else if (is_pair(d))
     {
+        d = eval_operator(d);
         value = eval(car(d));
-        if (is_builtin_function(value))
-            return(_call(make_pair(value, _eval_list(cdr(d)))));
-        else if (is_builtin_macro(value))
+        if (is_builtin_macro(value))
             return(call_macro(make_pair(value, cdr(d))));
+        else if (is_builtin_function(value))
+            return(_call(make_pair(value, _eval_list(cdr(d)))));
         else if (is_unnamed_macro(value))
             return(call_unnamed_macro(make_pair(value, cdr(d))));
         else if (is_unnamed_function(value))
@@ -94,31 +95,43 @@ void init_operator_list()
 
     //add_operator(make_suffix_operator(L";", _listize));
 
-    add_operator(make_left_associative_operator(L"=>", _unnamed_function));
+    add_builtin_left_associative_operator(L"=>", _left_associative_operator);
 
-    add_operator(make_left_associative_operator(L"=", _push_symbol));
+    add_builtin_left_associative_operator(L"=", _push_symbol);
 
-    //add_operator(make_binary_operator(L"<", _less));
-    //add_operator(make_binary_operator(L"<=", _less_equal));
-    //add_operator(make_binary_operator(L">", _greater));
-    //add_operator(make_binary_operator(L">=", _greater_equal));
+    add_builtin_left_associative_operator(L"<", _less_2op);
+    add_builtin_left_associative_operator(L"<=", _less_equal_2op);
+    add_builtin_left_associative_operator(L">", _greater_2op);
+    add_builtin_left_associative_operator(L">=", _greater_equal_2op);
+    add_builtin_left_associative_operator(L"==", _equal_2op);
+    add_builtin_left_associative_operator(L"!=", _not_equal_2op);
 
-    add_operator(make_left_associative_operator(L"+", _add_2op));
-    add_operator(make_left_associative_operator(L"-", _sub_2op));
-    add_operator(make_left_associative_operator(L"*", _mul_2op));
-    add_operator(make_left_associative_operator(L"/", _div_2op));
-    add_operator(make_left_associative_operator(L"%", _mod_2op));
+    add_builtin_left_associative_operator(L"+", _add_2op);
+    add_builtin_left_associative_operator(L"-", _sub_2op);
 
-    add_operator(make_left_associative_operator(L"<", _less_2op));
-    add_operator(make_left_associative_operator(L"<=", _less_equal_2op));
-    add_operator(make_left_associative_operator(L">", _greater_2op));
-    add_operator(make_left_associative_operator(L">=", _greater_equal_2op));
-    add_operator(make_left_associative_operator(L"==", _equal_2op));
-    add_operator(make_left_associative_operator(L"!=", _not_equal_2op));
+    add_builtin_left_associative_operator(L"*", _mul_2op);
+    add_builtin_left_associative_operator(L"/", _div_2op);
+    add_builtin_left_associative_operator(L"%", _mod_2op);
+}
+
+data add_builtin_left_associative_operator(const wchar_t * name, function_t f)
+{
+    data d = make_left_associative_operator(name, make_builtin_function(f));
+    add_operator(d);
+    return(d);
+}
+
+data add_builtin_right_associative_operator(const wchar_t * name, function_t f)
+{
+    data d = make_right_associative_operator(name, make_builtin_function(f));
+    add_operator(d);
+    return(d);
 }
 
 void add_operator(data d)
 {
+    if (!is_left_associative_operator(d) && !is_right_associative_operator(d))
+        error(L"add operator failed.\n");
     operator_list = make_pair(d, operator_list);
 }
 
@@ -137,17 +150,17 @@ void remove_operator(const wchar_t * name)
     error(L"<operator %s> not found.\n", name);
 }
 
-data find_operator(const wchar_t * name)
+/* nullable */ data find_operator(const wchar_t * name)
 {
-    data list;
-    list = operator_list;
-    while (is_not_nil(list))
+    data d;
+    d = operator_list;
+    while (is_not_nil(d))
     {
-        if (wcscmp(raw_string(car(list)), name) == 0)
-            return(car(list));
-        list = cdr(list);
+        if (wcscmp(raw_string(car(d)), name) == 0)
+            return(car(d));
+        d = cdr(d);
     }
-    error(L"<operator %s> not found.\n", name);
+    return(NULL);
 }
 
 int compare_operator_priority(const wchar_t * a, const wchar_t * b)
@@ -167,11 +180,14 @@ int compare_operator_priority(const wchar_t * a, const wchar_t * b)
     error(L"<operator %s> and <operator %s> not found.\n", a, b);
 }
 
-data sort_operator(data d)
+data eval_operator(data d)
 {
     stack operator_stack, stack_machine;
     queue output_queue;
-    data front_operator, front_token, left, right, sorted;
+    data op1, op2, front_token, left, right, sorted;
+    const wchar_t * op1_name, * op2_name;
+
+    print(d);
 
     operator_stack = NULL;
     stack_machine = NULL;
@@ -188,18 +204,28 @@ data sort_operator(data d)
 
     while (is_not_nil(d))
     {
-        if (is_operator(car(d)))
+        if (is_symbol(car(d)))
         {
-            stack_front(operator_stack, &front_operator);
-            while (!stack_is_empty(operator_stack)
-                && (((is_left_associative_operator(front_operator) && (compare_operator_priority(car(d), front_operator) <= 0)))
-                || (compare_operator_priority(car(d), front_operator) < 0)))
+            op1_name = raw_string(car(d));
+            op1 = find_operator(op1_name);
+            if (op1)
             {
-                stack_pop(operator_stack, &front_operator);
-                if (!queue_enqueue(output_queue, &front_operator))
-                    goto error;
+                debug(op1);
+                if (!stack_is_empty(operator_stack))
+                {
+                    stack_front(operator_stack, &op2);
+                    op2_name = raw_string(op2);
+
+                    while (((is_left_associative_operator(op2) && (compare_operator_priority(op1_name, op2_name) <= 0)))
+                        || (compare_operator_priority(op1_name, op2_name) < 0))
+                    {
+                        stack_pop(operator_stack, &op2);
+                        if (!queue_enqueue(output_queue, &op2))
+                            goto error;
+                    }
+                }
             }
-            if (!queue_enqueue(output_queue, car(d)))
+            if (!stack_push(operator_stack, op1))
                 return error;
         }
         else
@@ -212,22 +238,25 @@ data sort_operator(data d)
 
     while (!stack_is_empty(operator_stack))
     {
-        stack_pop(operator_stack, &front_operator);
-        if (!queue_enqueue(output_queue, &front_operator))
+        stack_pop(operator_stack, &op1);
+        if (!queue_enqueue(output_queue, &op1))
             goto error;
     }
 
     while (!queue_is_empty(output_queue))
     {
         queue_dequeue(output_queue, &front_token);
-        if (is_operator(front_token))
+        debug(front_token);
+        if (is_left_associative_operator(front_token) || is_right_associative_operator(front_token))
         {
             if (stack_is_empty(stack_machine))
                 goto error;
             stack_pop(stack_machine, &left);
+            debug(left);
             if (stack_is_empty(stack_machine))
                 goto error;
             stack_pop(stack_machine, &right);
+            debug(right);
 
             sorted = make_pair(front_token, make_pair(left, make_pair(right, nil)));
             if (queue_is_empty(output_queue))
@@ -235,6 +264,10 @@ data sort_operator(data d)
 
             if (!stack_push(stack_machine, sorted))
                 goto error;
+        }
+        else
+        {
+            stack_push(stack_machine, &front_token);
         }
     }
 

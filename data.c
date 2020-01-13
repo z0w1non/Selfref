@@ -17,14 +17,13 @@ enum
     id_int,
     id_double,
     id_string,
-    id_operator                   = 0x0010,
-    id_left_associative_operator  = 0x0020 | id_operator,
-    id_right_associative_operator = 0x0040 | id_operator,
-    id_prefix_operator            = 0x0080 | id_operator,
-    id_suffix_operator            = 0x0100 | id_operator,
+    id_left_associative_operator,
+    id_right_associative_operator,
+    id_prefix_operator,
+    id_suffix_operator,
 
-    mask_used       = 0x0100,
-    mask_marked     = 0x0200,
+    mask_used       = 0x0200,
+    mask_marked     = 0x0400,
 };
 
 /****************************/
@@ -78,7 +77,7 @@ data make_pair(data first, data rest)
     return(d);
 }
 
-data make_builtin_macro(func_t f)
+data make_builtin_macro(function_t f)
 {
     data d = alloc();
     d->info |= id_builtin_macro;
@@ -86,7 +85,7 @@ data make_builtin_macro(func_t f)
     return(d);
 }
 
-data make_builtin_function(func_t f)
+data make_builtin_function(function_t f)
 {
     data d = alloc();
     d->info |= id_builtin_function;
@@ -271,12 +270,12 @@ data cdar(data d)
 /*********************/
 /* Raw data accesser */
 /*********************/
-func_t raw_function(data d)
+function_t raw_function(data d)
 {
     return(d->buffer.function);
 }
 
-func_t raw_macro(data d)
+function_t raw_macro(data d)
 {
     return(d->buffer.function);
 }
@@ -397,29 +396,24 @@ data _is_zero(data d)
     return(nil);
 }
 
-data _is_operator(data d)
-{
-    return(nilort(d->info | id_operator));
-}
-
 data _is_left_associative_operator(data d)
 {
-    return(nilort(d->info | id_left_associative_operator));
+    return(nilort(type_id(d) == id_left_associative_operator));
 }
 
 data _is_right_associative_operator(data d)
 {
-    return(nilort(d->info | id_right_associative_operator));
+    return(nilort(type_id(d) == id_right_associative_operator));
 }
 
 data _is_prefix_operator(data d)
 {
-    return(nilort(d->info | id_prefix_operator));
+    return(nilort(type_id(d) == id_prefix_operator));
 }
 
 data _is_suffix_operator(data d)
 {
-    return(nilort(d->info | id_suffix_operator));
+    return(nilort(type_id(d) == id_suffix_operator));
 }
 
 /****************************/
@@ -499,29 +493,24 @@ int is_zero(data d)
     return(0);
 }
 
-int is_operator(data d)
-{
-    return(d->info | id_operator);
-}
-
 int is_left_associative_operator(data d)
 {
-    return(d->info | id_left_associative_operator);
+    return(type_id(d) == id_left_associative_operator);
 }
 
 int is_right_associative_operator(data d)
 {
-    return(d->info | id_right_associative_operator);
+    return(type_id(d) == id_right_associative_operator);
 }
 
 int is_prefix_operator(data d)
 {
-    return(d->info | id_prefix_operator);
+    return(type_id(d) == id_prefix_operator);
 }
 
 int is_suffix_operator(data d)
 {
-    return(d->info | id_suffix_operator);
+    return(type_id(d) == id_suffix_operator);
 }
 
 /**************************************/
@@ -668,7 +657,7 @@ stack stack_create(int typesize)
     s->data = malloc(typesize * s->size);
     s->count = 0;
     s->typesize = typesize;
-    return(s->data != NULL);
+    return(s);
 }
 
 void stack_cleanup(stack s)
@@ -685,8 +674,8 @@ int stack_push(stack s, const void * data)
     if (s->count + 1 >= s->size)
         if (!(s->data = realloc(s->data, s->typesize * (s->size *= 2))))
             return(0);
-    s->count += 1;
     memcpy(((char *)(s->data) + s->typesize * s->count), data, s->typesize);
+    s->count += 1;
     return(1);
 }
 

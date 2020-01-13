@@ -440,6 +440,13 @@ data _not_equal_2op(data d)
     error(L"invalid argument.\n");
 }
 
+data _assign(data d)
+{
+    if (!is_symbol(car(d)))
+        error(L"An invalid value is specified as the assignment destination.\n");
+    _push_symbol(make_pair(car(d), make_pair(eval(cadr(d)), nil)));
+}
+
 data _if(data d)
 {
     if (is_not_nil(eval(car(d))))

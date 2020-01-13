@@ -25,6 +25,7 @@ data _greater_2op(data);
 data _greater_equal_2op(data);
 data _equal_2op(data);
 data _not_equal_2op(data);
+data _assign(data);
 
 data _if(data);
 data _and(data);

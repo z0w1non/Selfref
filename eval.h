@@ -16,8 +16,10 @@ data call_unnamed_function(data);
 /* Operator list */
 /*****************/
 void init_operator_list();
-data add_builtin_left_associative_operator(const wchar_t * name, function_t f);
-data add_builtin_right_associative_operator(const wchar_t * name, function_t f);
+data add_builtin_left_associative_operator_function(const wchar_t * name, function_t f);
+data add_builtin_right_associative_operator_function(const wchar_t * name, function_t f);
+data add_builtin_left_associative_operator_macro(const wchar_t * name, function_t f);
+data add_builtin_right_associative_operator_macro(const wchar_t * name, function_t f);
 void add_operator(data);
 void remove_operator(const wchar_t *);
 /* nullable */ data find_operator(const wchar_t *);

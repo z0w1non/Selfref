@@ -13,6 +13,8 @@ data eval(data d)
 {
     data value;
 
+    d = sort_operator(d);
+
     if (is_symbol(d))
     {
         value = find_symbol(raw_string(d));
@@ -22,7 +24,6 @@ data eval(data d)
     }
     else if (is_pair(d))
     {
-        d = sort_operator(d);
         value = eval(car(d));
         if (is_builtin_macro(value))
             return(call_macro(make_pair(value, cdr(d))));
@@ -97,35 +98,49 @@ void init_operator_list()
 
     //add_operator(make_suffix_operator(L";", _listize));
 
-    add_builtin_left_associative_operator(L"=>", _left_associative_operator);
+    add_builtin_left_associative_operator_function(L"=>", _unnamed_function);
 
-    add_builtin_left_associative_operator(L"=", _push_symbol);
+    add_builtin_right_associative_operator_macro(L"=", _assign);
 
-    add_builtin_left_associative_operator(L"<", _less_2op);
-    add_builtin_left_associative_operator(L"<=", _less_equal_2op);
-    add_builtin_left_associative_operator(L">", _greater_2op);
-    add_builtin_left_associative_operator(L">=", _greater_equal_2op);
-    add_builtin_left_associative_operator(L"==", _equal_2op);
-    add_builtin_left_associative_operator(L"!=", _not_equal_2op);
+    add_builtin_left_associative_operator_function(L"<", _less_2op);
+    add_builtin_left_associative_operator_function(L"<=", _less_equal_2op);
+    add_builtin_left_associative_operator_function(L">", _greater_2op);
+    add_builtin_left_associative_operator_function(L">=", _greater_equal_2op);
+    add_builtin_left_associative_operator_function(L"==", _equal_2op);
+    add_builtin_left_associative_operator_function(L"!=", _not_equal_2op);
 
-    add_builtin_left_associative_operator(L"+", _add_2op);
-    add_builtin_left_associative_operator(L"-", _sub_2op);
+    add_builtin_left_associative_operator_function(L"-", _sub_2op);
+    add_builtin_left_associative_operator_function(L"+", _add_2op);
 
-    add_builtin_left_associative_operator(L"*", _mul_2op);
-    add_builtin_left_associative_operator(L"/", _div_2op);
-    add_builtin_left_associative_operator(L"%", _mod_2op);
+    add_builtin_left_associative_operator_function(L"%", _mod_2op);
+    add_builtin_left_associative_operator_function(L"/", _div_2op);
+    add_builtin_left_associative_operator_function(L"*", _mul_2op);
 }
 
-data add_builtin_left_associative_operator(const wchar_t * name, function_t f)
+data add_builtin_left_associative_operator_function(const wchar_t * name, function_t f)
 {
     data d = make_left_associative_operator(name, make_builtin_function(f));
     add_operator(d);
     return(d);
 }
 
-data add_builtin_right_associative_operator(const wchar_t * name, function_t f)
+data add_builtin_right_associative_operator_function(const wchar_t * name, function_t f)
 {
     data d = make_right_associative_operator(name, make_builtin_function(f));
+    add_operator(d);
+    return(d);
+}
+
+data add_builtin_left_associative_operator_macro(const wchar_t * name, function_t f)
+{
+    data d = make_left_associative_operator(name, make_builtin_macro(f));
+    add_operator(d);
+    return(d);
+}
+
+data add_builtin_right_associative_operator_macro(const wchar_t * name, function_t f)
+{
+    data d = make_right_associative_operator(name, make_builtin_macro(f));
     add_operator(d);
     return(d);
 }
@@ -222,11 +237,22 @@ data sort_operator(data d)
                         stack_pop(operator_stack, &op2);
                         if (!queue_enqueue(output_queue, &op2))
                             goto error;
+
+                        if (stack_is_empty(operator_stack))
+                            break;
+                        stack_front(operator_stack, &op2);
+                        op2_name = raw_string(op2);
                     }
                 }
+                if (!stack_push(operator_stack, &op1))
+                    return error;
             }
-            if (!stack_push(operator_stack, &op1))
-                return error;
+            else
+            {
+                temp = car(list);
+                if (!queue_enqueue(output_queue, &temp))
+                    goto error;
+            }
         }
         else
         {

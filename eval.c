@@ -98,9 +98,9 @@ void init_operator_list()
 
     //add_operator(make_suffix_operator(L";", _listize));
 
-    add_builtin_left_associative_operator_function(L"=>", _unnamed_function);
-
     add_builtin_right_associative_operator_macro(L"=", _assign);
+
+    add_builtin_right_associative_operator_macro(L"=>", _unnamed_function);
 
     add_builtin_left_associative_operator_function(L"<", _less_2op);
     add_builtin_left_associative_operator_function(L"<=", _less_equal_2op);

@@ -100,5 +100,6 @@ data _to_char_code(data);
 data _from_char_code(data);
 
 data _progn(data);
+data _let(data);
 
 #endif

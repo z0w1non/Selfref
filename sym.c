@@ -215,6 +215,29 @@ data find_symbol(const wchar_t * key)
     return(NULL);
 }
 
+data replace_symbol(const wchar_t * key, data value)
+{
+    unsigned int hash;
+    int i, j;
+    hash = string_hash(key);
+    for (i = 0; i < table.len; ++i)
+    {
+        j = ((hash + i) % table.len);
+        if ((table.data[j].state == state_used) && (wcscmp(table.data[j].key, key) == 0))
+        {
+            if (is_not_nil(table.data[j].stack))
+            {
+                set_car(table.data[j].stack, value);
+                return(value);
+            }
+            return(NULL);
+        }
+        if (table.data[j].state == state_unused)
+            return(NULL);
+    }
+    return(NULL);
+}
+
 void mark_symbol()
 {
     int i;

@@ -77,6 +77,7 @@ void init_builtin()
     cpush_symbol(L"from_char_code", make_builtin_function(_from_char_code));
 
     cpush_symbol(L"progn", make_builtin_macro(_progn));
+    cpush_symbol(L"let", make_builtin_macro(_let));
 }
 
 /**************/
@@ -451,9 +452,13 @@ data _not_equal_2op(data d)
 
 data _assign(data d)
 {
+    data ret;
     if (!is_symbol(car(d)))
         error(L"An invalid value is specified as the assignment destination.\n");
-    _push_symbol(make_pair(car(d), make_pair(eval(cadr(d)), nil)));
+    ret = replace_symbol(raw_string(car(d)), eval(cadr(d)));
+    if (!ret)
+        error(L"<symbol %s> is not found.\n", raw_string(car(d)));
+    return(ret);
 }
 
 /***************/
@@ -714,5 +719,21 @@ data _progn(data d)
         last = eval(car(d));
         d = cdr(d);
     }
+    return(last);
+}
+
+data _let(data d)
+{
+    data last, args;
+    args = car(d);
+    _push_args(args);
+    d = cdr(d);
+    last = nil;
+    while (is_not_nil(car(d)))
+    {
+        last = eval(car(d));
+        d = cdr(d);
+    }
+    _pop_args(args);
     return(last);
 }

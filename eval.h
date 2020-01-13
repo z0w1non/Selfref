@@ -22,6 +22,6 @@ void add_operator(data);
 void remove_operator(const wchar_t *);
 /* nullable */ data find_operator(const wchar_t *);
 int compare_operator_priority(const wchar_t *, const wchar_t *);
-data eval_operator(data);
+data sort_operator(data);
 
 #endif

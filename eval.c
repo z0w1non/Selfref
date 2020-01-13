@@ -22,12 +22,14 @@ data eval(data d)
     }
     else if (is_pair(d))
     {
-        d = eval_operator(d);
+        d = sort_operator(d);
         value = eval(car(d));
         if (is_builtin_macro(value))
             return(call_macro(make_pair(value, cdr(d))));
         else if (is_builtin_function(value))
+        {
             return(_call(make_pair(value, _eval_list(cdr(d)))));
+        }
         else if (is_unnamed_macro(value))
             return(call_unnamed_macro(make_pair(value, cdr(d))));
         else if (is_unnamed_function(value))
@@ -180,14 +182,12 @@ int compare_operator_priority(const wchar_t * a, const wchar_t * b)
     error(L"<operator %s> and <operator %s> not found.\n", a, b);
 }
 
-data eval_operator(data d)
+data sort_operator(data d)
 {
     stack operator_stack, stack_machine;
     queue output_queue;
-    data op1, op2, front_token, left, right, sorted;
+    data list, op1, op2, temp, front_token, left, right, sorted;
     const wchar_t * op1_name, * op2_name;
-
-    print(d);
 
     operator_stack = NULL;
     stack_machine = NULL;
@@ -201,16 +201,16 @@ data eval_operator(data d)
 
     if (!(output_queue = queue_create(sizeof(data))))
         goto error;
-
-    while (is_not_nil(d))
+    
+    list = d;
+    while (is_not_nil(list))
     {
-        if (is_symbol(car(d)))
+        if (is_symbol(car(list)))
         {
-            op1_name = raw_string(car(d));
+            op1_name = raw_string(car(list));
             op1 = find_operator(op1_name);
             if (op1)
             {
-                debug(op1);
                 if (!stack_is_empty(operator_stack))
                 {
                     stack_front(operator_stack, &op2);
@@ -225,15 +225,16 @@ data eval_operator(data d)
                     }
                 }
             }
-            if (!stack_push(operator_stack, op1))
+            if (!stack_push(operator_stack, &op1))
                 return error;
         }
         else
         {
-            if (!queue_enqueue(output_queue, car(d)))
+            temp = car(list);
+            if (!queue_enqueue(output_queue, &temp))
                 goto error;
         }
-        d = cdr(d);
+        list = cdr(list);
     }
 
     while (!stack_is_empty(operator_stack))
@@ -246,23 +247,25 @@ data eval_operator(data d)
     while (!queue_is_empty(output_queue))
     {
         queue_dequeue(output_queue, &front_token);
-        debug(front_token);
         if (is_left_associative_operator(front_token) || is_right_associative_operator(front_token))
         {
             if (stack_is_empty(stack_machine))
                 goto error;
-            stack_pop(stack_machine, &left);
-            debug(left);
+            stack_pop(stack_machine, &right);
             if (stack_is_empty(stack_machine))
                 goto error;
-            stack_pop(stack_machine, &right);
-            debug(right);
+            stack_pop(stack_machine, &left);
 
-            sorted = make_pair(front_token, make_pair(left, make_pair(right, nil)));
+            op1_name = raw_string(front_token);
+            op1 = find_operator(op1_name);
+            if (!op1)
+                goto error;
+
+            sorted = make_pair(get_operator_impl(op1), make_pair(left, make_pair(right, nil)));
             if (queue_is_empty(output_queue))
                 return(sorted);
 
-            if (!stack_push(stack_machine, sorted))
+            if (!stack_push(stack_machine, &sorted))
                 goto error;
         }
         else
@@ -270,6 +273,7 @@ data eval_operator(data d)
             stack_push(stack_machine, &front_token);
         }
     }
+    return(d);
 
 error:
     stack_cleanup(operator_stack);

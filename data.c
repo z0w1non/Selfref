@@ -605,11 +605,11 @@ void queue_cleanup(queue q)
 
 int queue_enqueue(queue q, const void * data)
 {
-    if (q->count + 1 >= q->size)
+    if (q->count >= q->size)
         if (!(q->data = realloc(q->data, q->typesize * (q->size *= 2))))
             return(0);
+    memcpy(((char *)(q->data) + q->typesize * ((q->head + q->count) % q->size)), data, q->typesize);
     q->count += 1;
-    memcpy(((char *)(q->data) + q->typesize * q->head), data, q->typesize);
     return(1);
 }
 
@@ -617,7 +617,7 @@ int queue_dequeue(queue q, void * data)
 {
     if (q->count <= 0)
         return(0);
-    memcpy(data, ((char *)(q->data) + q->typesize * q->count), q->typesize);
+    memcpy(data, ((char *)(q->data) + q->typesize * q->head), q->typesize);
     q->count -= 1;
     q->head = (q->head + 1) % q->size;
     return(1);
@@ -627,7 +627,7 @@ int queue_front(queue q, void * data)
 {
     if (q->count <= 0)
         return(0);
-    memcpy(data, ((char *)(q->data) + q->typesize * q->count), q->typesize);
+    memcpy(data, ((char *)(q->data) + q->typesize * q->head), q->typesize);
     return(1);
 }
 
@@ -671,7 +671,7 @@ void stack_cleanup(stack s)
 
 int stack_push(stack s, const void * data)
 {
-    if (s->count + 1 >= s->size)
+    if (s->count >= s->size)
         if (!(s->data = realloc(s->data, s->typesize * (s->size *= 2))))
             return(0);
     memcpy(((char *)(s->data) + s->typesize * s->count), data, s->typesize);
@@ -683,8 +683,8 @@ int stack_pop(stack s, void * data)
 {
     if (s->count <= 0)
         return(0);
-    memcpy(data, ((char *)(s->data) + s->typesize * s->count), s->typesize);
     s->count -= 1;
+    memcpy(data, ((char *)(s->data) + s->typesize * s->count), s->typesize);
     return(1);
 }
 
@@ -692,7 +692,7 @@ int stack_front(stack s, void * data)
 {
     if (s->count <= 0)
         return(0);
-    memcpy(data, ((char *)(s->data) + s->typesize * s->count), s->typesize);
+    memcpy(data, ((char *)(s->data) + s->typesize * (s->count - 1)), s->typesize);
     return(1);
 }
 

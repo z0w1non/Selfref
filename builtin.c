@@ -90,6 +90,7 @@ data _inc(data d)
     else if (is_double(car(d)))
         return(make_double(raw_double(car(d)) + 1.0));
     error(L"invalid argument type.\n");
+    return(nil);
 }
 
 data _dec(data d)
@@ -99,6 +100,7 @@ data _dec(data d)
     else if (is_double(car(d)))
         return(make_double(raw_double(car(d)) - 1.0));
     error(L"invalid argument type.\n");
+    return(nil);
 }
 
 /*********************************/
@@ -518,6 +520,7 @@ data _call(data d)
     if (is_builtin_function(car(d)))
         return(raw_function(car(d))(cdr(d)));
     error(L"Call failed\n");
+    return(nil);
 }
 
 data _bind_symbol(data d)
@@ -551,6 +554,7 @@ data _macro(data d)
     if (!is_symbol(car(d)))
         error(L"invalid macro name.\n");
     cpush_symbol(raw_string(car(d)), _unnamed_macro(cdr(d)));
+    return(car(d));
 }
 
 data _function(data d)

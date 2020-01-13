@@ -39,15 +39,15 @@ typedef struct context_tag
 /********************/
 /* Private function */
 /********************/
-void   setgetchar(context * c, wint_t(*getchar)(void *));
-void   seteofcallback(context * c, void (*callback)(void *));
-void   setimpldata(context * c, void * impldata);
-void * calleofcallback(context * c);
-wint_t callgetchar(context * c);
+void   set_getchar(context * c, wint_t(*getchar)(void *));
+void   set_eof_callback(context * c, void * (*callback)(void *));
+void   set_impl_data(context * c, void * impldata);
+void * call_eof_callback(context * c);
+wint_t call_getchar(context * c);
 void * callback_fclose(void * impldata);
 wint_t getchar_from_file(void * impldata);
 wint_t getchar_from_stdin(void * impldata);
-
+int    skip_nonprintable(context * c);
 /******************/
 /* Read character */
 /******************/
@@ -127,8 +127,8 @@ void set_token_data(context * c, data d)
 data read_stdin()
 {
     context c;
-    init_context(&c, getwchar);
-    setgetchar(&c, getchar_from_stdin);
+    init_context(&c);
+    set_getchar(&c, getchar_from_stdin);
     return(read(&c));
 }
 
@@ -140,9 +140,10 @@ data read_file(const wchar_t * filename)
     wcstombs(mbs, filename, sizeof(mbs) / sizeof(*mbs));
     fileptr = (void *)(fopen(mbs, "r"));
     init_context(&c);
-    setgetchar(&c, getchar_from_file);
-    setimpldata(&c, fileptr);
-    seteofcallback(&c, callback_fclose);
+    set_getchar(&c, getchar_from_file);
+    set_impl_data(&c, fileptr);
+    set_eof_callback(&c, callback_fclose);
+    return(read(&c));
 }
 
 data read(context * c)
@@ -161,12 +162,13 @@ data read(context * c)
     default:
         error(L"Unexpected character\n");
     }
+    return(nil);
 }
 
 void read_token(context * c)
 {
     clear_token(c);
-    if (!skipnprint(c))
+    if (!skip_nonprintable(c))
     {
         if (parse_lparen(c))
             ;
@@ -178,7 +180,7 @@ void read_token(context * c)
             ;
         else if (parse_symbol(c))
             ;
-        else if (skipnprint(c))
+        else if (skip_nonprintable(c))
             set_token_kind(c, token_eof);
         else
             error(L"Undefined token.\n");
@@ -200,7 +202,7 @@ data read_list(context * c)
     return(make_pair(car, read_list(c)));
 }
 
-int skipnprint(context * c)
+int skip_nonprintable(context * c)
 {
     wint_t lastchar;
     while ((!is_eof(lastchar = read_char(c))) && ((is_space(lastchar) || (is_crlf(lastchar)))));
@@ -350,22 +352,22 @@ data listize(data d)
 /********************/
 /* Private function */
 /********************/
-void setgetchar(context * c, wint_t(*getchar)(void *))
+void set_getchar(context * c, wint_t(*getchar)(void *))
 {
     c->getchar = getchar;
 }
 
-void seteofcallback(context * c, void (*callback)(void *))
+void set_eof_callback(context * c, void * (*callback)(void *))
 {
     c->callback = callback;
 }
 
-void setimpldata(context * c, void * impldata)
+void set_impl_data(context * c, void * impldata)
 {
     c->impldata = impldata;
 }
 
-void * calleofcallback(context * c)
+void * call_eof_callback(context * c)
 {
     void * ret;
     ret = NULL;
@@ -378,7 +380,7 @@ void * calleofcallback(context * c)
     return ret;
 }
 
-wint_t callgetchar(context * c)
+wint_t call_getchar(context * c)
 {
     return(c->getchar(c->impldata));
 }

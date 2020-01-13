@@ -13,6 +13,19 @@ data _mul(data);
 data _div(data);
 data _mod(data);
 
+data _add_2op(data);
+data _sub_2op(data);
+data _mul_2op(data);
+data _div_2op(data);
+data _mod_2op(data);
+
+data _less_2op(data);
+data _less_equal_2op(data);
+data _greater_2op(data);
+data _greater_equal_2op(data);
+data _equal_2op(data);
+data _not_equal_2op(data);
+
 data _if(data);
 data _and(data);
 data _or(data);
@@ -29,6 +42,12 @@ data _unnamed_macro(data);
 data _unnamed_function(data);
 data _macro(data);
 data _function(data);
+
+/************************/
+/* Operator declaration */
+/************************/
+data _left_associative_operator(data);
+data _right_associative_operator(data);
 
 /**********************/
 /* Cons-cell function */

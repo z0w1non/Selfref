@@ -320,6 +320,11 @@ void set_cdr(data d, data cdr)
     d->buffer.rest = cdr;
 }
 
+data get_operator_impl(data d)
+{
+    return(d->buffer.impl);
+}
+
 /**********************/
 /* Predicate function */
 /**********************/
@@ -604,6 +609,7 @@ void queue_cleanup(queue q)
     if(q)
     {
         free(q->data);
+        q->data = NULL;
         free(q);
     }
 }

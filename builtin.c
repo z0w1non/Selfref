@@ -4,6 +4,7 @@
 #include "eval.h"
 #include "sym.h"
 #include "heap.h"
+#include "eval.h"
 
 void init_builtin()
 {
@@ -41,6 +42,9 @@ void init_builtin()
     cpush_symbol(L"macro", make_builtin_macro(_macro));
     cpush_symbol(L"function", make_builtin_macro(_function));
 
+    cpush_symbol(L"left_associative_operator", make_builtin_macro(_left_associative_operator));
+    cpush_symbol(L"right_associative_operator", make_builtin_macro(_right_associative_operator));
+
     cpush_symbol(L"is_cons", make_builtin_function(_is_pair));
     cpush_symbol(L"is_builtin_macro", make_builtin_function(_is_builtin_macro));
     cpush_symbol(L"is_builtin_function", make_builtin_function(_is_builtin_function));
@@ -61,6 +65,12 @@ void init_builtin()
     cpush_symbol(L"mul", make_builtin_function(_mul));
     cpush_symbol(L"div", make_builtin_function(_div));
     cpush_symbol(L"mod", make_builtin_function(_mod));
+
+    cpush_symbol(L"+", make_left_associative_operator(L"+", _add_2op));
+    cpush_symbol(L"-", make_left_associative_operator(L"-", _sub_2op));
+    cpush_symbol(L"*", make_left_associative_operator(L"*", _mul_2op));
+    cpush_symbol(L"/", make_left_associative_operator(L"/", _div_2op));
+    cpush_symbol(L"%", make_left_associative_operator(L"%", _mod_2op));
 
     cpush_symbol(L"zip_first", make_builtin_function(_zip_first));
     cpush_symbol(L"zip_rest", make_builtin_function(_zip_rest));
@@ -299,6 +309,143 @@ data _mod(data d)
     return(make_int(i));
 }
 
+data _add_2op(data d)
+{
+    if (is_int(car(d)) && is_int(cadr(d)))
+        return(make_int(raw_int(car(d)) + raw_int(cadr(d))));
+    else if (is_int(car(d)) && is_double(cadr(d)))
+        return(make_double(raw_int(car(d)) + raw_double(cadr(d))));
+    else if (is_double(car(d)) && is_int(cadr(d)))
+        return(make_double(raw_double(car(d)) + raw_int(cadr(d))));
+    else if (is_double(car(d)) && is_double(cadr(d)))
+        return(make_double(raw_double(car(d)) + raw_double(cadr(d))));
+    error(L"invalid argument.\n");
+}
+
+data _sub_2op(data d)
+{
+    if (is_int(car(d)) && is_int(cadr(d)))
+        return(make_int(raw_int(car(d)) - raw_int(cadr(d))));
+    else if (is_int(car(d)) && is_double(cadr(d)))
+        return(make_double(raw_int(car(d)) - raw_double(cadr(d))));
+    else if (is_double(car(d)) && is_int(cadr(d)))
+        return(make_double(raw_double(car(d)) - raw_int(cadr(d))));
+    else if (is_double(car(d)) && is_double(cadr(d)))
+        return(make_double(raw_double(car(d)) - raw_double(cadr(d))));
+    error(L"invalid argument.\n");
+}
+
+data _mul_2op(data d)
+{
+    if (is_int(car(d)) && is_int(cadr(d)))
+        return(make_int(raw_int(car(d)) * raw_int(cadr(d))));
+    else if (is_int(car(d)) && is_double(cadr(d)))
+        return(make_double(raw_int(car(d)) * raw_double(cadr(d))));
+    else if (is_double(car(d)) && is_int(cadr(d)))
+        return(make_double(raw_double(car(d)) * raw_int(cadr(d))));
+    else if (is_double(car(d)) && is_double(cadr(d)))
+        return(make_double(raw_double(car(d)) * raw_double(cadr(d))));
+    error(L"invalid argument.\n");
+}
+
+data _div_2op(data d)
+{
+    if (is_int(car(d)) && is_int(cadr(d)))
+        return(make_int(raw_int(car(d)) / raw_int(cadr(d))));
+    else if (is_int(car(d)) && is_double(cadr(d)))
+        return(make_double(raw_int(car(d)) / raw_double(cadr(d))));
+    else if (is_double(car(d)) && is_int(cadr(d)))
+        return(make_double(raw_double(car(d)) / raw_int(cadr(d))));
+    else if (is_double(car(d)) && is_double(cadr(d)))
+        return(make_double(raw_double(car(d)) / raw_double(cadr(d))));
+    error(L"invalid argument.\n");
+}
+
+data _mod_2op(data d)
+{
+    if (is_int(car(d)) && is_int(cadr(d)))
+        return(make_int(raw_int(car(d)) % raw_int(cadr(d))));
+    error(L"invalid argument.\n");
+}
+
+data _less_2op(data d)
+{
+    if (is_int(car(d)) && is_int(cadr(d)))
+        return(nilort(raw_int(car(d)) < raw_int(cadr(d))));
+    else if (is_int(car(d)) && is_double(cadr(d)))
+        return(nilort(raw_int(car(d)) < raw_double(cadr(d))));
+    else if (is_double(car(d)) && is_int(cadr(d)))
+        return(nilort(raw_double(car(d)) < raw_int(cadr(d))));
+    else if (is_double(car(d)) && is_double(cadr(d)))
+        return(nilort(raw_double(car(d)) < raw_double(cadr(d))));
+    error(L"invalid argument.\n");
+}
+
+data _less_equal_2op(data d)
+{
+    if (is_int(car(d)) && is_int(cadr(d)))
+        return(nilort(raw_int(car(d)) <= raw_int(cadr(d))));
+    else if (is_int(car(d)) && is_double(cadr(d)))
+        return(nilort(raw_int(car(d)) <= raw_double(cadr(d))));
+    else if (is_double(car(d)) && is_int(cadr(d)))
+        return(nilort(raw_double(car(d)) <= raw_int(cadr(d))));
+    else if (is_double(car(d)) && is_double(cadr(d)))
+        return(nilort(raw_double(car(d)) <= raw_double(cadr(d))));
+    error(L"invalid argument.\n");
+}
+
+data _greater_2op(data d)
+{
+    if (is_int(car(d)) && is_int(cadr(d)))
+        return(nilort(raw_int(car(d)) > raw_int(cadr(d))));
+    else if (is_int(car(d)) && is_double(cadr(d)))
+        return(nilort(raw_int(car(d)) > raw_double(cadr(d))));
+    else if (is_double(car(d)) && is_int(cadr(d)))
+        return(nilort(raw_double(car(d)) > raw_int(cadr(d))));
+    else if (is_double(car(d)) && is_double(cadr(d)))
+        return(nilort(raw_double(car(d)) > raw_double(cadr(d))));
+    error(L"invalid argument.\n");
+}
+
+data _greater_equal_2op(data d)
+{
+    if (is_int(car(d)) && is_int(cadr(d)))
+        return(nilort(raw_int(car(d)) >= raw_int(cadr(d))));
+    else if (is_int(car(d)) && is_double(cadr(d)))
+        return(nilort(raw_int(car(d)) >= raw_double(cadr(d))));
+    else if (is_double(car(d)) && is_int(cadr(d)))
+        return(nilort(raw_double(car(d)) >= raw_int(cadr(d))));
+    else if (is_double(car(d)) && is_double(cadr(d)))
+        return(nilort(raw_double(car(d)) >= raw_double(cadr(d))));
+    error(L"invalid argument.\n");
+}
+
+data _equal_2op(data d)
+{
+    if (is_int(car(d)) && is_int(cadr(d)))
+        return(nilort(raw_int(car(d)) == raw_int(cadr(d))));
+    else if (is_int(car(d)) && is_double(cadr(d)))
+        return(nilort(raw_int(car(d)) == raw_double(cadr(d))));
+    else if (is_double(car(d)) && is_int(cadr(d)))
+        return(nilort(raw_double(car(d)) == raw_int(cadr(d))));
+    else if (is_double(car(d)) && is_double(cadr(d)))
+        return(nilort(raw_double(car(d)) == raw_double(cadr(d))));
+    error(L"invalid argument.\n");
+}
+
+data _not_equal_2op(data d)
+{
+    if (is_int(car(d)) && is_int(cadr(d)))
+        return(nilort(raw_int(car(d)) != raw_int(cadr(d))));
+    else if (is_int(car(d)) && is_double(cadr(d)))
+        return(nilort(raw_int(car(d)) != raw_double(cadr(d))));
+    else if (is_double(car(d)) && is_int(cadr(d)))
+        return(nilort(raw_double(car(d)) != raw_int(cadr(d))));
+    else if (is_double(car(d)) && is_double(cadr(d)))
+        return(nilort(raw_double(car(d)) != raw_double(cadr(d))));
+    error(L"invalid argument.\n");
+}
+
 data _if(data d)
 {
     if (is_not_nil(eval(car(d))))
@@ -393,6 +540,27 @@ data _function(data d)
     if (!is_symbol(car(d)))
         error(L"invalid function name.\n");
     cpush_symbol(raw_string(car(d)), _unnamed_function(cdr(d)));
+    return(car(d));
+}
+
+/************************/
+/* Operator declaration */
+/************************/
+// (left_associative_operator => (args impl) (unnamed_function args impl))
+data _left_associative_operator(data d)
+{
+    if (!is_symbol(car(d)))
+        error(L"invalid operator name.\n");
+    make_left_associative_operator(raw_string(car(d)), _unnamed_function(cdr(d)));
+    return(car(d));
+}
+
+// (right_associative_operator = (destination value) (push_symbol destination value))
+data _right_associative_operator(data d)
+{
+    if (!is_symbol(car(d)))
+        error(L"invalid operator name.\n");
+    make_right_associative_operator(raw_string(car(d)), _unnamed_function(cdr(d)));
     return(car(d));
 }
 
@@ -516,7 +684,7 @@ data _from_char_code(data d)
     while ((is_int(car(d))))
     {
         if (s - buf < 1024 - 1)
-            error(L"fromcharcode buffer overrun");
+            error(L"fromcharcode buffer overrun.\n");
         *(s++) = (wchar_t)raw_int(car(d));
         d = cdr(d);
     }
@@ -534,10 +702,4 @@ data _progn(data d)
         d = cdr(d);
     }
     return(last);
-}
-
-// (binary_operator operator (leftarg rightarg) (impl))
-data _binary_opeartor(data d)
-{
-
 }

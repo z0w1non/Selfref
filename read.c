@@ -277,7 +277,7 @@ int parse_number(context * c)
             set_token_kind(c, token_literal);
             set_token_data(c, make_int(i));
         }
-        if (is_letter(lastchar))
+        if (is_symbol_char(lastchar))
         {
             set_token_kind(c, token_unknown);
             set_token_data(c, NULL);
@@ -327,7 +327,7 @@ int parse_string(context * c)
 int parse_symbol(context * c)
 {
     wint_t lastchar;
-    while ((!is_eof(lastchar = read_char(c))) && (is_letter(lastchar)))
+    while ((!is_eof(lastchar = read_char(c))) && (is_symbol_char(lastchar)))
         push_char(c, (wchar_t)lastchar);
     if(c->tkn.length > 0)
     {

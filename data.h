@@ -87,6 +87,7 @@ double          raw_double(data);
 const wchar_t * raw_string(data);
 void            set_car(data, data);
 void            set_cdr(data, data);
+data            get_operator_impl(data);
 
 /*******************/
 /* Constant symbol */

@@ -103,12 +103,18 @@ void init_operator_list()
     //add_operator(make_binary_operator(L">", _greater));
     //add_operator(make_binary_operator(L">=", _greater_equal));
 
-    add_operator(make_left_associative_operator(L"+", _add));
-    add_operator(make_left_associative_operator(L"-", _sub));
+    add_operator(make_left_associative_operator(L"+", _add_2op));
+    add_operator(make_left_associative_operator(L"-", _sub_2op));
+    add_operator(make_left_associative_operator(L"*", _mul_2op));
+    add_operator(make_left_associative_operator(L"/", _div_2op));
+    add_operator(make_left_associative_operator(L"%", _mod_2op));
 
-    add_operator(make_left_associative_operator(L"*", _mul));
-    add_operator(make_left_associative_operator(L"/", _div));
-    add_operator(make_left_associative_operator(L"%", _mod));
+    add_operator(make_left_associative_operator(L"<", _less_2op));
+    add_operator(make_left_associative_operator(L"<=", _less_equal_2op));
+    add_operator(make_left_associative_operator(L">", _greater_2op));
+    add_operator(make_left_associative_operator(L">=", _greater_equal_2op));
+    add_operator(make_left_associative_operator(L"==", _equal_2op));
+    add_operator(make_left_associative_operator(L"!=", _not_equal_2op));
 }
 
 void add_operator(data d)

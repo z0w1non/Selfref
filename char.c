@@ -6,7 +6,7 @@ int chartype(wint_t wi)
 {
     if (is_digit(wi))
         return(wctype_digit);
-    if (is_letter(wi))
+    if (is_symbol_char(wi))
         return(wctype_letter);
     if (is_lparen(wi))
         return(wctype_lparen);
@@ -44,9 +44,27 @@ int is_rparen(wint_t wi)
     return(wi == L')');
 }
 
-int is_letter(wint_t wi)
+int is_symbol_char(wint_t wi)
 {
-    return(((wi >= L'a') && (wi <= L'z')) || ((wi >= L'A') && (wi <= L'Z')) || (wi == L'_'));
+    return(
+        ((wi >= L'a') && (wi <= L'z'))
+     || ((wi >= L'A') && (wi <= L'Z'))
+     || (wi == L'_')
+     || (wi == L'.')
+     || (wi == L',')
+     || (wi == L':')
+     || (wi == L';')
+     || (wi == L'+')
+     || (wi == L'-')
+     || (wi == L'*')
+     || (wi == L'/')
+     || (wi == L'%')
+     || (wi == L'=')
+     || (wi == L'<')
+     || (wi == L'>')
+     || (wi == L'!')
+     || (wi == L'?')
+    );
 }
 
 int is_dot(wint_t wi)

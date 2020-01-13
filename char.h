@@ -20,7 +20,7 @@ int is_eof(wint_t);
 int is_space(wint_t);
 int is_lparen(wint_t);
 int is_rparen(wint_t);
-int is_letter(wint_t);
+int is_symbol_char(wint_t);
 int is_dot(wint_t);
 int is_print(wint_t);
 int is_crlf(wint_t);

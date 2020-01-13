@@ -20,6 +20,7 @@ int repl()
     {
         init_heap(0x400);
         init_symbol_stack();
+        init_operator_list();
     }
 
 loop:

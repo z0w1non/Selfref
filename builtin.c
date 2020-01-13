@@ -722,10 +722,22 @@ data _progn(data d)
     return(last);
 }
 
+// (let (a b c) (...))
+// -> (let ((a nil) (b nil) (c nil)) (...))
+data complement_args(data args)
+{
+    if (is_nil(args))
+        return(nil);
+    if (is_pair(car(args)))
+        return(make_pair(car(args), cdr(args)));
+    return(make_pair(make_pair(car(args), make_pair(nil, nil)), complement_args(cdr(args))));
+}
+
 data _let(data d)
 {
     data last, args;
-    args = car(d);
+    args = complement_args(car(d));
+    debug(args);
     _push_args(args);
     d = cdr(d);
     last = nil;

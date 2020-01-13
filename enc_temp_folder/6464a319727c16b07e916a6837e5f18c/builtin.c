@@ -100,9 +100,6 @@ data _dec(data d)
     error(L"invalid argument type.\n");
 }
 
-/*********************************/
-/* Variacdic arithmetic function */
-/*********************************/
 data _add(data d)
 {
     int i = 0;
@@ -306,9 +303,6 @@ data _mod(data d)
     return(make_int(i));
 }
 
-/*******************/
-/* Binary operator */
-/*******************/
 data _add_2op(data d)
 {
     if (is_int(car(d)) && is_int(cadr(d)))
@@ -368,9 +362,6 @@ data _mod_2op(data d)
     error(L"invalid argument.\n");
 }
 
-/**************/
-/* Comparator */
-/**************/
 data _less_2op(data d)
 {
     if (is_int(car(d)) && is_int(cadr(d)))
@@ -456,9 +447,6 @@ data _assign(data d)
     _push_symbol(make_pair(car(d), make_pair(eval(cadr(d)), nil)));
 }
 
-/***************/
-/* Conditional */
-/***************/
 data _if(data d)
 {
     if (is_not_nil(eval(car(d))))

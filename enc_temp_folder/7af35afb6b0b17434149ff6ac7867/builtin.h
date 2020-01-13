@@ -5,45 +5,28 @@
 
 void init_builtin();
 
-/**************/
-/* Arithmetic */
-/**************/
 data _inc(data);
 data _dec(data);
-
-/*********************************/
-/* Variacdic arithmetic function */
-/*********************************/
 data _add(data);
 data _sub(data);
 data _mul(data);
 data _div(data);
 data _mod(data);
 
-/*******************/
-/* Binary operator */
-/*******************/
 data _add_2op(data);
 data _sub_2op(data);
 data _mul_2op(data);
 data _div_2op(data);
 data _mod_2op(data);
 
-/**************/
-/* Comparator */
-/**************/
 data _less_2op(data);
 data _less_equal_2op(data);
 data _greater_2op(data);
 data _greater_equal_2op(data);
 data _equal_2op(data);
 data _not_equal_2op(data);
-
 data _assign(data);
 
-/***************/
-/* Conditional */
-/***************/
 data _if(data);
 data _and(data);
 data _or(data);

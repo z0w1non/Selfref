@@ -636,6 +636,20 @@ int queue_is_empty(queue q)
     return(q->count == 0);
 }
 
+int queue_print_as_data(queue q)
+{
+    int i;
+    wprintf(L"(queue ");
+    for (i = 0; i < q->count; ++i)
+    {
+        if (i > 0)
+            wprintf(L" ");
+        print(*((data *)(q->data) + ((q->head + i) % q->size)));
+    }
+    wprintf(L")\n");
+    return(1);
+}
+
 /*********/
 /* Stack */
 /*********/
@@ -699,4 +713,18 @@ int stack_front(stack s, void * data)
 int stack_is_empty(stack s)
 {
     return(s->count == 0);
+}
+
+int stack_print_as_data(stack s)
+{
+    int i;
+    wprintf(L"(stack ");
+    for (i = 0; i < s->count; ++i)
+    {
+        if (i > 0)
+            wprintf(L" ");
+        print(*((data *)(s->data) + i));
+    }
+    wprintf(L")\n");
+    return(1);
 }

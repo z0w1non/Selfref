@@ -163,6 +163,7 @@ int queue_enqueue(queue, const void *);
 int queue_dequeue(queue, void *);
 int queue_front(queue, void *);
 int queue_is_empty(queue);
+int queue_print_as_data(stack);
 
 /*********/
 /* Stack */
@@ -175,5 +176,6 @@ int stack_push(stack, const void *);
 int stack_pop(stack, void *);
 int stack_front(stack, void *);
 int stack_is_empty(stack);
+int stack_print_as_data(stack);
 
 #endif

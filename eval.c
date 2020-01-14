@@ -22,7 +22,6 @@ data eval(data d)
     }
     else if (is_pair(d))
     {
-        d = sort_operator(d);
         value = eval(car(d));
         if (is_builtin_macro(value))
             return(call_macro(make_pair(value, cdr(d))));
@@ -32,7 +31,9 @@ data eval(data d)
             return(call_unnamed_macro(make_pair(value, cdr(d))));
         else if (is_unnamed_function(value))
             return(call_unnamed_function(make_pair(value, _eval_list(cdr(d)))));
-        return(value); //???
+        if (has_operator(d))
+            return(eval(sort_operator(d)));
+        error(L"The first token in the list is must be callable or a symbol that bound to a callable.\n");
     }
    return(d);
 }
@@ -194,6 +195,17 @@ int compare_operator_priority(const wchar_t * a, const wchar_t * b)
     error(L"<operator %s> and <operator %s> not found.\n", a, b);
 }
 
+int has_operator(data d)
+{
+    while (is_not_nil(car(d)))
+    {
+        if (is_symbol(car(d)) && find_operator(raw_string(car(d))))
+            return(1);
+        d = cdr(d);
+    }
+    return(0);
+}
+
 data sort_operator(data d)
 {
     stack operator_stack, stack_machine;
@@ -266,7 +278,6 @@ data sort_operator(data d)
         if (!queue_enqueue(output_queue, &op1))
             goto error;
     }
-
     sorted = nil;
     while (!queue_is_empty(output_queue))
     {
@@ -286,6 +297,14 @@ data sort_operator(data d)
                 goto error;
 
             temp = make_pair(get_operator_impl(op1), make_pair(left, make_pair(right, nil)));
+            if (stack_is_empty(stack_machine))
+            {
+                stack_cleanup(operator_stack);
+                stack_cleanup(stack_machine);
+                queue_cleanup(output_queue);
+                return(temp);
+            }
+
             if (!stack_push(stack_machine, &temp))
                 goto error;
         }

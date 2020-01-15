@@ -328,6 +328,8 @@ data _add_2op(data d)
         return(make_double(raw_double(car(d)) + raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(make_double(raw_double(car(d)) + raw_double(cadr(d))));
+    else if (is_string(car(d)) && is_string(cadr(d)))
+        return(_strcat(d));
     error(L"invalid argument.\n");
 }
 

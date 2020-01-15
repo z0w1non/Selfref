@@ -1,9 +1,10 @@
 #ifndef DATA_H
 #define DATA_H
 
+#include <stdio.h>
 #include <wchar.h>
 
-#define debug(expr) do { wprintf(L"%s: ", L#expr); print(expr); wprintf(L"\n"); } while(0);
+#define debug(expr) do { printf("%s(%d) %s: ", __FILE__, __LINE__,  #expr); print(expr); wprintf(L"\n"); } while(0);
 
 struct dataimpl_tag;
 typedef struct dataimpl_tag * data;

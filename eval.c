@@ -152,7 +152,7 @@ void add_operator(data d)
 
 void remove_operator(const wchar_t * name)
 {
-    data list, temp;
+    data list;
     list = operator_list;
     while (is_not_nil(list))
     {
@@ -165,7 +165,7 @@ void remove_operator(const wchar_t * name)
     error(L"<operator %s> not found.\n", name);
 }
 
-/* nullable */ data find_operator(const wchar_t * name)
+data find_operator(const wchar_t * name)
 {
     data d;
     d = operator_list;
@@ -193,6 +193,7 @@ int compare_operator_priority(const wchar_t * a, const wchar_t * b)
         list = cdr(list);
     }
     error(L"<operator %s> and <operator %s> not found.\n", a, b);
+    return(0);
 }
 
 int has_operator(data d)
@@ -254,7 +255,7 @@ data sort_operator(data d)
                     }
                 }
                 if (!stack_push(operator_stack, &op1))
-                    return error;
+                    goto error;
             }
             else
             {

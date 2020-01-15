@@ -1,7 +1,5 @@
 #include "read.h"
 
-#pragma warning(disable: 4996)
-
 #include <stdlib.h>
 #include <stdio.h>
 #include "char.h"
@@ -31,36 +29,77 @@ typedef struct context_tag
     wint_t buf[contextbuflen];
     int lastreadbuf;
     int backcnt;
-    wint_t (*getchar)(void *);
-    void * (*callback)(void *);
-    void * impldata;
 } context;
 
-/********************/
-/* Private function */
-/********************/
-void   set_getchar(context * c, wint_t(*getchar)(void *));
-void   set_eof_callback(context * c, void * (*callback)(void *));
-void   set_impl_data(context * c, void * impldata);
-void * call_eof_callback(context * c);
-wint_t call_getchar(context * c);
-void * callback_fclose(void * impldata);
-wint_t getchar_from_file(void * impldata);
-wint_t getchar_from_stdin(void * impldata);
-int    skip_nonprintable(context * c);
+enum
+{
+    token_unknown,
+    token_eof,
+    token_lparen,
+    token_rparen,
+    token_literal,
+    token_symbol,
+    token_quote,
+};
+
+FILE * input_stream;
+
+/********************************/
+/* Private function declaration */
+/********************************/
+void            context_init(context *);
+wint_t          context_read_char(context *);
+void            context_read_back(context *);
+void            context_push_char(context *, wchar_t);
+void            context_pop_char(context *);
+void            context_clear_token(context * c);
+int             context_get_token_kind(context *);
+const wchar_t * context_get_token_str(context *);
+data            context_get_token_data(context *);
+void            context_set_token_kind(context *, int);
+void            context_set_token_data(context *, data);
+
+data read_internal(context *);
+void read_token(context *);
+data read_list(context *);
+
+int parse_nonprintable(context * c);
+int parse_lparen(context * c);
+int parse_rparen(context * c);
+int parse_number(context *);
+int parse_string(context *);
+int parse_symbol(context *);
+
+/*******************/
+/* Public function */
+/*******************/
+void set_input_stream(FILE * s)
+{
+    input_stream = s;
+}
+
+FILE * get_input_stream()
+{
+    return(input_stream);
+}
+
+data read()
+{
+    context c;
+    context_init(&c);
+    return(read_internal(&c));
+}
+
 /******************/
 /* Read character */
 /******************/
-void init_context(context * c)
+void context_init(context * c)
 {
     memset(c, 0, sizeof(context));
     c->lastreadbuf = -1;
-    c->getchar = NULL;
-    c->callback = NULL;
-    c->impldata = NULL;
 }
 
-wint_t read_char(context * c)
+wint_t context_read_char(context * c)
 {
     if (c->backcnt > 0)
     {
@@ -69,26 +108,26 @@ wint_t read_char(context * c)
     }
     c->lastreadbuf += 1;
     c->lastreadbuf %= contextbuflen;
-    return(c->buf[c->lastreadbuf] = c->getchar(c->impldata));
+    return(c->buf[c->lastreadbuf] = fgetc(input_stream));
 }
 
-void read_back(context * c)
+void context_read_back(context * c)
 {
     c->backcnt += 1;
 }
 
-void push_char(context * c, wchar_t wc)
+void context_push_char(context * c, wchar_t wc)
 {
     c->tkn.string[c->tkn.length++] = wc;
     c->tkn.string[c->tkn.length] = L'\0';
 }
 
-void pop_char(context * c)
+void context_pop_char(context * c)
 {
     c->tkn.string[--(c->tkn.length)] = L'\0';
 }
 
-void clear_token(context * c)
+void context_clear_token(context * c)
 {
     c->tkn.data = NULL;
     c->tkn.kind = 0;
@@ -96,27 +135,27 @@ void clear_token(context * c)
     c->tkn.string[0] = L'\0';
 }
 
-int token_kind(context * c)
+int context_get_token_kind(context * c)
 {
     return(c->tkn.kind);
 }
 
-const wchar_t * token_str(context * c)
+const wchar_t * context_get_token_str(context * c)
 {
     return(c->tkn.string);
 }
 
-data token_data(context * c)
+data context_get_token_data(context * c)
 {
     return(c->tkn.data);
 }
 
-void set_token_kind(context * c, int kind)
+void context_set_token_kind(context * c, int kind)
 {
     c->tkn.kind = kind;
 }
 
-void set_token_data(context * c, data d)
+void context_set_token_data(context * c, data d)
 {
     c->tkn.data = d;
 }
@@ -124,32 +163,10 @@ void set_token_data(context * c, data d)
 /**************/
 /* Read input */
 /**************/
-data read_stdin()
-{
-    context c;
-    init_context(&c);
-    set_getchar(&c, getchar_from_stdin);
-    return(read(&c));
-}
-
-data read_file(const wchar_t * filename)
-{
-    context c;
-    void * fileptr;
-    char mbs[1024];
-    wcstombs(mbs, filename, sizeof(mbs) / sizeof(*mbs));
-    fileptr = (void *)(fopen(mbs, "r"));
-    init_context(&c);
-    set_getchar(&c, getchar_from_file);
-    set_impl_data(&c, fileptr);
-    set_eof_callback(&c, callback_fclose);
-    return(read(&c));
-}
-
-data read(context * c)
+data read_internal(context * c)
 {
     read_token(c);
-    switch (token_kind(c))
+    switch (context_get_token_kind(c))
     {
     case token_eof:
         return(NULL);
@@ -158,7 +175,7 @@ data read(context * c)
     case token_literal:
     case token_symbol:
     //case token_quote:
-        return(token_data(c));
+        return(context_get_token_data(c));
     default:
         error(L"Unexpected character\n");
     }
@@ -167,8 +184,8 @@ data read(context * c)
 
 void read_token(context * c)
 {
-    clear_token(c);
-    if (!skip_nonprintable(c))
+    context_clear_token(c);
+    if (!parse_nonprintable(c))
     {
         if (parse_lparen(c))
             ;
@@ -180,8 +197,8 @@ void read_token(context * c)
             ;
         else if (parse_symbol(c))
             ;
-        else if (skip_nonprintable(c))
-            set_token_kind(c, token_eof);
+        else if (parse_nonprintable(c))
+            context_set_token_kind(c, token_eof);
         else
             error(L"Undefined token.\n");
     }
@@ -191,54 +208,54 @@ data read_list(context * c)
 {
     data car;
     read_token(c);
-    if (token_kind(c) == token_rparen)
+    if (context_get_token_kind(c) == token_rparen)
         return(nil);
-    else if (token_kind(c) == token_lparen)
+    else if (context_get_token_kind(c) == token_lparen)
     {
         car = read_list(c);
         return(make_pair(car, read_list(c)));
     }
-    car = token_data(c);
+    car = context_get_token_data(c);
     return(make_pair(car, read_list(c)));
 }
 
-int skip_nonprintable(context * c)
+int parse_nonprintable(context * c)
 {
     wint_t lastchar;
-    while ((!is_eof(lastchar = read_char(c))) && ((is_space(lastchar) || (is_crlf(lastchar)))));
+    while ((!is_eof(lastchar = context_read_char(c))) && ((is_space(lastchar) || (is_crlf(lastchar)))));
     if (is_eof(lastchar))
         return(1);
-    read_back(c);
+    context_read_back(c);
     return(0);
 }
 
 int parse_lparen(context * c)
 {
     wint_t lastchar;
-    lastchar = read_char(c);
+    lastchar = context_read_char(c);
     if (is_lparen(lastchar))
     {
-        push_char(c, lastchar);
-        set_token_kind(c, token_lparen);
-        set_token_data(c, NULL);
+        context_push_char(c, lastchar);
+        context_set_token_kind(c, token_lparen);
+        context_set_token_data(c, NULL);
         return(1);
     }
-    read_back(c);
+    context_read_back(c);
     return(0);
 }
 
 int parse_rparen(context * c)
 {
     wint_t lastchar;
-    lastchar = read_char(c);
+    lastchar = context_read_char(c);
     if (is_rparen(lastchar))
     {
-        push_char(c, lastchar);
-        set_token_kind(c, token_rparen);
-        set_token_data(c, NULL);
+        context_push_char(c, lastchar);
+        context_set_token_kind(c, token_rparen);
+        context_set_token_data(c, NULL);
         return(1);
     }
-    read_back(c);
+    context_read_back(c);
     return(0);
 }
 
@@ -247,161 +264,97 @@ int parse_number(context * c)
     int i;
     double d, div;
     wint_t lastchar;
-    lastchar = read_char(c);
+    lastchar = context_read_char(c);
     if (is_digit(lastchar))
     {
         i = ((int)(lastchar - L'0'));
-        lastchar = read_char(c);
+        lastchar = context_read_char(c);
         while ((!is_eof(lastchar)) && (is_digit(lastchar)))
         {
             i = i * 10 + ((int)(lastchar - L'0'));
-            push_char(c, (wchar_t)lastchar);
-            lastchar = read_char(c);
+            context_push_char(c, (wchar_t)lastchar);
+            lastchar = context_read_char(c);
         }
         if (is_dot(lastchar))
         {
-            push_char(c, L'.');
+            context_push_char(c, L'.');
             d = 0.0;
             div = 1.0;
-            lastchar = read_char(c);
+            lastchar = context_read_char(c);
             while ((!is_eof(lastchar)) && (is_digit(lastchar)))
             {
                 d = d * 10.0 + (double)(lastchar - L'0');
                 div *= 10;
-                push_char(c, (wchar_t)lastchar);
-                lastchar = read_char(c);
+                context_push_char(c, (wchar_t)lastchar);
+                lastchar = context_read_char(c);
             }
-            set_token_kind(c, token_literal);
-            set_token_data(c, make_double((double)i + d / div));
+            context_set_token_kind(c, token_literal);
+            context_set_token_data(c, make_double((double)i + d / div));
         }
         else
         {
-            set_token_kind(c, token_literal);
-            set_token_data(c, make_int(i));
+            context_set_token_kind(c, token_literal);
+            context_set_token_data(c, make_int(i));
         }
         if (is_symbol_char(lastchar))
         {
-            set_token_kind(c, token_unknown);
-            set_token_data(c, NULL);
-            push_char(c, (wchar_t)lastchar);
+            context_set_token_kind(c, token_unknown);
+            context_set_token_data(c, NULL);
+            context_push_char(c, (wchar_t)lastchar);
             error(L"Number literal parsing failed. (%s)\n", c->tkn.string);
         }
-        read_back(c);
+        context_read_back(c);
         return(1);
     }
-    read_back(c);
+    context_read_back(c);
     return(0);
 }
 
 int parse_string(context * c)
 {
     wint_t lastchar;
-    lastchar = read_char(c);
+    lastchar = context_read_char(c);
     if (lastchar == L'\"')
     {
-        while (!is_eof((lastchar = read_char(c))) && (lastchar != L'\"'))
+        while (!is_eof((lastchar = context_read_char(c))) && (lastchar != L'\"'))
         {
             if (lastchar == L'\\')
             {
-                lastchar = read_char(c);
+                lastchar = context_read_char(c);
                 switch (lastchar)
                 {
-                case L'n':  push_char(c, L'\n'); break;
-                case L't':  push_char(c, L'\t'); break;
-                case L'\\': push_char(c, L'\\'); break;
-                case L'\"': push_char(c, L'\"'); break;
+                case L'n':  context_push_char(c, L'\n'); break;
+                case L't':  context_push_char(c, L'\t'); break;
+                case L'\\': context_push_char(c, L'\\'); break;
+                case L'\"': context_push_char(c, L'\"'); break;
                 default: error(L"Unknown escape sequence (\\n -> newline, \\t -> tab, \\\\ -> \\, \\\" -> double quotation(\"))\n");
                 }
             }
             else if (!is_print(lastchar))
                 error(L"String literal contains a unprintable character.\n");
             else
-                push_char(c, (wchar_t)lastchar);
+                context_push_char(c, (wchar_t)lastchar);
         }
-        set_token_kind(c, token_literal);
-        set_token_data(c, make_string(token_str(c)));
+        context_set_token_kind(c, token_literal);
+        context_set_token_data(c, make_string(context_get_token_str(c)));
         return(1);
     }
-    read_back(c);
+    context_read_back(c);
     return(0);
 }
 
 int parse_symbol(context * c)
 {
     wint_t lastchar;
-    while ((!is_eof(lastchar = read_char(c))) && (is_symbol_char(lastchar)))
-        push_char(c, (wchar_t)lastchar);
+    while ((!is_eof(lastchar = context_read_char(c))) && (is_symbol_char(lastchar)))
+        context_push_char(c, (wchar_t)lastchar);
     if(c->tkn.length > 0)
     {
-        set_token_kind(c, token_symbol);
-        set_token_data(c, make_symbol(token_str(c)));
+        context_set_token_kind(c, token_symbol);
+        context_set_token_data(c, make_symbol(context_get_token_str(c)));
     }
     else
         return(0);
-    read_back(c);
+    context_read_back(c);
     return(1);
-}
-
-data listize(data d)
-{
-    if (is_symbol(d))
-        return(make_pair(d, nil));
-    return(d);
-}
-
-/********************/
-/* Private function */
-/********************/
-void set_getchar(context * c, wint_t(*getchar)(void *))
-{
-    c->getchar = getchar;
-}
-
-void set_eof_callback(context * c, void * (*callback)(void *))
-{
-    c->callback = callback;
-}
-
-void set_impl_data(context * c, void * impldata)
-{
-    c->impldata = impldata;
-}
-
-void * call_eof_callback(context * c)
-{
-    void * ret;
-    ret = NULL;
-    if (c->callback)
-    {
-        ret = c->callback(c->impldata);
-        c->callback = NULL;
-        c->impldata = NULL;
-    }
-    return ret;
-}
-
-wint_t call_getchar(context * c)
-{
-    return(c->getchar(c->impldata));
-}
-
-void * callback_fclose(void * impldata)
-{
-    fclose((FILE *)impldata);
-    return(NULL);
-}
-
-wint_t getchar_from_file(void * impldata)
-{
-    wint_t wi;
-    int ret;
-    ret = fwscanf((FILE *)impldata, L"%c", &wi);
-    if (ret == EOF)
-        return(WEOF);
-    return(wi);
-}
-
-wint_t getchar_from_stdin(void * impldata)
-{
-    return(getwchar());
 }

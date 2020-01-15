@@ -4,7 +4,7 @@
 /********/
 /* REPL */
 /********/
-int repl();
+int repl(int argc, const char ** argv);
 void escape();
 
 #endif

@@ -1,6 +1,6 @@
 #include "repl.h"
 
-int main()
+int main(int argc, const char ** argv)
 {
-    return(repl());
+    return(repl(argc, argv));
 }

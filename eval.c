@@ -11,7 +11,6 @@
 /********/
 data eval(data d)
 {
-    debug(d);
     data value;
     if (has_operator(d))
         d = sort_operator(d);

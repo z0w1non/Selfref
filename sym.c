@@ -215,7 +215,7 @@ data find_symbol(const wchar_t * key)
     return(NULL);
 }
 
-data replace_symbol(const wchar_t * key, data value)
+data override_symbol(const wchar_t * key, data value)
 {
     unsigned int hash;
     int i, j;
@@ -232,8 +232,14 @@ data replace_symbol(const wchar_t * key, data value)
             }
             return(NULL);
         }
-        if (table.data[j].state == state_unused)
-            return(NULL);
+        else if (table.data[j].state == state_unused)
+        {
+            table.data[j].state = state_used;
+            table.data[j].key = clone_string(key);
+            table.data[j].stack = make_pair(value, table.data[j].stack);
+            table.usedcnt += 1;
+            return(value);
+        }
     }
     return(NULL);
 }

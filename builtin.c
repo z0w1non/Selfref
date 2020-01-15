@@ -457,10 +457,8 @@ data _assign(data d)
     data ret;
     if (!is_symbol(car(d)))
         error(L"An invalid value is specified as the assignment destination.\n");
-    ret = replace_symbol(raw_string(car(d)), eval(cadr(d)));
-    if (!ret)
-        error(L"<symbol %s> is not found.\n", raw_string(car(d)));
-    return(ret);
+    override_symbol(raw_string(car(d)), cadr(d));
+    return(car(d));
 }
 
 /***************/

@@ -12,7 +12,8 @@
 data eval(data d)
 {
     data value;
-
+    if (has_operator(d))
+        d = sort_operator(d);
     if (is_symbol(d))
     {
         value = find_symbol(raw_string(d));
@@ -32,7 +33,7 @@ data eval(data d)
         else if (is_unnamed_function(value))
             return(call_unnamed_function(make_pair(value, _eval_list(cdr(d)))));
         if (has_operator(d))
-            return(eval(sort_operator(d)));
+            return(eval(d));
         error(L"The first token in the list is must be callable or a symbol that bound to a callable.\n");
     }
    return(d);

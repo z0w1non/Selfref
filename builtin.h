@@ -104,5 +104,6 @@ data _progn(data);
 data _let(data);
 data _mapcar(data);
 data _strcat(data);
+data _substr(data);
 
 #endif

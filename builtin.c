@@ -81,7 +81,9 @@ void init_builtin()
     cpush_symbol(L"progn", make_builtin_macro(_progn));
     cpush_symbol(L"let", make_builtin_macro(_let));
     cpush_symbol(L"mapcar", make_builtin_function(_mapcar));
+
     cpush_symbol(L"strcat", make_builtin_function(_strcat));
+    cpush_symbol(L"substr", make_builtin_function(_substr));
 }
 
 /**************/
@@ -790,9 +792,33 @@ data _strcat(data d)
     alen = wcslen(raw_string(car(d)));
     blen = wcslen(raw_string(cadr(d)));
     newstr = malloc(sizeof(wchar_t) * (alen + blen + 1));
+    if (!newstr)
+        error(L"bad alloc.\n");
     memcpy(newstr, raw_string(car(d)), sizeof(wchar_t) * alen);
     memcpy(newstr + alen, raw_string(cadr(d)), sizeof(wchar_t) * blen);
     newstr[alen + blen] = L'\0';
+    return(make_string(newstr));
+}
+
+data _substr(data d)
+{
+    int len, pos, n;
+    wchar_t * newstr;
+    if (!is_string(car(d)))
+        error(L"substr failed.\n");
+    len = wcslen(raw_string(car(d)));
+    if (!is_int(cadr(d)) || (!is_int(caddr(d)) && is_not_nil(cddr(d))))
+        error(L"substr failed.\n");
+    if (is_nil(cddr(d)))
+        return(make_string(clone_string(raw_string(car(d)) + raw_int(cadr(d)))));
+    if (raw_int(cadr(d)) + raw_int(caddr(d)) > wcslen(raw_string(car(d))))
+        error(L"invalid range.\n");
+    len = wcslen(raw_string(car(d)));
+    newstr = malloc(sizeof(wchar_t) * raw_int(caddr(d)));
+    if (!newstr)
+        error(L"bad alloc.\n");
+    memcpy(newstr, raw_string(car(d)) + raw_int(cadr(d)), sizeof(wchar_t) * raw_int(caddr(d)));
+    newstr[raw_int(caddr(d))] = L'\0';
     return(make_string(newstr));
 }
 

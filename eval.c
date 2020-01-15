@@ -282,6 +282,13 @@ data sort_operator(data d)
     sorted = nil;
     while (!queue_is_empty(output_queue))
     {
+#ifndef NDEBUG
+        if (find_symbol(L"debug_sort_operator"))
+        {
+            queue_print_as_data(output_queue);
+            stack_print_as_data(stack_machine);
+        }
+#endif
         queue_dequeue(output_queue, &front_token);
         if (is_left_associative_operator(front_token) || is_right_associative_operator(front_token))
         {
@@ -298,11 +305,18 @@ data sort_operator(data d)
                 goto error;
 
             temp = make_pair(get_operator_impl(op1), make_pair(left, make_pair(right, nil)));
-            if (stack_is_empty(stack_machine))
+            if (queue_is_empty(output_queue))
             {
                 stack_cleanup(operator_stack);
                 stack_cleanup(stack_machine);
                 queue_cleanup(output_queue);
+#ifndef NDEBUG
+                if (find_symbol(L"debug_sort_operator"))
+                {
+                    print(temp);
+                    wprintf(L"\n");
+                }
+#endif
                 return(temp);
             }
 
@@ -321,6 +335,13 @@ data sort_operator(data d)
         stack_pop(stack_machine, &temp);
         sorted = make_pair(temp, sorted);
     }
+#ifndef NDEBUG
+    if (find_symbol(L"debug_sort_operator"))
+    {
+        print(sorted);
+        wprintf(L"\n");
+    }
+#endif
     return(sorted);
 
 error:

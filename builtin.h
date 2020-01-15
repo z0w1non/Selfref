@@ -55,6 +55,7 @@ data _not(data);
 data _eval(data);
 data _print(data);
 data _call(data);
+data _apply(data);
 data _bind_symbol(data);
 data _unnamed_macro(data);
 data _unnamed_function(data);
@@ -101,5 +102,7 @@ data _from_char_code(data);
 
 data _progn(data);
 data _let(data);
+data _mapcar(data);
+data _strcat(data);
 
 #endif

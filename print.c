@@ -3,19 +3,18 @@
 #include "repl.h"
 #include "heap.h"
 
+data print_list_internal(data);
+data print_function(data);
+
+/*******************/
+/* Public function */
+/*******************/
 data print(data d)
 {
-    if (is_pair(d))
-    {
-        if (!used(d))
-            wprintf(L"<unused heap>");
-        else
-        {
-            wprintf(L"(");
-            print_list(d);
-            wprintf(L")");
-        }
-    }
+    if (!used(d))
+        wprintf(L"<unused heap>");
+    else if (is_pair(d))
+        print_list(d);
     else if (is_nil(d))
         wprintf(L"nil");
     else if (is_t(d))
@@ -29,7 +28,7 @@ data print(data d)
     else if (is_unnamed_macro(d))
         wprintf(L"<macro %04x>", heap_addr(d));
     else if (is_unnamed_function(d))
-        wprintf(L"<function %04x>", heap_addr(d));
+        print_function(d);
     else if (is_left_associative_operator(d))
         wprintf(L"<left_associative_operator %s>", raw_string(d));
     else if (is_right_associative_operator(d))
@@ -47,12 +46,9 @@ data print(data d)
 
 data print_list(data d)
 {
-    print(car(d));
-    if(is_not_nil(cdr(d)))
-    {
-        wprintf(L" ");
-        print_list(cdr(d));
-    }
+    wprintf(L"(");
+    print_list_internal(d);
+    wprintf(L")");
     return(d);
 }
 
@@ -65,4 +61,29 @@ void error(const wchar_t * format, ...)
     va_end(args);
     fwprintf(stdout, L"\n");
     escape();
+}
+
+/********************/
+/* Private function */
+/********************/
+data print_list_internal(data d)
+{
+    print(car(d));
+    if (is_not_nil(cdr(d)))
+    {
+        wprintf(L" ");
+        print_list_internal(cdr(d));
+    }
+    return(d);
+}
+
+data print_function(data d)
+{
+    if (!is_unnamed_function(d))
+        error(L"print function failed.\n");
+    wprintf(L"<function ");
+    print(get_args(d));
+    wprintf(L" ");
+    print(get_impl(d));
+    wprintf(L">");
 }

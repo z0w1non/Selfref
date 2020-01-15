@@ -25,13 +25,13 @@ data eval(data d)
     {
         value = eval(car(d));
         if (is_builtin_macro(value))
-            return(call_macro(make_pair(value, cdr(d))));
+            return(call_builtin_macro(make_pair(value, cdr(d))));
         else if (is_builtin_function(value))
-            return(_call(make_pair(value, _eval_list(cdr(d)))));
+            return(call_builtin_function(make_pair(value, cdr(d))));
         else if (is_unnamed_macro(value))
             return(call_unnamed_macro(make_pair(value, cdr(d))));
         else if (is_unnamed_function(value))
-            return(call_unnamed_function(make_pair(value, _eval_list(cdr(d)))));
+            return(call_unnamed_function(make_pair(value, cdr(d))));
         if (has_operator(d))
             return(eval(d));
         error(L"The first token in the list is must be callable or a symbol that bound to a callable.\n");
@@ -48,40 +48,48 @@ data _eval_list(data d)
     return(make_pair(eval(car(d)), _eval_list(cdr(d))));
 }
 
-// (call_macro actualargs)
-data call_macro(data d)
+// (call_macro arg1 arg2 arg3 ...)
+data call_builtin_macro(data d)
 {
     if (!is_builtin_macro(car(d)))
         error(L"invalid macro call.\n");
     return(raw_macro(car(d))(cdr(d)));
 }
 
-// (call_macro actualargs)
+// (call_function arg1 arg2 arg3 ...)
+data call_builtin_function(data d)
+{
+    if (!is_builtin_function(car(d)))
+        error(L"invalid function call.\n");
+    return(raw_function(car(d))(_eval_list(cdr(d))));
+}
+
+// (call_unnamed_macro arg1 arg2 arg3 ...)
 data call_unnamed_macro(data d)
 {
     data args, ret;
     if (!is_unnamed_macro(car(d)))
         error(L"invalid unnnamed macro call.\n");
-    args = _zip(make_pair(get_args(car(d)), make_pair(cdr(d), nil)));
-    if (is_not_nil(car(args)))
-        _push_args(args);
+    args = nil;
+    if (is_not_nil(cadr(d)))
+        _push_args(args = _zip(make_pair(get_args(car(d)), make_pair(cdr(d), nil))));
     ret = eval(get_impl(car(d)));
-    if (is_not_nil(car(args)))
+    if (is_not_nil(cadr(d)))
         _pop_args(args);
     return(ret);
 }
 
-// (call_function actualargs)
+// (call_unnamed_function arg1 arg2 arg3 ...)
 data call_unnamed_function(data d)
 {
     data args, ret;
     if(!is_unnamed_function(car(d)))
         error(L"invalid function call.\n");
-    args = _zip(make_pair(get_args(car(d)), make_pair(_eval_list(cdr(d)), nil)));
-    if (is_not_nil(car(args)))
-        _push_args(args);
+    args = nil;
+    if (is_not_nil(cadr(d)))
+        _push_args(args = _zip(make_pair(get_args(car(d)), make_pair(_eval_list(cdr(d)), nil))));
     ret = eval(get_impl(car(d)));
-    if (is_not_nil(car(args)))
+    if (is_not_nil(cadr(d)))
         _pop_args(args);
     return(ret);
 }

@@ -1,5 +1,6 @@
 #include "builtin.h"
 
+#include <stdlib.h>
 #include "print.h"
 #include "eval.h"
 #include "sym.h"
@@ -36,6 +37,7 @@ void init_builtin()
 
     cpush_symbol(L"eval", make_builtin_macro(eval));
     cpush_symbol(L"call", make_builtin_macro(_call));
+    cpush_symbol(L"apply", make_builtin_macro(_apply));
     cpush_symbol(L"bind_symbol", make_builtin_macro(_bind_symbol));
     cpush_symbol(L"unnamed_macro", make_builtin_macro(_unnamed_macro));
     cpush_symbol(L"unnamed_function", make_builtin_macro(_unnamed_function));
@@ -78,6 +80,8 @@ void init_builtin()
 
     cpush_symbol(L"progn", make_builtin_macro(_progn));
     cpush_symbol(L"let", make_builtin_macro(_let));
+    cpush_symbol(L"mapcar", make_builtin_function(_mapcar));
+    cpush_symbol(L"strcat", make_builtin_function(_strcat));
 }
 
 /**************/
@@ -457,7 +461,7 @@ data _assign(data d)
     data ret;
     if (!is_symbol(car(d)))
         error(L"An invalid value is specified as the assignment destination.\n");
-    override_symbol(raw_string(car(d)), cadr(d));
+    override_symbol(raw_string(car(d)), eval(cadr(d)));
     return(car(d));
 }
 
@@ -513,12 +517,30 @@ data _print(data d)
     return(car(d));
 }
 
+// (call <macro | function> arg1 arg2 arg3 ...)
 data _call(data d)
 {
-    if (is_builtin_function(car(d)))
-        return(raw_function(car(d))(cdr(d)));
-    error(L"Call failed\n");
+    data function;
+    if (is_symbol(car(d)))
+        function = find_symbol(raw_string(car(d)));
+    else
+        function = car(d);
+    if (is_builtin_macro(function))
+        return(call_builtin_macro(make_pair(function, cdr(d))));
+    else if (is_builtin_function(function))
+        return(call_builtin_function(make_pair(function, cdr(d))));
+    else if (is_unnamed_macro(function))
+        return(call_unnamed_macro(make_pair(function, cdr(d))));
+    else if (is_unnamed_function(function))
+        return(call_unnamed_function(make_pair(function, cdr(d))));
+    error(L"call failed.\n");
     return(nil);
+}
+
+// (apply <macro | function> (arg1 arg2 arg3 ...))
+data _apply(data d)
+{
+    return(_call(make_pair(car(d), cadr(d))));
 }
 
 data _bind_symbol(data d)
@@ -750,4 +772,31 @@ data _let(data d)
     }
     _pop_args(args);
     return(last);
+}
+
+data _mapcar(data d)
+{
+    if (is_nil(d))
+        return(nil);
+    return(make_pair(raw_function(car(d))(d), _mapcar(make_pair(car(d), cdr(d)))));
+}
+
+data _strcat(data d)
+{
+    int alen, blen;
+    wchar_t * newstr;
+    if (!is_string(car(d)) || !is_string(cadr(d)))
+        error(L"strcat failed.\n");
+    alen = wcslen(raw_string(car(d)));
+    blen = wcslen(raw_string(cadr(d)));
+    newstr = malloc(sizeof(wchar_t) * (alen + blen + 1));
+    memcpy(newstr, raw_string(car(d)), sizeof(wchar_t) * alen);
+    memcpy(newstr + alen, raw_string(cadr(d)), sizeof(wchar_t) * blen);
+    newstr[alen + blen] = L'\0';
+    return(make_string(newstr));
+}
+
+data _for(data d)
+{
+    
 }

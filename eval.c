@@ -12,6 +12,12 @@
 data eval(data d)
 {
     data value;
+    if (is_pair(d))
+    {
+        if (has_prefix_operator(d))
+            d = resolve_prefix_operator(d);
+    }
+
     if (has_operator(d))
         d = sort_operator(d);
     if (is_symbol(d))
@@ -359,4 +365,100 @@ error:
     queue_cleanup(output_queue);
     error(L"bac alloc.\n");
     return(nil);
+}
+
+/************************/
+/* Prefix operator list */
+/************************/
+data prefix_operator_list;
+
+void init_prefix_operator_list()
+{
+    prefix_operator_list = forward_list_create();
+
+    add_builtin_prefix_operator_macro(L"\'", _quote);
+}
+
+data add_builtin_prefix_operator_macro(const wchar_t * name, function_t f)
+{
+    data d;
+    d = make_prefix_operator(name, make_builtin_macro(f));
+    return(add_prefix_operator(d));
+}
+
+data add_builtin_prefix_operator_function(const wchar_t * name, function_t f)
+{
+    data d;
+    d = make_prefix_operator(name, make_builtin_function(f));
+    return(add_prefix_operator(d));
+}
+
+data add_prefix_operator(data d)
+{
+    forward_list_push_front(&prefix_operator_list, d);
+    return(d);
+}
+
+/* Private callback function */
+const wchar_t * prefix_operator_string;
+int prefix_operator_internal_predicate(data d)
+{
+    return(wcscmp(prefix_operator_string, raw_string(d)) == 0);
+}
+
+data remove_prefix_operator(const wchar_t * name)
+{
+    data d;
+    prefix_operator_string = name;
+    d = forward_list_remove(&prefix_operator_list, prefix_operator_internal_predicate);
+    prefix_operator_string = NULL;
+    if(!d)
+        error(L"<prefix operator %s> not found.\n", name);
+    return(d);
+}
+
+data find_prefix_operator(const wchar_t * name)
+{
+    data d;
+    prefix_operator_string = name;
+    d = forward_list_find(prefix_operator_list, prefix_operator_internal_predicate);
+    prefix_operator_string = NULL;
+    return(d);
+}
+
+int has_prefix_operator(data d)
+{
+    data temp;
+    while (is_not_nil(d))
+    {
+        if (is_symbol(car(d)))
+        {
+            temp = find_prefix_operator(raw_string(car(d)));
+            if (temp)
+                return(1);
+        }
+        d = cdr(d);
+    }
+    return(0);
+}
+
+// (resolve_prefix_operator (a ' b c ...))
+data resolve_prefix_operator(data d)
+{
+    data prefix_operator;
+    if (is_nil(d))
+        return(nil);
+    if (is_symbol(car(d)))
+    {
+        prefix_operator = find_prefix_operator(raw_string(car(d)));
+        if (prefix_operator)
+        {
+            if (is_nil(cdr(d)))
+                error(L"token expected at after prefix operator.\n");
+            return(make_pair(
+                    make_pair(get_operator_impl(prefix_operator), make_pair(resolve_prefix_operator(cadr(d)), nil)),
+                    resolve_prefix_operator(cddr(d))));
+        }
+    }
+    return(make_pair(car(d), resolve_prefix_operator(cdr(d))));
 }

@@ -53,6 +53,7 @@ data make_function(data, data);
 data make_symbol(const wchar_t *);
 data make_nil();
 data make_t();
+data _quote(data);
 data make_quote();
 data make_int(int);
 data make_double(double);
@@ -178,5 +179,16 @@ int stack_pop(stack, void *);
 int stack_front(stack, void *);
 int stack_is_empty(stack);
 int stack_print_as_data(stack);
+
+/****************/
+/* Forward list */
+/****************/
+typedef int (*predicate_t) (data d);
+data forward_list_create();
+data forward_list_push_front(data * list, data element);
+data forward_list_pop_front(data * list);
+data forward_list_find(data list, predicate_t);
+data forward_list_remove(data * list, predicate_t);
+data forward_list_mark(data list);
 
 #endif

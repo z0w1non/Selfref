@@ -64,6 +64,7 @@ int is_symbol_char(wint_t wi)
      || (wi == L'>')
      || (wi == L'!')
      || (wi == L'?')
+     || (wi == L'\'')
     );
 }
 

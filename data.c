@@ -135,14 +135,14 @@ data make_t
     return(d);
 }
 
-data quote_impl(data d)
+data _quote(data d)
 {
     return(car(d));
 }
 
 data make_quote()
 {
-    return(make_builtin_macro(quote_impl));
+    return(make_builtin_macro(_quote));
 }
 
 data make_int(int value)
@@ -727,4 +727,74 @@ int stack_print_as_data(stack s)
     }
     wprintf(L")\n");
     return(1);
+}
+
+/****************/
+/* Forward list */
+/****************/
+data forward_list_create()
+{
+    return(nil);
+}
+
+data forward_list_push_front(data * list, data element)
+{
+    data front;
+    front = make_pair(element, *list);
+    *list = front;
+    return(t);
+}
+
+data forward_list_pop_front(data * list)
+{
+    data front;
+    front = car(*list);
+    *list = cdr(*list);
+    return(front);
+}
+
+data forward_list_find(data list, predicate_t pred)
+{
+    data d = list;
+    while (is_not_nil(d))
+    {
+        if (pred(car(d)))
+            return(car(d));
+        d = cdr(d);
+    }
+    return(NULL);
+}
+
+data forward_list_remove(data * list, predicate_t pred)
+{
+    data d, temp;
+    if (is_nil(*list))
+        return(nil);
+    if (pred(car(*list)))
+    {
+        temp = car(*list);
+        *list = cdr(*list);
+        return(temp);
+    }
+    d = *list;
+    while (is_not_nil(cdr(d)))
+    {
+        if (pred(cadr(d)))
+        {
+            temp = cadr(d);
+            set_cdr(d, cddr(d));
+            return(temp);
+        }
+        d = cdr(d);
+    }
+    return(NULL);
+}
+
+data forward_list_mark(data list)
+{
+    while (is_not_nil(list))
+    {
+        mark_data(car(list));
+        list = cdr(list);
+    }
 }

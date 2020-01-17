@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "char.h"
 #include "print.h"
+#include "eval.h"
 
 enum
 {
@@ -49,15 +50,16 @@ FILE * input_stream;
 /********************************/
 void            context_init(context *);
 wint_t          context_read_char(context *);
-void            context_read_back(context *);
+void            context_read_back(context *, int count);
 void            context_push_char(context *, wchar_t);
 void            context_pop_char(context *);
 void            context_clear_token(context * c);
 int             context_get_token_kind(context *);
-const wchar_t * context_get_token_str(context *);
+const wchar_t * context_get_token_string(context *);
 data            context_get_token_data(context *);
 void            context_set_token_kind(context *, int);
 void            context_set_token_data(context *, data);
+void            context_remove_token_string_suffix(context * c, int length);
 
 data read_internal(context *);
 void read_token(context *);
@@ -111,9 +113,9 @@ wint_t context_read_char(context * c)
     return(c->buf[c->lastreadbuf] = fgetc(input_stream));
 }
 
-void context_read_back(context * c)
+void context_read_back(context * c, int count)
 {
-    c->backcnt += 1;
+    c->backcnt += count;
 }
 
 void context_push_char(context * c, wchar_t wc)
@@ -140,7 +142,7 @@ int context_get_token_kind(context * c)
     return(c->tkn.kind);
 }
 
-const wchar_t * context_get_token_str(context * c)
+const wchar_t * context_get_token_string(context * c)
 {
     return(c->tkn.string);
 }
@@ -158,6 +160,12 @@ void context_set_token_kind(context * c, int kind)
 void context_set_token_data(context * c, data d)
 {
     c->tkn.data = d;
+}
+
+void context_remove_token_string_suffix(context * c, int length)
+{
+    c->tkn.string[c->tkn.length - length] = L'\0';
+    c->tkn.length -= length;
 }
 
 /**************/
@@ -225,7 +233,7 @@ int parse_nonprintable(context * c)
     while ((!is_eof(lastchar = context_read_char(c))) && ((is_space(lastchar) || (is_crlf(lastchar)))));
     if (is_eof(lastchar))
         return(1);
-    context_read_back(c);
+    context_read_back(c, 1);
     return(0);
 }
 
@@ -240,7 +248,7 @@ int parse_lparen(context * c)
         context_set_token_data(c, NULL);
         return(1);
     }
-    context_read_back(c);
+    context_read_back(c, 1);
     return(0);
 }
 
@@ -255,7 +263,7 @@ int parse_rparen(context * c)
         context_set_token_data(c, NULL);
         return(1);
     }
-    context_read_back(c);
+    context_read_back(c, 1);
     return(0);
 }
 
@@ -303,10 +311,10 @@ int parse_number(context * c)
             context_push_char(c, (wchar_t)lastchar);
             error(L"Number literal parsing failed. (%s)\n", c->tkn.string);
         }
-        context_read_back(c);
+        context_read_back(c, 1);
         return(1);
     }
-    context_read_back(c);
+    context_read_back(c, 1);
     return(0);
 }
 
@@ -336,25 +344,51 @@ int parse_string(context * c)
                 context_push_char(c, (wchar_t)lastchar);
         }
         context_set_token_kind(c, token_literal);
-        context_set_token_data(c, make_string(context_get_token_str(c)));
+        context_set_token_data(c, make_string(context_get_token_string(c)));
         return(1);
     }
-    context_read_back(c);
+    context_read_back(c, 1);
     return(0);
 }
 
 int parse_symbol(context * c)
 {
     wint_t lastchar;
+    data prefix_operator;
+    const wchar_t * sub_string;
+    int operator_length;
     while ((!is_eof(lastchar = context_read_char(c))) && (is_symbol_char(lastchar)))
-        context_push_char(c, (wchar_t)lastchar);
-    if(c->tkn.length > 0)
     {
-        context_set_token_kind(c, token_symbol);
-        context_set_token_data(c, make_symbol(context_get_token_str(c)));
+        context_push_char(c, (wchar_t)lastchar);
+
+        for (sub_string = context_get_token_string(c); *sub_string; ++sub_string)
+        {
+            prefix_operator = find_prefix_operator(sub_string);
+            if (prefix_operator)
+            {
+                if (sub_string == context_get_token_string(c)) /* parse prefix operator */
+                {
+                    context_set_token_kind(c, token_literal);
+                    context_set_token_data(c, make_symbol(context_get_token_string(c)));
+                    return(1);
+                }
+
+                operator_length = wcslen(raw_string(prefix_operator));
+                context_remove_token_string_suffix(c, operator_length);
+                context_read_back(c, operator_length);
+                return(1);
+            }
+        }
     }
-    else
+
+    context_read_back(c, 1);
+    if (c->tkn.length == 0)
+    {
         return(0);
-    context_read_back(c);
+    }
+
+    context_set_token_kind(c, token_symbol);
+    context_set_token_data(c, make_symbol(context_get_token_string(c)));
+
     return(1);
 }

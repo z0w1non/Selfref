@@ -13,7 +13,6 @@ void init_builtin()
     cpush_symbol(L"t", t);
     cpush_symbol(L"quote", quote);
 
-    cpush_symbol(L"eval", make_builtin_function(_eval));
     cpush_symbol(L"print", make_builtin_function(_print));
 
     cpush_symbol(L"dump_symbol", make_builtin_function(_dump_symbol));
@@ -377,6 +376,34 @@ data _mod_2op(data d)
     if (is_int(car(d)) && is_int(cadr(d)))
         return(make_int(raw_int(car(d)) % raw_int(cadr(d))));
     error(L"invalid argument.\n");
+}
+
+data _logical_left_shift(data d)
+{
+    if (!is_int(car(d)) || !is_int(cadr(d)))
+        error(L"logical left shift can not be applied to non-integer value");
+    return(make_int(((unsigned int)raw_int(car(d))) << raw_int(cadr(d))));
+}
+
+data _logical_right_shift(data d)
+{
+    if (!is_int(car(d)) || !is_int(cadr(d)))
+        error(L"logical left shift can not be applied to non-integer value");
+    return(make_int(((unsigned int)raw_int(car(d))) >> raw_int(cadr(d))));
+}
+
+data _arithmetic_left_shift(data d)
+{
+    if (!is_int(car(d)) || !is_int(cadr(d)))
+        error(L"logical left shift can not be applied to non-integer value");
+    return(make_int(raw_int(car(d)) << raw_int(cadr(d))));
+}
+
+data _arithmetic_right_shift(data d)
+{
+    if (!is_int(car(d)) || !is_int(cadr(d)))
+        error(L"logical left shift can not be applied to non-integer value");
+    return(make_int(raw_int(car(d)) >> raw_int(cadr(d))));
 }
 
 /**************/

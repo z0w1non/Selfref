@@ -28,6 +28,10 @@ data _sub_2op(data);
 data _mul_2op(data);
 data _div_2op(data);
 data _mod_2op(data);
+data _logical_left_shift(data);
+data _logical_right_shift(data);
+data _arithmetic_left_shift(data);
+data _arithmetic_right_shift(data);
 
 /**************/
 /* Comparator */

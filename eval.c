@@ -128,6 +128,11 @@ void init_operator_list()
     add_builtin_left_associative_operator_function(L"%", _mod_2op);
     add_builtin_left_associative_operator_function(L"/", _div_2op);
     add_builtin_left_associative_operator_function(L"*", _mul_2op);
+
+    add_builtin_left_associative_operator_function(L"<<", _arithmetic_left_shift);
+    add_builtin_left_associative_operator_function(L">>", _arithmetic_right_shift);
+    add_builtin_left_associative_operator_function(L"<<<", _logical_left_shift);
+    add_builtin_left_associative_operator_function(L">>>", _logical_right_shift);
 }
 
 data add_builtin_left_associative_operator_function(const wchar_t * name, function_t f)
@@ -442,7 +447,7 @@ int has_prefix_operator(data d)
     return(0);
 }
 
-// (resolve_prefix_operator (a ' b c ...))
+// (resolve_prefix_operator (a 'b c ...))
 data resolve_prefix_operator(data d)
 {
     data prefix_operator;

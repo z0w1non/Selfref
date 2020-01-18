@@ -22,11 +22,11 @@ data print(data d)
     else if (is_symbol(d))
         wprintf(L"<symbol %s>", raw_string(d));
     else if (is_builtin_macro(d))
-        wprintf(L"<builtin_macro %04x>", heap_addr(d));
+        wprintf(L"<builtin_macro %04x>", heap_address(d));
     else if (is_builtin_function(d))
-        wprintf(L"<builtin_function %04x>", heap_addr(d));
+        wprintf(L"<builtin_function %04x>", heap_address(d));
     else if (is_unnamed_macro(d))
-        wprintf(L"<macro %04x>", heap_addr(d));
+        wprintf(L"<macro %04x>", heap_address(d));
     else if (is_unnamed_function(d))
         print_function(d);
     else if (is_left_associative_operator(d))
@@ -40,7 +40,7 @@ data print(data d)
     else if (is_string(d))
         wprintf(L"\"%s\"", raw_string(d));
     else if (is_unnamed_function(d))
-        wprintf(L"<lambda %04x>", heap_addr(d));
+        wprintf(L"<lambda %04x>", heap_address(d));
     return(d);
 }
 

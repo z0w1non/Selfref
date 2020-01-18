@@ -8,22 +8,23 @@
 /* Heap memory function */
 /************************/
 data heap;
-data restheap;
-int heaplen;
-int heapcnt;
+data unused_heap;
+int heap_length;
+int heap_used_count;
 
 void init_heap(int len)
 {
-    int i;
+    size_t i;
     heap = (data)malloc(sizeof(dataimpl) * len);
     if (!heap)
+    {
         error(L"bad alloc");
-
+        return;
+    }
     memset(heap, 0, sizeof(dataimpl) * len);
-
-    restheap = heap;
-    heaplen = len;
-    heapcnt = 0;
+    unused_heap = heap;
+    heap_length = len;
+    heap_used_count = 0;
     for (i = 0; i < len; ++i)
     {
         set_car(&heap[i], &heap[((i - 1 + len) % len)]);
@@ -36,34 +37,35 @@ void init_heap(int len)
 
 void cleanup_heap()
 {
-    int i;
-    for (i = 0; i < heaplen; ++i)
+    size_t i;
+    for (i = 0; i < heap_length; ++i)
         free_data(&heap[i]);
     free(heap);
     heap = NULL;
-    restheap = NULL;
-    heaplen = 0;
-    heapcnt = 0;
+    unused_heap = NULL;
+    heap_length = 0;
+    heap_used_count = 0;
 }
 
 void free_data(data d)
 {
     if (!used(d))
-        error(L"Invalid freedata to unused heap\n");
+        error(L"invalid free data to unused heap\n");
     if (is_symbol(d) || is_string(d) || is_left_associative_operator(d) || is_right_associative_operator(d))
         free(d->buffer._string);
     init_data(d);
-    insert_node(restheap, d);
-    heapcnt -= 1;
+    insert_node(unused_heap, d);
+    heap_used_count -= 1;
 }
 
 data _dump_heap(data d)
 {
-    wprintf(L"%05.1lf%% (%d/%d)\n", ((double)heapcnt / heaplen * 100), heapcnt, heaplen);
+    size_t i;
+    wprintf(L"%05.1lf%% (%d/%d)\n", ((double)heap_used_count / heap_length * 100), heap_used_count, heap_length);
     wprintf(L"   addr info\n");
-    for (int i = 0; i < heaplen; ++i)
+    for (i = 0; i < heap_length; ++i)
     {
-        wprintf(L"%c%c %04x ", (used(&heap[i]) ? L'u' : L' '), (marked(&heap[i]) ? L'm' : L' '), (int)heap_addr(&heap[i]));
+        wprintf(L"%c%c %04zu ", (used(&heap[i]) ? L'u' : L' '), (marked(&heap[i]) ? L'm' : L' '), (size_t)heap_address(&heap[i]));
         print(&heap[i]);
         wprintf(L"\n");
     }
@@ -72,29 +74,29 @@ data _dump_heap(data d)
 
 void unmark_heap()
 {
-    int i;
-    for (i = 0; i < heaplen; ++i)
+    size_t i;
+    for (i = 0; i < heap_length; ++i)
         set_marked(&heap[i], 0);
 }
 
 data sweep_unmarked(data d)
 {
-    int i, cnt;
-    cnt = 0;
-    for (i = 0; i < heaplen; ++i)
+    size_t i, count;
+    count = 0;
+    for (i = 0; i < heap_length; ++i)
     {
         if (used(&heap[i]) && !marked(&heap[i]))
         {
             free_data(&heap[i]);
-            cnt += 1;
+            count += 1;
         }
     }
-    return(make_int(cnt));
+    return(make_int(count));
 }
 
 data request_gc(data d)
 {
-    if (((double)heapcnt / heaplen) > 0.75)
+    if (((double)heap_used_count / heap_length) > 0.75)
         return(_gc(d));
     return(nil);
 }
@@ -108,18 +110,21 @@ data _gc(data d)
 
 data alloc()
 {
-    if (heapcnt == heaplen)
+    if (heap_used_count == heap_length)
+    {
         error(L"Heap memory allocation failed");
+        return(nil);
+    }
 
-    data newdata = pull_node(&restheap);
-    heapcnt += 1;
+    data new_data = pull_node(&unused_heap);
+    heap_used_count += 1;
 
-    memset((void *)newdata, 0, sizeof(dataimpl));
-    set_used(newdata, 1);
-    return(newdata);
+    memset((void *)new_data, 0, sizeof(dataimpl));
+    set_used(new_data, 1);
+    return(new_data);
 }
 
-int heap_addr(data d)
+int heap_address(data d)
 {
     return((int)(d - heap));
 }

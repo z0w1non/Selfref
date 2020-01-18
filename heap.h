@@ -12,6 +12,6 @@ data request_gc(data);
 data sweep_unmarked(data);
 data _gc(data);
 data alloc();
-int heap_addr(data);
+int heap_address(data);
 
 #endif

@@ -417,13 +417,13 @@ data _arithmetic_right_shift(data d)
 data _less_2op(data d)
 {
     if (is_int(car(d)) && is_int(cadr(d)))
-        return(nilort(raw_int(car(d)) < raw_int(cadr(d))));
+        return(nil_or_t(raw_int(car(d)) < raw_int(cadr(d))));
     else if (is_int(car(d)) && is_double(cadr(d)))
-        return(nilort(raw_int(car(d)) < raw_double(cadr(d))));
+        return(nil_or_t(raw_int(car(d)) < raw_double(cadr(d))));
     else if (is_double(car(d)) && is_int(cadr(d)))
-        return(nilort(raw_double(car(d)) < raw_int(cadr(d))));
+        return(nil_or_t(raw_double(car(d)) < raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
-        return(nilort(raw_double(car(d)) < raw_double(cadr(d))));
+        return(nil_or_t(raw_double(car(d)) < raw_double(cadr(d))));
     error(L"invalid argument");
     return(nil);
 }
@@ -431,13 +431,13 @@ data _less_2op(data d)
 data _less_equal_2op(data d)
 {
     if (is_int(car(d)) && is_int(cadr(d)))
-        return(nilort(raw_int(car(d)) <= raw_int(cadr(d))));
+        return(nil_or_t(raw_int(car(d)) <= raw_int(cadr(d))));
     else if (is_int(car(d)) && is_double(cadr(d)))
-        return(nilort(raw_int(car(d)) <= raw_double(cadr(d))));
+        return(nil_or_t(raw_int(car(d)) <= raw_double(cadr(d))));
     else if (is_double(car(d)) && is_int(cadr(d)))
-        return(nilort(raw_double(car(d)) <= raw_int(cadr(d))));
+        return(nil_or_t(raw_double(car(d)) <= raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
-        return(nilort(raw_double(car(d)) <= raw_double(cadr(d))));
+        return(nil_or_t(raw_double(car(d)) <= raw_double(cadr(d))));
     error(L"invalid argument");
     return(nil);
 }
@@ -445,13 +445,13 @@ data _less_equal_2op(data d)
 data _greater_2op(data d)
 {
     if (is_int(car(d)) && is_int(cadr(d)))
-        return(nilort(raw_int(car(d)) > raw_int(cadr(d))));
+        return(nil_or_t(raw_int(car(d)) > raw_int(cadr(d))));
     else if (is_int(car(d)) && is_double(cadr(d)))
-        return(nilort(raw_int(car(d)) > raw_double(cadr(d))));
+        return(nil_or_t(raw_int(car(d)) > raw_double(cadr(d))));
     else if (is_double(car(d)) && is_int(cadr(d)))
-        return(nilort(raw_double(car(d)) > raw_int(cadr(d))));
+        return(nil_or_t(raw_double(car(d)) > raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
-        return(nilort(raw_double(car(d)) > raw_double(cadr(d))));
+        return(nil_or_t(raw_double(car(d)) > raw_double(cadr(d))));
     error(L"invalid argument");
     return(nil);
 }
@@ -459,13 +459,13 @@ data _greater_2op(data d)
 data _greater_equal_2op(data d)
 {
     if (is_int(car(d)) && is_int(cadr(d)))
-        return(nilort(raw_int(car(d)) >= raw_int(cadr(d))));
+        return(nil_or_t(raw_int(car(d)) >= raw_int(cadr(d))));
     else if (is_int(car(d)) && is_double(cadr(d)))
-        return(nilort(raw_int(car(d)) >= raw_double(cadr(d))));
+        return(nil_or_t(raw_int(car(d)) >= raw_double(cadr(d))));
     else if (is_double(car(d)) && is_int(cadr(d)))
-        return(nilort(raw_double(car(d)) >= raw_int(cadr(d))));
+        return(nil_or_t(raw_double(car(d)) >= raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
-        return(nilort(raw_double(car(d)) >= raw_double(cadr(d))));
+        return(nil_or_t(raw_double(car(d)) >= raw_double(cadr(d))));
     error(L"invalid argument");
     return(nil);
 }
@@ -473,13 +473,13 @@ data _greater_equal_2op(data d)
 data _equal_2op(data d)
 {
     if (is_int(car(d)) && is_int(cadr(d)))
-        return(nilort(raw_int(car(d)) == raw_int(cadr(d))));
+        return(nil_or_t(raw_int(car(d)) == raw_int(cadr(d))));
     else if (is_int(car(d)) && is_double(cadr(d)))
-        return(nilort(raw_int(car(d)) == raw_double(cadr(d))));
+        return(nil_or_t(raw_int(car(d)) == raw_double(cadr(d))));
     else if (is_double(car(d)) && is_int(cadr(d)))
-        return(nilort(raw_double(car(d)) == raw_int(cadr(d))));
+        return(nil_or_t(raw_double(car(d)) == raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
-        return(nilort(raw_double(car(d)) == raw_double(cadr(d))));
+        return(nil_or_t(raw_double(car(d)) == raw_double(cadr(d))));
     error(L"invalid argument");
     return(nil);
 }
@@ -487,13 +487,13 @@ data _equal_2op(data d)
 data _not_equal_2op(data d)
 {
     if (is_int(car(d)) && is_int(cadr(d)))
-        return(nilort(raw_int(car(d)) != raw_int(cadr(d))));
+        return(nil_or_t(raw_int(car(d)) != raw_int(cadr(d))));
     else if (is_int(car(d)) && is_double(cadr(d)))
-        return(nilort(raw_int(car(d)) != raw_double(cadr(d))));
+        return(nil_or_t(raw_int(car(d)) != raw_double(cadr(d))));
     else if (is_double(car(d)) && is_int(cadr(d)))
-        return(nilort(raw_double(car(d)) != raw_int(cadr(d))));
+        return(nil_or_t(raw_double(car(d)) != raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
-        return(nilort(raw_double(car(d)) != raw_double(cadr(d))));
+        return(nil_or_t(raw_double(car(d)) != raw_double(cadr(d))));
     error(L"invalid argument");
     return(nil);
 }

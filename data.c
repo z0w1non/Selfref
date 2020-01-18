@@ -348,91 +348,91 @@ data get_operator_impl(data d)
 /**********************/
 data _is_pair(data d)
 {
-    return(nilort(type_id(car(d)) == id_pair));
+    return(nil_or_t(type_id(car(d)) == id_pair));
 }
 
 data _is_builtin_macro(data d)
 {
-    return(nilort(type_id(car(d)) == id_builtin_macro));
+    return(nil_or_t(type_id(car(d)) == id_builtin_macro));
 }
 
 data _is_builtin_function(data d)
 {
-    return(nilort(type_id(car(d)) == id_builtin_function));
+    return(nil_or_t(type_id(car(d)) == id_builtin_function));
 }
 
 data _is_unnamed_macro(data d)
 {
-    return(nilort(type_id(car(d)) == id_unnamed_macro));
+    return(nil_or_t(type_id(car(d)) == id_unnamed_macro));
 }
 
 data _is_unnamed_function(data d)
 {
-    return(nilort(type_id(car(d)) == id_unnamed_function));
+    return(nil_or_t(type_id(car(d)) == id_unnamed_function));
 }
 
 data _is_symbol(data d)
 {
-    return(nilort(type_id(car(d)) == id_symbol));
+    return(nil_or_t(type_id(car(d)) == id_symbol));
 }
 
 data _is_nil(data d)
 {
-    return(nilort(type_id(car(d)) == id_nil));
+    return(nil_or_t(type_id(car(d)) == id_nil));
 }
 
 data _is_not_nil(data d)
 {
-    return(nilort(type_id(car(d)) != id_nil));
+    return(nil_or_t(type_id(car(d)) != id_nil));
 }
 
 data _is_int(data d)
 {
-    return(nilort(type_id(car(d)) == id_int));
+    return(nil_or_t(type_id(car(d)) == id_int));
 }
 
 data _is_double(data d)
 {
-    return(nilort(type_id(car(d)) == id_double));
+    return(nil_or_t(type_id(car(d)) == id_double));
 }
 
 data _is_number(data d)
 {
-    return(nilort((type_id(car(d)) == id_int) || (type_id(car(d)) == id_double)));
+    return(nil_or_t((type_id(car(d)) == id_int) || (type_id(car(d)) == id_double)));
 }
 
 data _is_string(data d)
 {
-    return(nilort(type_id(car(d)) == id_string));
+    return(nil_or_t(type_id(car(d)) == id_string));
 }
 
 data _is_zero(data d)
 {
     if (is_int(car(d)))
-        return(nilort(raw_int(car(d)) == 0));
+        return(nil_or_t(raw_int(car(d)) == 0));
     else if (is_double(car(d)))
-        return(nilort(raw_double(car(d)) == 0.0));
+        return(nil_or_t(raw_double(car(d)) == 0.0));
     return(nil);
 }
 
 data _is_left_associative_operator(data d)
 {
-    return(nilort(type_id(d) == id_left_associative_operator));
+    return(nil_or_t(type_id(d) == id_left_associative_operator));
 }
 
 data _is_right_associative_operator(data d)
 {
-    return(nilort(type_id(d) == id_right_associative_operator));
+    return(nil_or_t(type_id(d) == id_right_associative_operator));
 }
 
 data _is_prefix_operator(data d)
 {
-    return(nilort(type_id(d) == id_prefix_operator));
+    return(nil_or_t(type_id(d) == id_prefix_operator));
 }
 
 data _is_suffix_operator(data d)
 {
-    return(nilort(type_id(d) == id_suffix_operator));
+    return(nil_or_t(type_id(d) == id_suffix_operator));
 }
 
 /****************************/
@@ -538,7 +538,10 @@ int is_suffix_operator(data d)
 void link_node(data a, data b)
 {
     if (a == b)
+    {
         error(L"linknode failed");
+        return;
+    }
     set_cdr(a, b);
     set_car(b, a);
 }
@@ -546,7 +549,10 @@ void link_node(data a, data b)
 data insert_node(data list, data node)
 {
     if (list == node)
+    {
         error(L"insertnode failed");
+        return(nil);
+    }
     data prev = car(list);
     link_node(prev, node);
     link_node(node, list);
@@ -557,7 +563,10 @@ data pull_node(data * list)
 {
     data d1, d2, pop;
     if ((car(*list) == *list) || (cdr(*list) == *list))
+    {
         error(L"pullnode failed");
+        return(nil);
+    }
     d1 = car(*list);
     d2 = cdr(*list);
     link_node(d1, d2);
@@ -569,7 +578,7 @@ data pull_node(data * list)
 /***********/
 /* Utility */
 /***********/
-data nilort(int b)
+data nil_or_t(int b)
 {
     return(b ? t : nil);
 }
@@ -592,23 +601,23 @@ wchar_t * clone_string(const wchar_t * s)
 typedef struct queue_tag
 {
     void * data;
-    int size;
-    int head;
-    int count;
-    int typesize;
+    size_t size;
+    size_t head;
+    size_t count;
+    size_t size_of_type;
 } * queue;
 
-queue queue_create(int typesize)
+queue queue_create(size_t size_of_type)
 {
     queue q;
     q = malloc(sizeof(struct queue_tag));
     if (!q)
         return(NULL);
     q->size = 32;
-    q->data = malloc(typesize * q->size);
+    q->data = malloc(size_of_type * q->size);
     q->head = 0;
     q->count = 0;
-    q->typesize = typesize;
+    q->size_of_type = size_of_type;
     return(q);
 }
 
@@ -625,9 +634,9 @@ void queue_cleanup(queue q)
 int queue_enqueue(queue q, const void * data)
 {
     if (q->count >= q->size)
-        if (!(q->data = realloc(q->data, q->typesize * (q->size *= 2))))
+        if (!(q->data = realloc(q->data, q->size_of_type * (q->size *= 2))))
             return(0);
-    memcpy(((char *)(q->data) + q->typesize * ((q->head + q->count) % q->size)), data, q->typesize);
+    memcpy(((char *)(q->data) + q->size_of_type * ((q->head + q->count) % q->size)), data, q->size_of_type);
     q->count += 1;
     return(1);
 }
@@ -636,7 +645,7 @@ int queue_dequeue(queue q, void * data)
 {
     if (q->count <= 0)
         return(0);
-    memcpy(data, ((char *)(q->data) + q->typesize * q->head), q->typesize);
+    memcpy(data, ((char *)(q->data) + q->size_of_type * q->head), q->size_of_type);
     q->count -= 1;
     q->head = (q->head + 1) % q->size;
     return(1);
@@ -646,7 +655,7 @@ int queue_front(queue q, void * data)
 {
     if (q->count <= 0)
         return(0);
-    memcpy(data, ((char *)(q->data) + q->typesize * q->head), q->typesize);
+    memcpy(data, ((char *)(q->data) + q->size_of_type * q->head), q->size_of_type);
     return(1);
 }
 
@@ -657,7 +666,7 @@ int queue_is_empty(queue q)
 
 int queue_print_as_data(queue q)
 {
-    int i;
+    size_t i;
     wprintf(L"(queue ");
     for (i = 0; i < q->count; ++i)
     {
@@ -675,21 +684,21 @@ int queue_print_as_data(queue q)
 typedef struct stack_tag
 {
     void * data;
-    int size;
-    int count;
-    int typesize;
+    size_t size;
+    size_t count;
+    size_t size_of_type;
 } * stack;
 
-stack stack_create(int typesize)
+stack stack_create(size_t size_of_type)
 {
     stack s;
     s = (stack)malloc(sizeof(struct stack_tag));
     if (!s)
         return(NULL);
     s->size = 32;
-    s->data = malloc(typesize * s->size);
+    s->data = malloc(size_of_type * s->size);
     s->count = 0;
-    s->typesize = typesize;
+    s->size_of_type = size_of_type;
     return(s);
 }
 
@@ -705,9 +714,9 @@ void stack_cleanup(stack s)
 int stack_push(stack s, const void * data)
 {
     if (s->count >= s->size)
-        if (!(s->data = realloc(s->data, s->typesize * (s->size *= 2))))
+        if (!(s->data = realloc(s->data, s->size_of_type * (s->size *= 2))))
             return(0);
-    memcpy(((char *)(s->data) + s->typesize * s->count), data, s->typesize);
+    memcpy(((char *)(s->data) + s->size_of_type * s->count), data, s->size_of_type);
     s->count += 1;
     return(1);
 }
@@ -717,7 +726,7 @@ int stack_pop(stack s, void * data)
     if (s->count <= 0)
         return(0);
     s->count -= 1;
-    memcpy(data, ((char *)(s->data) + s->typesize * s->count), s->typesize);
+    memcpy(data, ((char *)(s->data) + s->size_of_type * s->count), s->size_of_type);
     return(1);
 }
 
@@ -725,7 +734,7 @@ int stack_front(stack s, void * data)
 {
     if (s->count <= 0)
         return(0);
-    memcpy(data, ((char *)(s->data) + s->typesize * (s->count - 1)), s->typesize);
+    memcpy(data, ((char *)(s->data) + s->size_of_type * (s->count - 1)), s->size_of_type);
     return(1);
 }
 
@@ -736,7 +745,7 @@ int stack_is_empty(stack s)
 
 int stack_print_as_data(stack s)
 {
-    int i;
+    size_t i;
     wprintf(L"(stack ");
     for (i = 0; i < s->count; ++i)
     {

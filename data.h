@@ -152,7 +152,7 @@ data pull_node(data * list);
 /***********/
 /* Utility */
 /***********/
-data nilort(int);
+data nil_or_t(int);
 wchar_t * clone_string(const wchar_t * s);
 
 /*********/
@@ -160,7 +160,7 @@ wchar_t * clone_string(const wchar_t * s);
 /*********/
 struct queue_tag;
 typedef struct queue_tag * queue;
-queue queue_create(int);
+queue queue_create(size_t);
 void queue_cleanup(queue);
 int queue_enqueue(queue, const void *);
 int queue_dequeue(queue, void *);
@@ -173,7 +173,7 @@ int queue_print_as_data(stack);
 /*********/
 struct stack_tag;
 typedef struct stack_tag * stack;
-stack stack_create(int);
+stack stack_create(size_t);
 void stack_cleanup(stack);
 int stack_push(stack, const void *);
 int stack_pop(stack, void *);

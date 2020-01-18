@@ -112,7 +112,7 @@ data alloc()
 {
     if (heap_used_count == heap_length)
     {
-        error(L"Heap memory allocation failed");
+        error(L"heap memory allocation failed");
         return(nil);
     }
 

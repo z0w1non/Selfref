@@ -17,6 +17,7 @@ data call_unnamed_function(data);
 /* Operator list */
 /*****************/
 void init_operator_list();
+void mark_operator_list();
 data add_builtin_left_associative_operator_function(const wchar_t * name, function_t f);
 data add_builtin_right_associative_operator_function(const wchar_t * name, function_t f);
 data add_builtin_left_associative_operator_macro(const wchar_t * name, function_t f);
@@ -32,6 +33,7 @@ data sort_operator(data);
 /* Prefix operator list */
 /************************/
 void init_prefix_operator_list();
+void mark_prefix_operator_list();
 data add_builtin_prefix_operator_macro(const wchar_t *, function_t);
 data add_builtin_prefix_operator_function(const wchar_t *, function_t);
 data add_prefix_operator(data);

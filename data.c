@@ -822,6 +822,7 @@ data forward_list_mark(data list)
 {
     while (is_not_nil(list))
     {
+        mark_data(list);
         mark_data(car(list));
         list = cdr(list);
     }

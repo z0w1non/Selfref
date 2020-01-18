@@ -135,6 +135,11 @@ void init_operator_list()
     add_builtin_left_associative_operator_function(L">>>", _logical_right_shift);
 }
 
+void mark_operator_list()
+{
+    forward_list_mark(operator_list);
+}
+
 data add_builtin_left_associative_operator_function(const wchar_t * name, function_t f)
 {
     data d = make_left_associative_operator(name, make_builtin_function(f));
@@ -382,6 +387,11 @@ void init_prefix_operator_list()
     prefix_operator_list = forward_list_create();
 
     add_builtin_prefix_operator_macro(L"\'", _quote);
+}
+
+void mark_prefix_operator_list()
+{
+    forward_list_mark(prefix_operator_list);
 }
 
 data add_builtin_prefix_operator_macro(const wchar_t * name, function_t f)

@@ -3,6 +3,7 @@
 #include "string.h"
 #include "print.h"
 #include "sym.h"
+#include "eval.h"
 
 /************************/
 /* Heap memory function */
@@ -105,6 +106,8 @@ data _gc(data d)
 {
     unmark_heap();
     mark_symbol();
+    mark_operator_list();
+    mark_prefix_operator_list();
     return(sweep_unmarked(nil));
 }
 

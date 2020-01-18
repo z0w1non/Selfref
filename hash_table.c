@@ -147,7 +147,6 @@ void hash_table_mark(hash_table * table)
     {
         if (table->data[i].state == state_used)
         {
-            wprintf(L"%s\n", table->data[i].key);
             d = table->data[i].stack;
             while (is_not_nil(d))
             {

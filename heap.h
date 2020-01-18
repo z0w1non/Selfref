@@ -7,7 +7,6 @@ void init_heap(int len);
 void cleanup_heap();
 void free_data(data);
 data _dump_heap(data);
-void mark_data(data);
 void unmark_heap();
 data request_gc(data);
 data sweep_unmarked(data);

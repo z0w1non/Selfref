@@ -127,6 +127,7 @@
     <ClInclude Include="char.h" />
     <ClInclude Include="data.h" />
     <ClInclude Include="eval.h" />
+    <ClInclude Include="hash_table.h" />
     <ClInclude Include="heap.h" />
     <ClInclude Include="print.h" />
     <ClInclude Include="read.h" />
@@ -138,6 +139,7 @@
     <ClCompile Include="char.c" />
     <ClCompile Include="data.c" />
     <ClCompile Include="eval.c" />
+    <ClCompile Include="hash_table.c" />
     <ClCompile Include="heap.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="print.c" />

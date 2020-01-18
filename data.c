@@ -65,6 +65,25 @@ int type_id(data d)
     return(d->info & 15);
 }
 
+void mark_data(data d)
+{
+    if (marked(d))
+        return;
+    set_marked(d, 1);
+    if (is_pair(d))
+    {
+        if (is_not_nil(car(d)))
+            mark_data(car(d));
+        if (is_not_nil(cdr(d)))
+            mark_data(cdr(d));
+    }
+    else if (is_unnamed_function(d) || is_unnamed_macro(d))
+    {
+        mark_data(get_args(d));
+        mark_data(get_impl(d));
+    }
+}
+
 /*****************/
 /* Make function */
 /*****************/
@@ -283,14 +302,14 @@ function_t raw_macro(data d)
 data get_args(data d)
 {
     if (!is_unnamed_function(d))
-        error(L"getargs failed.\n");
+        error(L"getargs failed");
     return(d->buffer.first);
 }
 
 data get_impl(data d)
 {
     if (!is_unnamed_function(d))
-        error(L"getargs failed.\n");
+        error(L"getargs failed");
     return(d->buffer.rest);
 }
 
@@ -519,7 +538,7 @@ int is_suffix_operator(data d)
 void link_node(data a, data b)
 {
     if (a == b)
-        error(L"linknode failed.\n");
+        error(L"linknode failed");
     set_cdr(a, b);
     set_car(b, a);
 }
@@ -527,7 +546,7 @@ void link_node(data a, data b)
 data insert_node(data list, data node)
 {
     if (list == node)
-        error(L"insertnode failed.\n");
+        error(L"insertnode failed");
     data prev = car(list);
     link_node(prev, node);
     link_node(node, list);
@@ -538,7 +557,7 @@ data pull_node(data * list)
 {
     data d1, d2, pop;
     if ((car(*list) == *list) || (cdr(*list) == *list))
-        error(L"pullnode failed.\n");
+        error(L"pullnode failed");
     d1 = car(*list);
     d2 = cdr(*list);
     link_node(d1, d2);
@@ -562,7 +581,7 @@ wchar_t * clone_string(const wchar_t * s)
     len = wcslen(s) + 1;
     newstr = (wchar_t *)malloc(sizeof(wchar_t) * len);
     if (!newstr)
-        error(L"Heap memory allocation failed.\n");
+        error(L"Heap memory allocation failed");
     wcscpy_s(newstr, len, s);
     return(newstr);
 }

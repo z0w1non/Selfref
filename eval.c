@@ -24,7 +24,7 @@ data eval(data d)
     {
         value = find_symbol(raw_string(d));
         if (!value)
-            error(L"<symbol %s> is not found.\n", raw_string(d));
+            error(L"<symbol %s> is not found", raw_string(d));
         return(value);
     }
     else if (is_pair(d))
@@ -40,7 +40,7 @@ data eval(data d)
             return(call_unnamed_function(make_pair(value, cdr(d))));
         if (has_operator(d))
             return(eval(d));
-        error(L"The first token in the list is must be callable or a symbol that bound to a callable.\n");
+        error(L"The first token in the list is must be callable or a symbol that bound to a callable");
     }
    return(d);
 }
@@ -50,7 +50,7 @@ data _eval_list(data d)
     if (is_nil(d))
         return(nil);
     if (!is_pair(d))
-        error(L"eval list failed.\n");
+        error(L"eval list failed");
     return(make_pair(eval(car(d)), _eval_list(cdr(d))));
 }
 
@@ -58,7 +58,7 @@ data _eval_list(data d)
 data call_builtin_macro(data d)
 {
     if (!is_builtin_macro(car(d)))
-        error(L"invalid macro call.\n");
+        error(L"invalid macro call");
     return(raw_macro(car(d))(cdr(d)));
 }
 
@@ -66,7 +66,7 @@ data call_builtin_macro(data d)
 data call_builtin_function(data d)
 {
     if (!is_builtin_function(car(d)))
-        error(L"invalid function call.\n");
+        error(L"invalid function call");
     return(raw_function(car(d))(_eval_list(cdr(d))));
 }
 
@@ -75,7 +75,7 @@ data call_unnamed_macro(data d)
 {
     data args, ret;
     if (!is_unnamed_macro(car(d)))
-        error(L"invalid unnnamed macro call.\n");
+        error(L"invalid unnnamed macro call");
     args = nil;
     if (is_not_nil(cadr(d)))
         _push_args(args = _zip(make_pair(get_args(car(d)), make_pair(cdr(d), nil))));
@@ -90,7 +90,7 @@ data call_unnamed_function(data d)
 {
     data args, ret;
     if(!is_unnamed_function(car(d)))
-        error(L"invalid function call.\n");
+        error(L"invalid function call");
     args = nil;
     if (is_not_nil(cadr(d)))
         _push_args(args = _zip(make_pair(get_args(car(d)), make_pair(_eval_list(cdr(d)), nil))));
@@ -166,7 +166,7 @@ data add_builtin_right_associative_operator_macro(const wchar_t * name, function
 void add_operator(data d)
 {
     if (!is_left_associative_operator(d) && !is_right_associative_operator(d))
-        error(L"add operator failed.\n");
+        error(L"add operator failed");
     operator_list = make_pair(d, operator_list);
 }
 
@@ -182,7 +182,7 @@ void remove_operator(const wchar_t * name)
         }
         list = cdr(list);
     }
-    error(L"<operator %s> not found.\n", name);
+    error(L"<operator %s> not found", name);
 }
 
 data find_operator(const wchar_t * name)
@@ -212,7 +212,7 @@ int compare_operator_priority(const wchar_t * a, const wchar_t * b)
             return(-1);
         list = cdr(list);
     }
-    error(L"<operator %s> and <operator %s> not found.\n", a, b);
+    error(L"<operator %s> and <operator %s> not found", a, b);
     return(0);
 }
 
@@ -368,7 +368,7 @@ error:
     stack_cleanup(operator_stack);
     stack_cleanup(stack_machine);
     queue_cleanup(output_queue);
-    error(L"bac alloc.\n");
+    error(L"bac alloc");
     return(nil);
 }
 
@@ -418,7 +418,7 @@ data remove_prefix_operator(const wchar_t * name)
     d = forward_list_remove(&prefix_operator_list, prefix_operator_internal_predicate);
     prefix_operator_string = NULL;
     if(!d)
-        error(L"<prefix operator %s> not found.\n", name);
+        error(L"<prefix operator %s> not found", name);
     return(d);
 }
 
@@ -459,7 +459,7 @@ data resolve_prefix_operator(data d)
         if (prefix_operator)
         {
             if (is_nil(cdr(d)))
-                error(L"token expected at after prefix operator.\n");
+                error(L"token expected at after prefix operator");
             return(make_pair(
                     make_pair(get_operator_impl(prefix_operator), make_pair(resolve_prefix_operator(cadr(d)), nil)),
                     resolve_prefix_operator(cddr(d))));

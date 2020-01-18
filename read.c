@@ -208,7 +208,7 @@ void read_token(context * c)
         else if (parse_nonprintable(c))
             context_set_token_kind(c, token_eof);
         else
-            error(L"Undefined token.\n");
+            error(L"Undefined token");
     }
 }
 
@@ -339,7 +339,7 @@ int parse_string(context * c)
                 }
             }
             else if (!is_print(lastchar))
-                error(L"String literal contains a unprintable character.\n");
+                error(L"String literal contains a unprintable character");
             else
                 context_push_char(c, (wchar_t)lastchar);
         }

@@ -17,7 +17,7 @@ void init_heap(int len)
     int i;
     heap = (data)malloc(sizeof(dataimpl) * len);
     if (!heap)
-        error(L"bad alloc.\n");
+        error(L"bad alloc");
 
     memset(heap, 0, sizeof(dataimpl) * len);
 
@@ -70,23 +70,6 @@ data _dump_heap(data d)
     return(t);
 }
 
-void mark_data(data d)
-{
-    set_marked(d, 1);
-    if (is_pair(d))
-    {
-        if (is_not_nil(car(d)))
-            mark_data(car(d));
-        if (is_not_nil(cdr(d)))
-            mark_data(cdr(d));
-    }
-    else if (is_unnamed_function(d))
-    {
-        mark_data(get_args(d));
-        mark_data(get_impl(d));
-    }
-}
-
 void unmark_heap()
 {
     int i;
@@ -126,7 +109,7 @@ data _gc(data d)
 data alloc()
 {
     if (heapcnt == heaplen)
-        error(L"Heap memory allocation failed.\n");
+        error(L"Heap memory allocation failed");
 
     data newdata = pull_node(&restheap);
     heapcnt += 1;

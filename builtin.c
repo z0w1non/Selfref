@@ -9,80 +9,80 @@
 
 void init_builtin()
 {
-    cpush_symbol(L"nil", nil);
-    cpush_symbol(L"t", t);
-    cpush_symbol(L"quote", quote);
+    push_symbol(L"nil", nil);
+    push_symbol(L"t", t);
+    push_symbol(L"quote", quote);
 
-    cpush_symbol(L"print", make_builtin_function(_print));
+    push_symbol(L"print", make_builtin_function(_print));
 
-    cpush_symbol(L"dump_symbol", make_builtin_function(_dump_symbol));
-    cpush_symbol(L"dump_heap", make_builtin_function(_dump_heap));
-    cpush_symbol(L"gc", make_builtin_function(_gc));
+    push_symbol(L"dump_symbol", make_builtin_function(_dump_symbol));
+    push_symbol(L"dump_heap", make_builtin_function(_dump_heap));
+    push_symbol(L"gc", make_builtin_function(_gc));
 
-    cpush_symbol(L"push_args", make_builtin_macro(_push_args));
-    cpush_symbol(L"pop_args", make_builtin_macro(_pop_args));
+    push_symbol(L"push_args", make_builtin_macro(_push_args));
+    push_symbol(L"pop_args", make_builtin_macro(_pop_args));
 
-    cpush_symbol(L"pair", make_builtin_function(_pair));
-    cpush_symbol(L"set_first", make_builtin_function(_set_first));
-    cpush_symbol(L"set_rest", make_builtin_function(_set_rest));
+    push_symbol(L"pair", make_builtin_function(_pair));
+    push_symbol(L"set_first", make_builtin_function(_set_first));
+    push_symbol(L"set_rest", make_builtin_function(_set_rest));
 
-    cpush_symbol(L"list", make_builtin_function(_list));
-    cpush_symbol(L"length", make_builtin_function(_length));
+    push_symbol(L"list", make_builtin_function(_list));
+    push_symbol(L"length", make_builtin_function(_length));
 
-    cpush_symbol(L"if", make_builtin_macro(_if));
-    cpush_symbol(L"and", make_builtin_macro(_and));
-    cpush_symbol(L"or", make_builtin_macro(_or));
-    cpush_symbol(L"not", make_builtin_function(_not));
+    push_symbol(L"if", make_builtin_macro(_if));
+    push_symbol(L"and", make_builtin_macro(_and));
+    push_symbol(L"or", make_builtin_macro(_or));
+    push_symbol(L"not", make_builtin_function(_not));
 
-    cpush_symbol(L"eval", make_builtin_macro(eval));
-    cpush_symbol(L"call", make_builtin_macro(_call));
-    cpush_symbol(L"apply", make_builtin_macro(_apply));
-    cpush_symbol(L"bind_symbol", make_builtin_macro(_bind_symbol));
-    cpush_symbol(L"unnamed_macro", make_builtin_macro(_unnamed_macro));
-    cpush_symbol(L"unnamed_function", make_builtin_macro(_unnamed_function));
-    cpush_symbol(L"macro", make_builtin_macro(_macro));
-    cpush_symbol(L"function", make_builtin_macro(_function));
+    push_symbol(L"eval", make_builtin_macro(eval));
+    push_symbol(L"call", make_builtin_macro(_call));
+    push_symbol(L"apply", make_builtin_macro(_apply));
+    push_symbol(L"bind_symbol", make_builtin_macro(_bind_symbol));
+    push_symbol(L"unnamed_macro", make_builtin_macro(_unnamed_macro));
+    push_symbol(L"unnamed_function", make_builtin_macro(_unnamed_function));
+    push_symbol(L"macro", make_builtin_macro(_macro));
+    push_symbol(L"function", make_builtin_macro(_function));
 
-    cpush_symbol(L"left_associative_operator", make_builtin_macro(_left_associative_operator));
-    cpush_symbol(L"right_associative_operator", make_builtin_macro(_right_associative_operator));
+    push_symbol(L"left_associative_operator", make_builtin_macro(_left_associative_operator));
+    push_symbol(L"right_associative_operator", make_builtin_macro(_right_associative_operator));
 
-    cpush_symbol(L"is_cons", make_builtin_function(_is_pair));
-    cpush_symbol(L"is_builtin_macro", make_builtin_function(_is_builtin_macro));
-    cpush_symbol(L"is_builtin_function", make_builtin_function(_is_builtin_function));
-    cpush_symbol(L"is_unnamed_macro", make_builtin_function(_is_unnamed_macro));
-    cpush_symbol(L"is_unnamed_function", make_builtin_function(_is_unnamed_function));
-    cpush_symbol(L"is_symbol", make_builtin_function(_is_symbol));
-    cpush_symbol(L"is_nil", make_builtin_function(_is_nil));
-    cpush_symbol(L"is_int", make_builtin_function(_is_int));
-    cpush_symbol(L"is_double", make_builtin_function(_is_double));
-    cpush_symbol(L"is_number", make_builtin_function(_is_number));
-    cpush_symbol(L"is_string", make_builtin_function(_is_string));
-    cpush_symbol(L"is_zero", make_builtin_function(_is_zero));
+    push_symbol(L"is_cons", make_builtin_function(_is_pair));
+    push_symbol(L"is_builtin_macro", make_builtin_function(_is_builtin_macro));
+    push_symbol(L"is_builtin_function", make_builtin_function(_is_builtin_function));
+    push_symbol(L"is_unnamed_macro", make_builtin_function(_is_unnamed_macro));
+    push_symbol(L"is_unnamed_function", make_builtin_function(_is_unnamed_function));
+    push_symbol(L"is_symbol", make_builtin_function(_is_symbol));
+    push_symbol(L"is_nil", make_builtin_function(_is_nil));
+    push_symbol(L"is_int", make_builtin_function(_is_int));
+    push_symbol(L"is_double", make_builtin_function(_is_double));
+    push_symbol(L"is_number", make_builtin_function(_is_number));
+    push_symbol(L"is_string", make_builtin_function(_is_string));
+    push_symbol(L"is_zero", make_builtin_function(_is_zero));
 
-    cpush_symbol(L"inc", make_builtin_function(_inc));
-    cpush_symbol(L"dec", make_builtin_function(_dec));
-    cpush_symbol(L"add", make_builtin_function(_add));
-    cpush_symbol(L"sub", make_builtin_function(_sub));
-    cpush_symbol(L"mul", make_builtin_function(_mul));
-    cpush_symbol(L"div", make_builtin_function(_div));
-    cpush_symbol(L"mod", make_builtin_function(_mod));
+    push_symbol(L"inc", make_builtin_function(_inc));
+    push_symbol(L"dec", make_builtin_function(_dec));
+    push_symbol(L"add", make_builtin_function(_add));
+    push_symbol(L"sub", make_builtin_function(_sub));
+    push_symbol(L"mul", make_builtin_function(_mul));
+    push_symbol(L"div", make_builtin_function(_div));
+    push_symbol(L"mod", make_builtin_function(_mod));
 
-    cpush_symbol(L"zip_first", make_builtin_function(_zip_first));
-    cpush_symbol(L"zip_rest", make_builtin_function(_zip_rest));
-    cpush_symbol(L"zip", make_builtin_function(_zip));
+    push_symbol(L"zip_first", make_builtin_function(_zip_first));
+    push_symbol(L"zip_rest", make_builtin_function(_zip_rest));
+    push_symbol(L"zip", make_builtin_function(_zip));
 
-    cpush_symbol(L"push_symbol", make_builtin_macro(_push_symbol));
-    cpush_symbol(L"pop_symbol", make_builtin_macro(_pop_symbol));
+    push_symbol(L"push_symbol", make_builtin_macro(_push_symbol));
+    push_symbol(L"pop_symbol", make_builtin_macro(_pop_symbol));
 
-    cpush_symbol(L"to_char_code", make_builtin_function(_to_char_code));
-    cpush_symbol(L"from_char_code", make_builtin_function(_from_char_code));
+    push_symbol(L"to_char_code", make_builtin_function(_to_char_code));
+    push_symbol(L"from_char_code", make_builtin_function(_from_char_code));
 
-    cpush_symbol(L"progn", make_builtin_macro(_progn));
-    cpush_symbol(L"let", make_builtin_macro(_let));
-    cpush_symbol(L"mapcar", make_builtin_function(_mapcar));
+    push_symbol(L"progn", make_builtin_macro(_progn));
+    push_symbol(L"let", make_builtin_macro(_let));
+    push_symbol(L"mapcar", make_builtin_function(_mapcar));
 
-    cpush_symbol(L"strcat", make_builtin_function(_strcat));
-    cpush_symbol(L"substr", make_builtin_function(_substr));
+    push_symbol(L"strcat", make_builtin_function(_strcat));
+    push_symbol(L"substr", make_builtin_function(_substr));
 }
 
 /**************/
@@ -94,7 +94,7 @@ data _inc(data d)
         return(make_int(raw_int(car(d)) + 1));
     else if (is_double(car(d)))
         return(make_double(raw_double(car(d)) + 1.0));
-    error(L"invalid argument type.\n");
+    error(L"invalid argument type");
     return(nil);
 }
 
@@ -104,7 +104,7 @@ data _dec(data d)
         return(make_int(raw_int(car(d)) - 1));
     else if (is_double(car(d)))
         return(make_double(raw_double(car(d)) - 1.0));
-    error(L"invalid argument type.\n");
+    error(L"invalid argument type");
     return(nil);
 }
 
@@ -125,7 +125,7 @@ data _add(data d)
             else if (is_double(car(d)))
                 f += raw_double(car(d));
             else
-                error(L"invalid argument type.\n");
+                error(L"invalid argument type");
         }
         else
         {
@@ -138,7 +138,7 @@ data _add(data d)
                 contains_float = 1;
             }
             else
-                error(L"invalid argument type.\n");
+                error(L"invalid argument type");
         }
         d = cdr(d);
     }
@@ -177,7 +177,7 @@ data _sub(data d)
             else if (is_double(car(d)))
                 f -= raw_double(car(d));
             else
-                error(L"invalid argument type.\n");
+                error(L"invalid argument type");
         }
         else
         {
@@ -190,7 +190,7 @@ data _sub(data d)
                 contains_float = 1;
             }
             else
-                error(L"invalid argument type.\n");
+                error(L"invalid argument type");
         }
         d = cdr(d);
     }
@@ -214,7 +214,7 @@ data _mul(data d)
             else if (is_double(car(d)))
                 f *= raw_double(car(d));
             else
-                error(L"invalid argument type.\n");
+                error(L"invalid argument type");
         }
         else
         {
@@ -227,7 +227,7 @@ data _mul(data d)
                 contains_float = 1;
             }
             else
-                error(L"invalid argument type.\n");
+                error(L"invalid argument type");
         }
         d = cdr(d);
     }
@@ -254,7 +254,7 @@ data _div(data d)
         contains_float = 1;
     }
     else
-        error(L"invalid argument type.\n");
+        error(L"invalid argument type");
     d = cdr(d);
 
     while (is_not_nil(car(d)))
@@ -266,7 +266,7 @@ data _div(data d)
             else if (is_double(car(d)))
                 f /= raw_double(car(d));
             else
-                error(L"invalid argument type.\n");
+                error(L"invalid argument type");
         }
         else
         {
@@ -279,7 +279,7 @@ data _div(data d)
                 contains_float = 1;
             }
             else
-                error(L"invalid argument type.\n");
+                error(L"invalid argument type");
         }
         d = cdr(d);
     }
@@ -299,7 +299,7 @@ data _mod(data d)
     if (is_int(car(d)))
         i = raw_int(car(d));
     else
-        error(L"invalid argument type.\n");
+        error(L"invalid argument type");
     d = cdr(d);
 
     while (is_not_nil(car(d)))
@@ -307,7 +307,7 @@ data _mod(data d)
         if (is_int(car(d)))
             i /= raw_int(car(d));
         else
-            error(L"invalid argument type.\n");
+            error(L"invalid argument type");
         d = cdr(d);
     }
 
@@ -329,7 +329,8 @@ data _add_2op(data d)
         return(make_double(raw_double(car(d)) + raw_double(cadr(d))));
     else if (is_string(car(d)) && is_string(cadr(d)))
         return(_strcat(d));
-    error(L"invalid argument.\n");
+    error(L"invalid argument");
+    return(nil);
 }
 
 data _sub_2op(data d)
@@ -342,7 +343,8 @@ data _sub_2op(data d)
         return(make_double(raw_double(car(d)) - raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(make_double(raw_double(car(d)) - raw_double(cadr(d))));
-    error(L"invalid argument.\n");
+    error(L"invalid argument");
+    return(nil);
 }
 
 data _mul_2op(data d)
@@ -355,7 +357,8 @@ data _mul_2op(data d)
         return(make_double(raw_double(car(d)) * raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(make_double(raw_double(car(d)) * raw_double(cadr(d))));
-    error(L"invalid argument.\n");
+    error(L"invalid argument");
+    return(nil);
 }
 
 data _div_2op(data d)
@@ -368,14 +371,16 @@ data _div_2op(data d)
         return(make_double(raw_double(car(d)) / raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(make_double(raw_double(car(d)) / raw_double(cadr(d))));
-    error(L"invalid argument.\n");
+    error(L"invalid argument");
+    return(nil);
 }
 
 data _mod_2op(data d)
 {
     if (is_int(car(d)) && is_int(cadr(d)))
         return(make_int(raw_int(car(d)) % raw_int(cadr(d))));
-    error(L"invalid argument.\n");
+    error(L"invalid argument");
+    return(nil);
 }
 
 data _logical_left_shift(data d)
@@ -419,7 +424,8 @@ data _less_2op(data d)
         return(nilort(raw_double(car(d)) < raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(nilort(raw_double(car(d)) < raw_double(cadr(d))));
-    error(L"invalid argument.\n");
+    error(L"invalid argument");
+    return(nil);
 }
 
 data _less_equal_2op(data d)
@@ -432,7 +438,8 @@ data _less_equal_2op(data d)
         return(nilort(raw_double(car(d)) <= raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(nilort(raw_double(car(d)) <= raw_double(cadr(d))));
-    error(L"invalid argument.\n");
+    error(L"invalid argument");
+    return(nil);
 }
 
 data _greater_2op(data d)
@@ -445,7 +452,8 @@ data _greater_2op(data d)
         return(nilort(raw_double(car(d)) > raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(nilort(raw_double(car(d)) > raw_double(cadr(d))));
-    error(L"invalid argument.\n");
+    error(L"invalid argument");
+    return(nil);
 }
 
 data _greater_equal_2op(data d)
@@ -458,7 +466,8 @@ data _greater_equal_2op(data d)
         return(nilort(raw_double(car(d)) >= raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(nilort(raw_double(car(d)) >= raw_double(cadr(d))));
-    error(L"invalid argument.\n");
+    error(L"invalid argument");
+    return(nil);
 }
 
 data _equal_2op(data d)
@@ -471,7 +480,8 @@ data _equal_2op(data d)
         return(nilort(raw_double(car(d)) == raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(nilort(raw_double(car(d)) == raw_double(cadr(d))));
-    error(L"invalid argument.\n");
+    error(L"invalid argument");
+    return(nil);
 }
 
 data _not_equal_2op(data d)
@@ -484,14 +494,14 @@ data _not_equal_2op(data d)
         return(nilort(raw_double(car(d)) != raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(nilort(raw_double(car(d)) != raw_double(cadr(d))));
-    error(L"invalid argument.\n");
+    error(L"invalid argument");
+    return(nil);
 }
 
 data _assign(data d)
 {
-    data ret;
     if (!is_symbol(car(d)))
-        error(L"An invalid value is specified as the assignment destination.\n");
+        error(L"An invalid value is specified as the assignment destination");
     override_symbol(raw_string(car(d)), eval(cadr(d)));
     return(car(d));
 }
@@ -564,7 +574,7 @@ data _call(data d)
         return(call_unnamed_macro(make_pair(function, cdr(d))));
     else if (is_unnamed_function(function))
         return(call_unnamed_function(make_pair(function, cdr(d))));
-    error(L"call failed.\n");
+    error(L"call failed");
     return(nil);
 }
 
@@ -603,16 +613,16 @@ data _unnamed_function(data d)
 data _macro(data d)
 {
     if (!is_symbol(car(d)))
-        error(L"invalid macro name.\n");
-    cpush_symbol(raw_string(car(d)), _unnamed_macro(cdr(d)));
+        error(L"invalid macro name");
+    push_symbol(raw_string(car(d)), _unnamed_macro(cdr(d)));
     return(car(d));
 }
 
 data _function(data d)
 {
     if (!is_symbol(car(d)))
-        error(L"invalid function name.\n");
-    cpush_symbol(raw_string(car(d)), _unnamed_function(cdr(d)));
+        error(L"invalid function name");
+    push_symbol(raw_string(car(d)), _unnamed_function(cdr(d)));
     return(car(d));
 }
 
@@ -623,7 +633,7 @@ data _function(data d)
 data _left_associative_operator(data d)
 {
     if (!is_symbol(car(d)))
-        error(L"invalid operator name.\n");
+        error(L"invalid operator name");
     make_left_associative_operator(raw_string(car(d)), _unnamed_function(cdr(d)));
     return(car(d));
 }
@@ -632,7 +642,7 @@ data _left_associative_operator(data d)
 data _right_associative_operator(data d)
 {
     if (!is_symbol(car(d)))
-        error(L"invalid operator name.\n");
+        error(L"invalid operator name");
     make_right_associative_operator(raw_string(car(d)), _unnamed_function(cdr(d)));
     return(car(d));
 }
@@ -648,7 +658,7 @@ data _pair(data d)
 data _set_first(data d)
 {
     if (!is_pair(car(d)))
-        error(L"setcar failed.\n");
+        error(L"setcar failed");
     set_car(car(d), cadr(d));
     return(cadr(d));
 }
@@ -656,7 +666,7 @@ data _set_first(data d)
 data _set_rest(data d)
 {
     if (!is_pair(car(d)))
-        error(L"setcdr failed.\n");
+        error(L"setcdr failed");
     set_cdr(car(d), cadr(d));
     return(cadr(d));
 }
@@ -714,15 +724,15 @@ data _zip(data d)
 data _push_symbol(data d)
 {
     if (!is_symbol(car(d)))
-        error(L"pushsym failed.\n");
-    cpush_symbol(raw_string(car(d)), cadr(d));
+        error(L"pushsym failed");
+    push_symbol(raw_string(car(d)), cadr(d));
     return(d);
 }
 
 data _pop_symbol(data d)
 {
     if (!is_symbol(car(d)))
-        error(L"popsym failed.\n");
+        error(L"popsym failed");
     cpop_symbol(raw_string(car(d)));
     return(d);
 }
@@ -737,7 +747,7 @@ data _to_char_code(data d)
 
     list = nil;
     if (!is_string(car(d)))
-        error(L"charcode source is must be a string literal.\n");
+        error(L"charcode source is must be a string literal");
     first = raw_string(car(d));
     for (last = first; *last; ++last);
     --last;
@@ -757,7 +767,7 @@ data _from_char_code(data d)
     while ((is_int(car(d))))
     {
         if (s - buf < 1024 - 1)
-            error(L"fromcharcode buffer overrun.\n");
+            error(L"fromcharcode buffer overrun");
         *(s++) = (wchar_t)raw_int(car(d));
         d = cdr(d);
     }
@@ -814,41 +824,49 @@ data _mapcar(data d)
 
 data _strcat(data d)
 {
-    int alen, blen;
-    wchar_t * newstr;
+    size_t a_length, b_length;
+    wchar_t * new_string;
     if (!is_string(car(d)) || !is_string(cadr(d)))
-        error(L"strcat failed.\n");
-    alen = wcslen(raw_string(car(d)));
-    blen = wcslen(raw_string(cadr(d)));
-    newstr = malloc(sizeof(wchar_t) * (alen + blen + 1));
-    if (!newstr)
-        error(L"bad alloc.\n");
-    memcpy(newstr, raw_string(car(d)), sizeof(wchar_t) * alen);
-    memcpy(newstr + alen, raw_string(cadr(d)), sizeof(wchar_t) * blen);
-    newstr[alen + blen] = L'\0';
-    return(make_string(newstr));
+        goto error;
+    a_length = wcslen(raw_string(car(d)));
+    b_length = wcslen(raw_string(cadr(d)));
+    new_string = malloc(sizeof(wchar_t) * (a_length + b_length + 1));
+    if (!new_string)
+        goto error;
+    memcpy(new_string, raw_string(car(d)), sizeof(wchar_t) * a_length);
+    memcpy(new_string + a_length, raw_string(cadr(d)), sizeof(wchar_t) * b_length);
+    new_string[a_length + b_length] = L'\0';
+    return(make_string(new_string));
+
+error:
+    error(L"strcat failed");
+    return(nil);
 }
 
 data _substr(data d)
 {
-    int len, pos, n;
-    wchar_t * newstr;
+    size_t length;
+    wchar_t * new_string;
     if (!is_string(car(d)))
-        error(L"substr failed.\n");
-    len = wcslen(raw_string(car(d)));
+        goto error;
+    length = wcslen(raw_string(car(d)));
     if (!is_int(cadr(d)) || (!is_int(caddr(d)) && is_not_nil(cddr(d))))
-        error(L"substr failed.\n");
+        goto error;
     if (is_nil(cddr(d)))
         return(make_string(clone_string(raw_string(car(d)) + raw_int(cadr(d)))));
-    if (raw_int(cadr(d)) + raw_int(caddr(d)) > wcslen(raw_string(car(d))))
-        error(L"invalid range.\n");
-    len = wcslen(raw_string(car(d)));
-    newstr = malloc(sizeof(wchar_t) * raw_int(caddr(d)));
-    if (!newstr)
-        error(L"bad alloc.\n");
-    memcpy(newstr, raw_string(car(d)) + raw_int(cadr(d)), sizeof(wchar_t) * raw_int(caddr(d)));
-    newstr[raw_int(caddr(d))] = L'\0';
-    return(make_string(newstr));
+    if ((size_t)raw_int(cadr(d)) + (size_t)raw_int(caddr(d)) > wcslen(raw_string(car(d))))
+        goto error;
+    length = wcslen(raw_string(car(d)));
+    new_string = malloc(sizeof(wchar_t) * raw_int(caddr(d)));
+    if (!new_string)
+        goto error;
+    memcpy(new_string, raw_string(car(d)) + raw_int(cadr(d)), sizeof(wchar_t) * raw_int(caddr(d)));
+    new_string[raw_int(caddr(d))] = L'\0';
+    return(make_string(new_string));
+
+error:
+    error(L"substr failed");
+    return(nil);
 }
 
 data _for(data d)

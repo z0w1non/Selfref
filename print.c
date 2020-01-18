@@ -80,7 +80,7 @@ data print_list_internal(data d)
 data print_function(data d)
 {
     if (!is_unnamed_function(d))
-        error(L"print function failed.\n");
+        error(L"print function failed");
     wprintf(L"<function ");
     print(get_args(d));
     wprintf(L" ");

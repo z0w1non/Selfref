@@ -41,6 +41,7 @@ void set_used(data, int);
 int  marked(data);
 void set_marked(data, int);
 int  type_id(data);
+void mark_data(data d);
 
 /*****************/
 /* Make function */

@@ -9,10 +9,10 @@
 /***********************/
 void init_symbol_stack();
 void cleanup_symbol_stack();
-void cpush_symbol(const wchar_t * key, data value);
+void push_symbol(const wchar_t * key, data value);
 void cpop_symbol(const wchar_t * key);
-data find_symbol(const wchar_t * key);
 data override_symbol(const wchar_t * key, data value);
+data find_symbol(const wchar_t * key);
 void mark_symbol();
 data _dump_symbol(data);
 

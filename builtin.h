@@ -5,6 +5,77 @@
 
 void init_builtin();
 
+data print_v;
+
+data dump_symbol_v;
+data dump_heap_v;
+data gc_v;
+
+data push_args_v;
+data pop_args_v;
+
+data pair_v;
+data set_first_v;
+data set_rest_v;
+
+data list_v;
+data length_v;
+
+data if_v;
+data and_v;
+data or_v;
+data not_v;
+
+data eval_v;
+data call_v;
+data apply_v;
+data bind_symbol_v;
+data unnamed_macro_v;
+data unnamed_function_v;
+data macro_v;
+data function_v;
+
+data left_associative_operator_v;
+data right_associative_operator_v;
+
+data is_cons_v;
+data is_builtin_macro_v;
+data is_builtin_function_v;
+data is_unnamed_macro_v;
+data is_unnamed_function_v;
+data is_symbol_v;
+data is_nil_v;
+data is_int_v;
+data is_double_v;
+data is_number_v;
+data is_string_v;
+data is_zero_v;
+
+data inc_v;
+data dec_v;
+data add_v;
+data sub_v;
+data mul_v;
+data div_v;
+data mod_v;
+
+data zip_first_v;
+data zip_rest_v;
+data zip_v;
+
+data push_symbol_v;
+data pop_symbol_v;
+
+data to_char_code_v;
+data from_char_code_v;
+
+data progn_v;
+data let_v;
+data mapcar_v;
+
+data strcat_v;
+data substr_v;
+
 /**************/
 /* Arithmetic */
 /**************/

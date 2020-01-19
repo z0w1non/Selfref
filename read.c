@@ -228,12 +228,19 @@ int parse_single_char(context * c, wchar_t wc)
 
 int parse_single_char_binary_operator(context * c, wchar_t wc)
 {
+    data operator;
     wint_t last_char;
     last_char = context_read_char(c);
     if (last_char == wc)
     {
         context_push_char(c, last_char);
-        context_set_token_data(c, find_binary_operator(context_get_token_string(c)));
+        operator = find_binary_operator(context_get_token_string(c));
+        if (!operator)
+        {
+            error(L"<binary operator %c> not found", wc);
+            return(0);
+        }
+        context_set_token_data(c, get_operator_impl(operator));
         return(1);
     }
     context_read_back(c, 1);
@@ -424,17 +431,17 @@ int parse_token(context * c)
     return(0);
 }
 
-/* <assignment expression> , <argument> */
-/* <assignment expression> */
+/* <function expression> , <argument> */
+/* <function expression> */
 int parse_argument(context * c)
 {
-    data assignment_expression, argument;
+    data function_expression, argument;
     saved_context_t saved_context;
     context_save(c, &saved_context);
 
-    if (parse_assignment_expression(c))
+    if (parse_function_expression(c))
     {
-        assignment_expression = context_get_token_data(c);
+        function_expression = context_get_token_data(c);
         context_clear_token(c);
         if (skip_space_and_at_eof(c))
             goto restore;
@@ -449,12 +456,12 @@ int parse_argument(context * c)
                 context_clear_token(c);
                 if (skip_space_and_at_eof(c))
                     goto restore;
-                context_set_token_data(c, make_pair(progn_v, make_pair(assignment_expression, make_pair(argument, nil))));
+                context_set_token_data(c, make_pair(progn_v, make_pair(function_expression, make_pair(argument, nil))));
                 return(1);
             }
         }
         context_clear_token(c);
-        context_set_token_data(c, assignment_expression);
+        context_set_token_data(c, function_expression);
         return(1);
     }
 
@@ -562,7 +569,6 @@ int parse_statement(context * c)
     if (parse_function_expression(c))
     {
         first_token = context_get_token_data(c);
-        debug(first_token);
         context_clear_token(c);
         if (skip_space_and_at_eof(c))
             goto restore;
@@ -646,8 +652,8 @@ int parse_polynominal(context * c)
         context_clear_token(c);
         if (skip_space_and_at_eof(c))
             goto restore;
-        if (parse_single_char_binary_operator(c, L"+")
-            || parse_single_char_binary_operator(c, L"-"))
+        if (parse_single_char_binary_operator(c, L'+')
+            || parse_single_char_binary_operator(c, L'-'))
         {
             plus_or_minus_operator = context_get_token_data(c);
             context_clear_token(c);

@@ -154,6 +154,7 @@ void init_builtin()
     push_symbol(L"substr", substr_v = make_builtin_function(_substr));
 
     /* binary operator */
+    init_binary_operator_list();
     add_builtin_right_associative_operator_macro(L"=", _assign);
     add_builtin_right_associative_operator_macro(L"=", _assign);
     add_builtin_right_associative_operator_macro(L"=>", _unnamed_function);
@@ -174,6 +175,7 @@ void init_builtin()
     add_builtin_left_associative_operator_function(L">>>", _logical_right_shift);
 
     /* prefix operator */
+    init_prefix_operator_list();
     add_builtin_prefix_operator_macro(L"\'", _quote);
 }
 

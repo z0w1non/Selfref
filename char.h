@@ -24,5 +24,7 @@ int is_symbol_char(wint_t);
 int is_dot(wint_t);
 int is_print(wint_t);
 int is_crlf(wint_t);
+int is_semicolon(wint_t);
+int is_comma(wint_t);
 
 #endif

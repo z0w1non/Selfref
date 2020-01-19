@@ -18,8 +18,8 @@ data eval(data d)
             d = resolve_prefix_operator(d);
     }
 
-    if (has_operator(d))
-        d = sort_operator(d);
+    if (has_binary_operator(d))
+        d = sort_binary_operator(d);
     if (is_symbol(d))
     {
         value = find_symbol(raw_string(d));
@@ -38,7 +38,7 @@ data eval(data d)
             return(call_unnamed_macro(make_pair(value, cdr(d))));
         else if (is_unnamed_function(value))
             return(call_unnamed_function(make_pair(value, cdr(d))));
-        if (has_operator(d))
+        if (has_binary_operator(d))
             return(eval(d));
         error(L"The first token in the list is must be callable or a symbol that bound to a callable");
     }
@@ -103,82 +103,57 @@ data call_unnamed_function(data d)
 /*****************/
 /* Operator list */
 /*****************/
-data operator_list;
+data binary_operator_list;
 
-void init_operator_list()
+void init_binary_operator_list()
 {
-    operator_list = nil;
-
-    //add_operator(make_suffix_operator(L";", _listize));
-
-    add_builtin_right_associative_operator_macro(L"=", _assign);
-
-    add_builtin_right_associative_operator_macro(L"=>", _unnamed_function);
-
-    add_builtin_left_associative_operator_function(L"<", _less_2op);
-    add_builtin_left_associative_operator_function(L"<=", _less_equal_2op);
-    add_builtin_left_associative_operator_function(L">", _greater_2op);
-    add_builtin_left_associative_operator_function(L">=", _greater_equal_2op);
-    add_builtin_left_associative_operator_function(L"==", _equal_2op);
-    add_builtin_left_associative_operator_function(L"!=", _not_equal_2op);
-
-    add_builtin_left_associative_operator_function(L"-", _sub_2op);
-    add_builtin_left_associative_operator_function(L"+", _add_2op);
-
-    add_builtin_left_associative_operator_function(L"%", _mod_2op);
-    add_builtin_left_associative_operator_function(L"/", _div_2op);
-    add_builtin_left_associative_operator_function(L"*", _mul_2op);
-
-    add_builtin_left_associative_operator_function(L"<<", _arithmetic_left_shift);
-    add_builtin_left_associative_operator_function(L">>", _arithmetic_right_shift);
-    add_builtin_left_associative_operator_function(L"<<<", _logical_left_shift);
-    add_builtin_left_associative_operator_function(L">>>", _logical_right_shift);
+    binary_operator_list = nil;
 }
 
-void mark_operator_list()
+void mark_binary_operator_list()
 {
-    forward_list_mark(operator_list);
+    forward_list_mark(binary_operator_list);
 }
 
 data add_builtin_left_associative_operator_function(const wchar_t * name, function_t f)
 {
     data d = make_left_associative_operator(name, make_builtin_function(f));
-    add_operator(d);
+    add_binary_operator(d);
     return(d);
 }
 
 data add_builtin_right_associative_operator_function(const wchar_t * name, function_t f)
 {
     data d = make_right_associative_operator(name, make_builtin_function(f));
-    add_operator(d);
+    add_binary_operator(d);
     return(d);
 }
 
 data add_builtin_left_associative_operator_macro(const wchar_t * name, function_t f)
 {
     data d = make_left_associative_operator(name, make_builtin_macro(f));
-    add_operator(d);
+    add_binary_operator(d);
     return(d);
 }
 
 data add_builtin_right_associative_operator_macro(const wchar_t * name, function_t f)
 {
     data d = make_right_associative_operator(name, make_builtin_macro(f));
-    add_operator(d);
+    add_binary_operator(d);
     return(d);
 }
 
-void add_operator(data d)
+void add_binary_operator(data d)
 {
     if (!is_left_associative_operator(d) && !is_right_associative_operator(d))
         error(L"add operator failed");
-    operator_list = make_pair(d, operator_list);
+    binary_operator_list = make_pair(d, binary_operator_list);
 }
 
-void remove_operator(const wchar_t * name)
+void remove_binary_operator(const wchar_t * name)
 {
     data list;
-    list = operator_list;
+    list = binary_operator_list;
     while (is_not_nil(list))
     {
         if (wcscmp(raw_string(car(list)), name) == 0)
@@ -190,10 +165,10 @@ void remove_operator(const wchar_t * name)
     error(L"<operator %s> not found", name);
 }
 
-data find_operator(const wchar_t * name)
+data find_binary_operator(const wchar_t * name)
 {
     data d;
-    d = operator_list;
+    d = binary_operator_list;
     while (is_not_nil(d))
     {
         if (wcscmp(raw_string(car(d)), name) == 0)
@@ -203,12 +178,12 @@ data find_operator(const wchar_t * name)
     return(NULL);
 }
 
-int compare_operator_priority(const wchar_t * a, const wchar_t * b)
+int compare_binary_operator_priority(const wchar_t * a, const wchar_t * b)
 {
     if (wcscmp(a, b) == 0)
         return(0);
     data list;
-    list = operator_list;
+    list = binary_operator_list;
     while (is_not_nil(list))
     {
         if (wcscmp(raw_string(car(list)), a) == 0)
@@ -221,18 +196,18 @@ int compare_operator_priority(const wchar_t * a, const wchar_t * b)
     return(0);
 }
 
-int has_operator(data d)
+int has_binary_operator(data d)
 {
     while (is_not_nil(car(d)))
     {
-        if (is_symbol(car(d)) && find_operator(raw_string(car(d))))
+        if (is_symbol(car(d)) && find_binary_operator(raw_string(car(d))))
             return(1);
         d = cdr(d);
     }
     return(0);
 }
 
-data sort_operator(data d)
+data sort_binary_operator(data d)
 {
     stack operator_stack, stack_machine;
     queue output_queue;
@@ -258,7 +233,7 @@ data sort_operator(data d)
         if (is_symbol(car(list)))
         {
             op1_name = raw_string(car(list));
-            op1 = find_operator(op1_name);
+            op1 = find_binary_operator(op1_name);
             if (op1)
             {
                 if (!stack_is_empty(operator_stack))
@@ -266,8 +241,8 @@ data sort_operator(data d)
                     stack_front(operator_stack, &op2);
                     op2_name = raw_string(op2);
 
-                    while (((is_left_associative_operator(op2) && (compare_operator_priority(op1_name, op2_name) <= 0)))
-                        || (compare_operator_priority(op1_name, op2_name) < 0))
+                    while (((is_left_associative_operator(op2) && (compare_binary_operator_priority(op1_name, op2_name) <= 0)))
+                        || (compare_binary_operator_priority(op1_name, op2_name) < 0))
                     {
                         stack_pop(operator_stack, &op2);
                         if (!queue_enqueue(output_queue, &op2))
@@ -325,7 +300,7 @@ data sort_operator(data d)
             stack_pop(stack_machine, &left);
 
             op1_name = raw_string(front_token);
-            op1 = find_operator(op1_name);
+            op1 = find_binary_operator(op1_name);
             if (!op1)
                 goto error;
 
@@ -385,8 +360,6 @@ data prefix_operator_list;
 void init_prefix_operator_list()
 {
     prefix_operator_list = forward_list_create();
-
-    add_builtin_prefix_operator_macro(L"\'", _quote);
 }
 
 void mark_prefix_operator_list()
@@ -476,4 +449,24 @@ data resolve_prefix_operator(data d)
         }
     }
     return(make_pair(car(d), resolve_prefix_operator(cdr(d))));
+}
+
+// ">"   : (">>" ">>>" "=>")
+// ">>"  : (">>>")
+// ">>>" : nil
+data get_operators_start_with(const wchar_t * name)
+{
+    data d, list;
+    size_t specified_operator_length;
+    specified_operator_length = wcslen(name);
+    d = prefix_operator_list;
+    list = nil;
+    if (is_not_nil(d))
+    {
+        if ((wcslen(raw_string(car(d))) > specified_operator_length)
+            && (wcsncmp(raw_string(car(d)), name, specified_operator_length) == 0))
+            list = make_pair(make_string(clone_string(raw_string(car(d)))), list);
+        d = cdr(d);
+    }
+    return(list);
 }

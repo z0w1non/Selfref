@@ -82,3 +82,13 @@ int is_crlf(wint_t wi)
 {
     return(wi == L'\n' || wi == L'\r');
 }
+
+int is_semicolon(wint_t wi)
+{
+    return(wi == L';');
+}
+
+int is_comma(wint_t wi)
+{
+    return(wi == L',');
+}

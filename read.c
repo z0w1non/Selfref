@@ -5,6 +5,8 @@
 #include "char.h"
 #include "print.h"
 #include "eval.h"
+#include "sym.h"
+#include "builtin.h"
 
 enum
 {
@@ -13,35 +15,29 @@ enum
 
 typedef struct token_tag
 {
-    int kind;
     wchar_t string[tokenmax];
-    int length;
+    size_t length;
     data data;
 } token;
 
 enum
 {
-    contextbuflen = 256,
+    context_buffer_length = 256,
 };
 
 typedef struct context_tag
 {
-    token tkn;
-    wint_t buf[contextbuflen];
-    int lastreadbuf;
-    int backcnt;
+    token token;
+    wint_t buffer[context_buffer_length];
+    size_t last_read_buffer_offset;
+    size_t read_back_count;
+    size_t total_count;
 } context;
 
-enum
+typedef struct saved_context_tag
 {
-    token_unknown,
-    token_eof,
-    token_lparen,
-    token_rparen,
-    token_literal,
-    token_symbol,
-    token_quote,
-};
+    size_t count;
+} saved_context_t;
 
 FILE * input_stream;
 
@@ -54,23 +50,35 @@ void            context_read_back(context *, int count);
 void            context_push_char(context *, wchar_t);
 void            context_pop_char(context *);
 void            context_clear_token(context * c);
-int             context_get_token_kind(context *);
 const wchar_t * context_get_token_string(context *);
 data            context_get_token_data(context *);
-void            context_set_token_kind(context *, int);
 void            context_set_token_data(context *, data);
 void            context_remove_token_string_suffix(context * c, int length);
+void            context_save(context * c, saved_context_t * temp);
+void            context_restore(context * c, const saved_context_t * temp);
 
 data read_internal(context *);
-void read_token(context *);
-data read_list(context *);
 
-int parse_nonprintable(context * c);
+int skip_space_and_at_eof(context * c);
+int parse_single_char(context * c, wchar_t wc);
+int parse_single_char_binary_operator(context * c, wchar_t wc);
 int parse_lparen(context * c);
 int parse_rparen(context * c);
-int parse_number(context *);
-int parse_string(context *);
+int parse_curly_lparen(context * c);
+int parse_curly_rparen(context * c);
+int parse_paragraph(context * c);
+int parse_block(context * c);
+int parse_block_internal(context * c);
+int parse_list(context * c);
+int parse_list_internal(context *);
+int parse_token(context * c);
+int parse_statement(context * c);
+int parse_expression(context * c);
+int parse_unsigned_number(context *);
+int parse_string_literal(context *);
 int parse_symbol(context *);
+int parse_binary_operator(context *);
+int parse_prefix_operator(context *);
 
 /*******************/
 /* Public function */
@@ -98,74 +106,76 @@ data read()
 void context_init(context * c)
 {
     memset(c, 0, sizeof(context));
-    c->lastreadbuf = -1;
+    c->last_read_buffer_offset = -1;
+    c->total_count = 0;
 }
 
 wint_t context_read_char(context * c)
 {
-    if (c->backcnt > 0)
+    if (c->read_back_count > 0)
     {
-        c->backcnt -= 1;
-        return(c->buf[(c->lastreadbuf + contextbuflen - c->backcnt) % contextbuflen]);
+        c->read_back_count -= 1;
+        return(c->buffer[(c->last_read_buffer_offset + context_buffer_length - c->read_back_count) % context_buffer_length]);
     }
-    c->lastreadbuf += 1;
-    c->lastreadbuf %= contextbuflen;
-    return(c->buf[c->lastreadbuf] = fgetc(input_stream));
+    c->last_read_buffer_offset += 1;
+    c->last_read_buffer_offset %= context_buffer_length;
+    c->total_count += 1;
+    return(c->buffer[c->last_read_buffer_offset] = fgetc(input_stream));
 }
 
 void context_read_back(context * c, int count)
 {
-    c->backcnt += count;
+    c->read_back_count += count;
 }
 
 void context_push_char(context * c, wchar_t wc)
 {
-    c->tkn.string[c->tkn.length++] = wc;
-    c->tkn.string[c->tkn.length] = L'\0';
+    c->token.string[c->token.length++] = wc;
+    c->token.string[c->token.length] = L'\0';
 }
 
 void context_pop_char(context * c)
 {
-    c->tkn.string[--(c->tkn.length)] = L'\0';
+    c->token.string[--(c->token.length)] = L'\0';
 }
 
 void context_clear_token(context * c)
 {
-    c->tkn.data = NULL;
-    c->tkn.kind = 0;
-    c->tkn.length = 0;
-    c->tkn.string[0] = L'\0';
-}
-
-int context_get_token_kind(context * c)
-{
-    return(c->tkn.kind);
+    c->token.data = NULL;
+    c->token.length = 0;
+    c->token.string[0] = L'\0';
 }
 
 const wchar_t * context_get_token_string(context * c)
 {
-    return(c->tkn.string);
+    return(c->token.string);
 }
 
 data context_get_token_data(context * c)
 {
-    return(c->tkn.data);
-}
-
-void context_set_token_kind(context * c, int kind)
-{
-    c->tkn.kind = kind;
+    return(c->token.data);
 }
 
 void context_set_token_data(context * c, data d)
 {
-    c->tkn.data = d;
+    c->token.data = d;
 }
 
 void context_remove_token_string_suffix(context * c, int length)
 {
-    c->tkn.string[c->tkn.length - length] = L'\0';
-    c->tkn.length -= length;
+    c->token.string[c->token.length - length] = L'\0';
+    c->token.length -= length;
+}
+
+void context_save(context * c, saved_context_t * saved_context)
+{
+    saved_context->count = c->total_count - c->read_back_count;
+}
+
+void context_restore(context * c, const saved_context_t * saved_context)
+{
+    if (c->total_count - c->read_back_count > saved_context->count)
+        context_read_back(c, ((int)(c->total_count) - c->read_back_count - saved_context->count));
 }
 
 /**************/
@@ -173,163 +183,518 @@ void context_remove_token_string_suffix(context * c, int length)
 /**************/
 data read_internal(context * c)
 {
-    read_token(c);
-    switch (context_get_token_kind(c))
-    {
-    case token_eof:
-        return(NULL);
-    case token_lparen:
-        return(read_list(c));
-    case token_literal:
-    case token_symbol:
-    //case token_quote:
+    if (skip_space_and_at_eof(c))
+        return(nil);
+    if (parse_paragraph(c))
         return(context_get_token_data(c));
-    default:
-        error(L"Unexpected character\n");
-    }
     return(nil);
 }
 
-void read_token(context * c)
+int skip_space_and_at_eof(context * c)
 {
-    context_clear_token(c);
-    if (!parse_nonprintable(c))
-    {
-        if (parse_lparen(c))
-            ;
-        else if (parse_rparen(c))
-            ;
-        else if (parse_number(c))
-            ;
-        else if (parse_string(c))
-            ;
-        else if (parse_symbol(c))
-            ;
-        else if (parse_nonprintable(c))
-            context_set_token_kind(c, token_eof);
-        else
-            error(L"Undefined token");
-    }
-}
-
-data read_list(context * c)
-{
-    data car;
-    read_token(c);
-    if (context_get_token_kind(c) == token_rparen)
-        return(nil);
-    else if (context_get_token_kind(c) == token_lparen)
-    {
-        car = read_list(c);
-        return(make_pair(car, read_list(c)));
-    }
-    car = context_get_token_data(c);
-    return(make_pair(car, read_list(c)));
-}
-
-int parse_nonprintable(context * c)
-{
-    wint_t lastchar;
-    while ((!is_eof(lastchar = context_read_char(c))) && ((is_space(lastchar) || (is_crlf(lastchar)))));
-    if (is_eof(lastchar))
+    wint_t last_char;
+    while ((!is_eof(last_char = context_read_char(c))) && ((is_space(last_char) || (is_crlf(last_char)))));
+    if (is_eof(last_char))
         return(1);
+    context_read_back(c, 1);
+    return(0);
+}
+
+int parse_single_char(context * c, wchar_t wc)
+{
+    wint_t last_char;
+    last_char = context_read_char(c);
+    if (last_char == wc)
+    {
+        context_push_char(c, last_char);
+        context_set_token_data(c, NULL);
+        return(1);
+    }
+    context_read_back(c, 1);
+    return(0);
+}
+
+int parse_single_char_binary_operator(context * c, wchar_t wc)
+{
+    wint_t last_char;
+    last_char = context_read_char(c);
+    if (last_char == wc)
+    {
+        context_push_char(c, last_char);
+        context_set_token_data(c, find_binary_operator(context_get_token_string(c)));
+        return(1);
+    }
     context_read_back(c, 1);
     return(0);
 }
 
 int parse_lparen(context * c)
 {
-    wint_t lastchar;
-    lastchar = context_read_char(c);
-    if (is_lparen(lastchar))
-    {
-        context_push_char(c, lastchar);
-        context_set_token_kind(c, token_lparen);
-        context_set_token_data(c, NULL);
-        return(1);
-    }
-    context_read_back(c, 1);
-    return(0);
+    return(parse_single_char(c, L'('));
 }
 
 int parse_rparen(context * c)
 {
-    wint_t lastchar;
-    lastchar = context_read_char(c);
-    if (is_rparen(lastchar))
-    {
-        context_push_char(c, lastchar);
-        context_set_token_kind(c, token_rparen);
-        context_set_token_data(c, NULL);
+    return(parse_single_char(c, L')'));
+}
+
+int parse_curly_lparen(context * c)
+{
+    return(parse_single_char(c, L'{'));
+}
+
+int parse_curly_rparen(context * c)
+{
+    return(parse_single_char(c, L'}'));
+}
+
+int parse_comma(context * c)
+{
+    return(parse_single_char(c, L','));
+}
+
+int parse_semicolon(context * c)
+{
+    return(parse_single_char(c, L';'));
+}
+
+/* <list> */
+/* <block> */
+/* <statement> */
+int parse_paragraph(context * c)
+{
+    data internal;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    if (parse_list(c))
         return(1);
+    
+    if (parse_curly_lparen(c))
+    {
+        context_clear_token(c);
+        if (parse_block_internal(c))
+        {
+            internal = context_get_token_data(c);
+            context_clear_token(c);
+            if (parse_curly_rparen(c))
+            {
+                context_set_token_data(c, internal);
+                return(1);
+            }
+        }
     }
-    context_read_back(c, 1);
+
+restore:
+    context_restore(c, &saved_context);
     return(0);
 }
 
-int parse_number(context * c)
+/* { <block internal> } */
+int parse_blcok(context * c)
+{
+    data internal;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    if (parse_curly_lparen(c))
+    {
+        context_clear_token(c);
+        if (parse_block_internal(c))
+        {
+            internal = context_get_token_data(c);
+            context_clear_token(c);
+            if (skip_space_and_at_eof(c))
+                goto restore;
+            if (parse_curly_rparen(c))
+            {
+                context_set_token_data(c, internal);
+                return(1);
+            }
+        }
+    }
+
+restore:
+    context_restore(c, &saved_context);
+    return(0);
+}
+
+/* <statement> <block internal> */
+/* <statement> */
+int parse_block_internal(context * c)
+{
+    data first_statement, rest_block_internal;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    if (parse_curly_rparen(c))
+    {
+        context_restore(c, &saved_context);
+        context_clear_token(c);
+        context_set_token_data(c, nil);
+        return(1);
+    }
+    else if (parse_statement(c))
+    {
+        first_statement = context_get_token_data(c);
+        context_clear_token(c);
+        if (parse_block_internal(c))
+        {
+            rest_block_internal = context_get_token_data(c);
+            context_clear_token(c);
+            context_set_token_data(c, make_pair(progn_v, make_pair(first_statement, make_pair(rest_block_internal, nil))));
+            return(1);
+        }
+        return(1);
+    }
+
+    context_restore(c, &saved_context);
+    return(0);
+}
+
+/* ( <list internal> ) */
+int parse_list(context * c)
+{
+    data internal;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    if (parse_lparen(c))
+    {
+        context_clear_token(c);
+        if (parse_list_internal(c))
+        {
+            internal = context_get_token_data(c);
+            context_clear_token(c);
+            if (skip_space_and_at_eof(c))
+                goto restore;
+            if (parse_rparen(c))
+            {
+                context_set_token_data(c, internal);
+                return(1);
+            }
+        }
+    }
+
+restore:
+    context_restore(c, &saved_context);
+    return(0);
+}
+
+/* <token> <list internal> */
+/* <token> */
+int parse_list_internal(context * c)
+{
+    data first_token, rest_token;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    if (parse_rparen(c))
+    {
+        context_restore(c, &saved_context);
+        context_clear_token(c);
+        context_set_token_data(c, nil);
+        return(1);
+    }
+    else if (parse_token(c))
+    {
+        first_token = context_get_token_data(c);
+        context_clear_token(c);
+        if (skip_space_and_at_eof(c))
+            goto restore;
+        if (parse_list_internal(c))
+        {
+            rest_token = context_get_token_data(c);
+            context_clear_token(c);
+            context_set_token_data(c, make_pair(first_token, rest_token));
+            return(1);
+        }
+    }
+
+restore:
+    context_restore(c, &saved_context);
+    return(0);
+}
+
+/* <symbol> */
+/* <signed number> */
+/* <string> */
+/* <paragraph> */
+int parse_token(context * c)
+{
+    if (parse_symbol(c) || parse_signed_number_literal(c) || parse_string_literal(c) || parse_paragraph(c))
+        return(1);
+    return(0);
+}
+
+/* <statement> , <argument> */
+/* <statement> */
+int parse_argument(context * c)
+{
+    
+}
+
+/* <statement> ; */
+/* <token> , <statement> */
+int parse_statement(context * c)
+{
+    data first_token, rest_statement;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    if (parse_token(c))
+    {
+        first_token = context_get_token_data(c);
+        context_clear_token(c);
+        if (parse_semicolon(c))
+            return(1);
+        else if (parse_comma(c))
+        {
+            context_clear_token(c);
+            if (parse_statement(c))
+            {
+                rest_statement = context_get_token_data(c);
+                context_clear_token(c);
+                context_set_token_data(c, make_pair(progn_v, make_pair(first_token, make_pair(rest_statement, nil))));
+                return(1);
+            }
+        }
+    }
+
+    context_restore(c, &saved_context);
+    return(0);
+}
+
+int parse_expression(context * c)
+{
+    if (parse_polynominal(c))
+    {
+        return(1);
+    }
+    return(0);
+}
+
+/* <monominal> */
+/* <monominal> + <polynominal> */
+/* <monominal> - <polynominal>*/
+int parse_polynominal(context * c)
+{
+    data first_monominal, rest_monominal, plus_or_minus_operator;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    if (parse_monominal(c))
+    {
+        first_monominal = context_get_token_data(c);
+        context_clear_token(c);
+        if (skip_space_and_at_eof(c))
+            goto restore;
+        if (parse_single_char_binary_operator(c, L"+")
+            || parse_single_char_binary_operator(c, L"-"))
+        {
+            plus_or_minus_operator = context_get_token_data(c);
+            context_clear_token(c);
+            if (skip_space_and_at_eof(c))
+                goto restore;
+            if (parse_polynominal(c))
+            {
+                rest_monominal = context_get_token_data(c);
+                context_clear_token(c);
+                context_set_token_data(c, make_pair(plus_or_minus_operator, make_pair(first_monominal, make_pair(rest_monominal, nil))));
+                return(1);
+            }
+            goto restore;
+        }
+        return(1);
+    }
+
+restore:
+    context_restore(c, &saved_context);
+    return(0);
+}
+
+/* <signed number> */
+/* <signed number> * <monominal> */
+/* <signed number> / <monominal> */
+/* <signed number> % <monominal> */
+int parse_monominal(context * c)
+{
+    data left, right, binary_operator;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    if (parse_signed_number_literal(c) || parse_symbol(c))
+    {
+        left = context_get_token_data(c);
+        context_clear_token(c);
+        if (skip_space_and_at_eof(c))
+            goto restore;
+        if (parse_single_char_binary_operator(c, L'*')
+            || parse_single_char_binary_operator(c, L'/')
+            || parse_single_char_binary_operator(c, L'%'))
+        {
+            binary_operator = context_get_token_data(c);
+            context_clear_token(c);
+            if (skip_space_and_at_eof(c))
+                goto restore;
+            if (parse_monominal(c))
+            {
+                right = context_get_token_data(c);
+                context_clear_token(c);
+                context_set_token_data(c, make_pair(binary_operator, make_pair(left, make_pair(right, nil))));
+                return(1);
+            }
+            goto restore;
+        }
+        return(1);
+    }
+
+restore:
+    context_restore(c, &saved_context);
+    return(0);
+}
+
+/* + <signed number> */
+/* - <signed number> */
+/* <unsigned number literal> */
+int parse_signed_number_literal(context * c)
+{
+    data signed_number;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    if (parse_single_char(c, L'+'))
+    {
+        context_clear_token(c);
+        if (skip_space_and_at_eof(c))
+            goto restore;
+        if (parse_signed_number_literal(c))
+            return(1);
+        goto restore;
+    }
+    else if (parse_single_char(c, L'-'))
+    {
+        context_clear_token(c);
+        if (skip_space_and_at_eof(c))
+            goto restore;
+        if (parse_signed_number_literal(c))
+        {
+            signed_number = context_get_token_data(c);
+            context_clear_token(c);
+            context_get_token_data(make_pair(_mul_2op_v, make_pair(signed_number, make_pair(make_int(-1), nil))));
+            return(1);
+        }
+        goto restore;
+    }
+    else if (parse_unsigned_number(c))
+        return(1);
+
+restore:
+    context_restore(c, &saved_context);
+    return(0);
+}
+
+/* [0-9]+ */
+/* [0-9]+.[0-9]+ */
+int parse_unsigned_number(context * c)
 {
     int i;
     double d, div;
-    wint_t lastchar;
-    lastchar = context_read_char(c);
-    if (is_digit(lastchar))
+    wint_t last_char;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    last_char = context_read_char(c);
+
+    if (is_digit(last_char))
     {
-        i = ((int)(lastchar - L'0'));
-        lastchar = context_read_char(c);
-        while ((!is_eof(lastchar)) && (is_digit(lastchar)))
+        i = ((int)(last_char - L'0'));
+        last_char = context_read_char(c);
+        while ((!is_eof(last_char)) && (is_digit(last_char)))
         {
-            i = i * 10 + ((int)(lastchar - L'0'));
-            context_push_char(c, (wchar_t)lastchar);
-            lastchar = context_read_char(c);
+            i = i * 10 + ((int)(last_char - L'0'));
+            context_push_char(c, (wchar_t)last_char);
+            last_char = context_read_char(c);
         }
-        if (is_dot(lastchar))
+        if (is_dot(last_char))
         {
             context_push_char(c, L'.');
             d = 0.0;
             div = 1.0;
-            lastchar = context_read_char(c);
-            while ((!is_eof(lastchar)) && (is_digit(lastchar)))
+            last_char = context_read_char(c);
+            while ((!is_eof(last_char)) && (is_digit(last_char)))
             {
-                d = d * 10.0 + (double)(lastchar - L'0');
+                d = d * 10.0 + (double)(last_char - L'0');
                 div *= 10;
-                context_push_char(c, (wchar_t)lastchar);
-                lastchar = context_read_char(c);
+                context_push_char(c, (wchar_t)last_char);
+                last_char = context_read_char(c);
             }
-            context_set_token_kind(c, token_literal);
-            context_set_token_data(c, make_double((double)i + d / div));
+            context_read_back(c, 1);
+            context_set_token_data(c, make_double(((double)i + d / div)));
+            return(1);
         }
         else
         {
-            context_set_token_kind(c, token_literal);
+            context_read_back(c, 1);
             context_set_token_data(c, make_int(i));
+            return(1);
         }
-        if (is_symbol_char(lastchar))
-        {
-            context_set_token_kind(c, token_unknown);
-            context_set_token_data(c, NULL);
-            context_push_char(c, (wchar_t)lastchar);
-            error(L"Number literal parsing failed. (%s)\n", c->tkn.string);
-        }
-        context_read_back(c, 1);
-        return(1);
     }
-    context_read_back(c, 1);
+
+restore:
+    context_restore(c, &saved_context);
     return(0);
 }
 
-int parse_string(context * c)
+/* <string literal> + <string expression> */
+/* <string literal> */
+int parse_string_expression(context * c)
 {
-    wint_t lastchar;
-    lastchar = context_read_char(c);
-    if (lastchar == L'\"')
+    data left, right, concatenate_operator;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    if (parse_string_literal(c))
     {
-        while (!is_eof((lastchar = context_read_char(c))) && (lastchar != L'\"'))
+        left = context_get_token_data(c);
+        if (skip_space_and_at_eof(c))
+            goto restore;
+        if (parse_single_char_binary_operator(c, L"+"))
         {
-            if (lastchar == L'\\')
+            concatenate_operator = context_get_token_data(c);
+            if (skip_space_and_at_eof(c))
+                goto restore;
+
+            if (parse_string_expression(c))
             {
-                lastchar = context_read_char(c);
-                switch (lastchar)
+                right = context_get_token_data(c);
+                context_set_token_data(c, make_pair(concatenate_operator, make_pair(left, make_pair(right, nil))));
+                return(1);
+            }
+        }
+        return(1);
+    }
+
+restore:
+    context_restore(c, &saved_context);
+    return(0);
+}
+
+int parse_string_literal(context * c)
+{
+    wint_t last_char;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    last_char = context_read_char(c);
+    if (last_char == L'\"')
+    {
+        while (!is_eof((last_char = context_read_char(c))) && (last_char != L'\"'))
+        {
+            if (last_char == L'\\')
+            {
+                last_char = context_read_char(c);
+                switch (last_char)
                 {
                 case L'n':  context_push_char(c, L'\n'); break;
                 case L't':  context_push_char(c, L'\t'); break;
@@ -338,57 +703,98 @@ int parse_string(context * c)
                 default: error(L"Unknown escape sequence (\\n -> newline, \\t -> tab, \\\\ -> \\, \\\" -> double quotation(\"))\n");
                 }
             }
-            else if (!is_print(lastchar))
-                error(L"String literal contains a unprintable character");
+            else if (!is_print(last_char))
+                goto restore;
             else
-                context_push_char(c, (wchar_t)lastchar);
+                context_push_char(c, (wchar_t)last_char);
         }
-        context_set_token_kind(c, token_literal);
         context_set_token_data(c, make_string(context_get_token_string(c)));
         return(1);
     }
-    context_read_back(c, 1);
+    
+restore:
+    context_restore(c, &saved_context);
     return(0);
 }
 
 int parse_symbol(context * c)
 {
-    wint_t lastchar;
+    wint_t last_char;
     data prefix_operator;
-    const wchar_t * sub_string;
-    int operator_length;
-    while ((!is_eof(lastchar = context_read_char(c))) && (is_symbol_char(lastchar)))
-    {
-        context_push_char(c, (wchar_t)lastchar);
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
 
-        for (sub_string = context_get_token_string(c); *sub_string; ++sub_string)
-        {
-            prefix_operator = find_prefix_operator(sub_string);
-            if (prefix_operator)
-            {
-                if (sub_string == context_get_token_string(c)) /* parse prefix operator */
-                {
-                    context_set_token_kind(c, token_literal);
-                    context_set_token_data(c, make_symbol(context_get_token_string(c)));
-                    return(1);
-                }
-
-                operator_length = wcslen(raw_string(prefix_operator));
-                context_remove_token_string_suffix(c, operator_length);
-                context_read_back(c, operator_length);
-                return(1);
-            }
-        }
-    }
-
+    while ((!is_eof(last_char = context_read_char(c))) && (is_symbol_char(last_char)))
+        context_push_char(c, (wchar_t)last_char);
     context_read_back(c, 1);
-    if (c->tkn.length == 0)
+
+    if (c->token.length > 0)
     {
-        return(0);
+        context_set_token_data(c, make_symbol(context_get_token_string(c)));
+        return(1);
     }
 
-    context_set_token_kind(c, token_symbol);
-    context_set_token_data(c, make_symbol(context_get_token_string(c)));
+restore:
+    context_restore(c, &saved_context);
+    return(0);
+}
 
-    return(1);
+int parse_binary_operator(context * c)
+{
+    wint_t last_char;
+    data longest_matched_operator;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    longest_matched_operator = NULL;
+    while (1)
+    {
+        if (is_eof(last_char = context_read_char(c)) || !is_symbol_char(last_char))
+        {
+            if (!longest_matched_operator)
+                goto restore;
+            context_set_token_data(c, longest_matched_operator);
+            context_read_back(c, 1);
+            return(1);
+        }
+
+        context_push_char(c, last_char);
+        longest_matched_operator = find_binary_operator(context_get_token_string(c));
+        if (!longest_matched_operator)
+            goto restore;
+    }
+
+restore:
+    context_restore(c, &saved_context);
+    return(0);
+}
+
+int parse_prefix_operator(context * c)
+{
+    wint_t last_char;
+    data longest_matched_operator;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    longest_matched_operator = NULL;
+    while (1)
+    {
+        if (is_eof(last_char = context_read_char(c)) || !is_symbol_char(last_char))
+        {
+            if (!longest_matched_operator)
+                goto restore;
+            context_set_token_data(c, longest_matched_operator);
+            context_read_back(c, 1);
+            return(1);
+        }
+
+        context_push_char(c, last_char);
+        longest_matched_operator = find_prefix_operator(context_get_token_string(c));
+        if (!longest_matched_operator)
+            goto restore;
+    }
+
+restore:
+    context_restore(c, &saved_context);
+    return(0);
 }

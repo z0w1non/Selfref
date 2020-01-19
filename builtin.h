@@ -5,76 +5,86 @@
 
 void init_builtin();
 
-data print_v;
+/**************************/
+/* Builtin function value */
+/**************************/
+extern data print_v;
+extern data dump_symbol_v;
+extern data dump_heap_v;
+extern data gc_v;
+extern data push_args_v;
+extern data pop_args_v;
+extern data pair_v;
+extern data set_first_v;
+extern data set_rest_v;
+extern data list_v;
+extern data length_v;
+extern data if_v;
+extern data and_v;
+extern data or_v;
+extern data not_v;
+extern data eval_v;
+extern data call_v;
+extern data apply_v;
+extern data bind_symbol_v;
+extern data unnamed_macro_v;
+extern data unnamed_function_v;
+extern data macro_v;
+extern data function_v;
+extern data left_associative_operator_v;
+extern data right_associative_operator_v;
+extern data is_cons_v;
+extern data is_builtin_macro_v;
+extern data is_builtin_function_v;
+extern data is_unnamed_macro_v;
+extern data is_unnamed_function_v;
+extern data is_symbol_v;
+extern data is_nil_v;
+extern data is_int_v;
+extern data is_double_v;
+extern data is_number_v;
+extern data is_string_v;
+extern data is_zero_v;
+extern data inc_v;
+extern data dec_v;
+extern data add_v;
+extern data sub_v;
+extern data mul_v;
+extern data div_v;
+extern data mod_v;
+extern data zip_first_v;
+extern data zip_rest_v;
+extern data zip_v;
+extern data push_symbol_v;
+extern data pop_symbol_v;
+extern data to_char_code_v;
+extern data from_char_code_v;
+extern data progn_v;
+extern data let_v;
+extern data mapcar_v;
+extern data strcat_v;
+extern data substr_v;
 
-data dump_symbol_v;
-data dump_heap_v;
-data gc_v;
-
-data push_args_v;
-data pop_args_v;
-
-data pair_v;
-data set_first_v;
-data set_rest_v;
-
-data list_v;
-data length_v;
-
-data if_v;
-data and_v;
-data or_v;
-data not_v;
-
-data eval_v;
-data call_v;
-data apply_v;
-data bind_symbol_v;
-data unnamed_macro_v;
-data unnamed_function_v;
-data macro_v;
-data function_v;
-
-data left_associative_operator_v;
-data right_associative_operator_v;
-
-data is_cons_v;
-data is_builtin_macro_v;
-data is_builtin_function_v;
-data is_unnamed_macro_v;
-data is_unnamed_function_v;
-data is_symbol_v;
-data is_nil_v;
-data is_int_v;
-data is_double_v;
-data is_number_v;
-data is_string_v;
-data is_zero_v;
-
-data inc_v;
-data dec_v;
-data add_v;
-data sub_v;
-data mul_v;
-data div_v;
-data mod_v;
-
-data zip_first_v;
-data zip_rest_v;
-data zip_v;
-
-data push_symbol_v;
-data pop_symbol_v;
-
-data to_char_code_v;
-data from_char_code_v;
-
-data progn_v;
-data let_v;
-data mapcar_v;
-
-data strcat_v;
-data substr_v;
+/*********************************/
+/* Builtin binary operator value */
+/*********************************/
+extern data _assign_v;
+extern data _unnamed_function_v;
+extern data _less_2op_v;
+extern data _less_equal_2op_v;
+extern data _greater_2op_v;
+extern data _greater_equal_2op_v;
+extern data _equal_2op_v;
+extern data _not_equal_2op_v;
+extern data _sub_2op_v;
+extern data _add_2op_v;
+extern data _mod_2op_v;
+extern data _div_2op_v;
+extern data _mul_2op_v;
+extern data _arithmetic_left_shift_v;
+extern data _arithmetic_right_shift_v;
+extern data _logical_left_shift_v;
+extern data _logical_right_shift_v;
 
 /**************/
 /* Arithmetic */

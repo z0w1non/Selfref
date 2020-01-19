@@ -7,33 +7,108 @@
 #include "heap.h"
 #include "eval.h"
 
+/**************************/
+/* Builtin function value */
+/**************************/
+data print_v;
+data dump_symbol_v;
+data dump_heap_v;
+data gc_v;
+data push_args_v;
+data pop_args_v;
+data pair_v;
+data set_first_v;
+data set_rest_v;
+data list_v;
+data length_v;
+data if_v;
+data and_v;
+data or_v;
+data not_v;
+data eval_v;
+data call_v;
+data apply_v;
+data bind_symbol_v;
+data unnamed_macro_v;
+data unnamed_function_v;
+data macro_v;
+data function_v;
+data left_associative_operator_v;
+data right_associative_operator_v;
+data is_cons_v;
+data is_builtin_macro_v;
+data is_builtin_function_v;
+data is_unnamed_macro_v;
+data is_unnamed_function_v;
+data is_symbol_v;
+data is_nil_v;
+data is_int_v;
+data is_double_v;
+data is_number_v;
+data is_string_v;
+data is_zero_v;
+data inc_v;
+data dec_v;
+data add_v;
+data sub_v;
+data mul_v;
+data div_v;
+data mod_v;
+data zip_first_v;
+data zip_rest_v;
+data zip_v;
+data push_symbol_v;
+data pop_symbol_v;
+data to_char_code_v;
+data from_char_code_v;
+data progn_v;
+data let_v;
+data mapcar_v;
+data strcat_v;
+data substr_v;
+
+/*********************************/
+/* Builtin binary operator value */
+/*********************************/
+data _assign_v;
+data _unnamed_function_v;
+data _less_2op_v;
+data _less_equal_2op_v;
+data _greater_2op_v;
+data _greater_equal_2op_v;
+data _equal_2op_v;
+data _not_equal_2op_v;
+data _sub_2op_v;
+data _add_2op_v;
+data _mod_2op_v;
+data _div_2op_v;
+data _mul_2op_v;
+data _arithmetic_left_shift_v;
+data _arithmetic_right_shift_v;
+data _logical_left_shift_v;
+data _logical_right_shift_v;
+
 void init_builtin()
 {
+    /* symbol */
     push_symbol(L"nil", nil);
     push_symbol(L"t", t);
     push_symbol(L"quote", quote);
-
     push_symbol(L"print", print_v = make_builtin_function(_print));
-
     push_symbol(L"dump_symbol", dump_symbol_v = make_builtin_function(_dump_symbol));
     push_symbol(L"dump_heap", dump_heap_v = make_builtin_function(_dump_heap));
     push_symbol(L"gc", gc_v = make_builtin_function(_gc));
-
     push_symbol(L"push_args", push_args_v = make_builtin_macro(_push_args));
     push_symbol(L"pop_args", pop_args_v = make_builtin_macro(_pop_args));
-
     push_symbol(L"pair", pair_v = make_builtin_function(_pair));
     push_symbol(L"set_first", set_first_v = make_builtin_function(_set_first));
     push_symbol(L"set_rest", set_rest_v = make_builtin_function(_set_rest));
-
     push_symbol(L"list", list_v = make_builtin_function(_list));
     push_symbol(L"length", length_v = make_builtin_function(_length));
-
     push_symbol(L"if", if_v = make_builtin_macro(_if));
     push_symbol(L"and", and_v = make_builtin_macro(_and));
     push_symbol(L"or", or_v = make_builtin_macro(_or));
     push_symbol(L"not", not_v = make_builtin_function(_not));
-
     push_symbol(L"eval", eval_v = make_builtin_macro(eval));
     push_symbol(L"call", call_v = make_builtin_macro(_call));
     push_symbol(L"apply", apply_v = make_builtin_macro(_apply));
@@ -42,10 +117,8 @@ void init_builtin()
     push_symbol(L"unnamed_function", unnamed_function_v = make_builtin_macro(_unnamed_function));
     push_symbol(L"macro", macro_v = make_builtin_macro(_macro));
     push_symbol(L"function", function_v = make_builtin_macro(_function));
-
     push_symbol(L"left_associative_operator", left_associative_operator_v = make_builtin_macro(_left_associative_operator));
     push_symbol(L"right_associative_operator", right_associative_operator_v = make_builtin_macro(_right_associative_operator));
-
     push_symbol(L"is_cons", is_cons_v = make_builtin_function(_is_pair));
     push_symbol(L"is_builtin_macro", is_builtin_macro_v = make_builtin_function(_is_builtin_macro));
     push_symbol(L"is_builtin_function", is_builtin_function_v = make_builtin_function(_is_builtin_function));
@@ -58,7 +131,6 @@ void init_builtin()
     push_symbol(L"is_number", is_number_v = make_builtin_function(_is_number));
     push_symbol(L"is_string", is_string_v = make_builtin_function(_is_string));
     push_symbol(L"is_zero", is_zero_v = make_builtin_function(_is_zero));
-
     push_symbol(L"inc", inc_v = make_builtin_function(_inc));
     push_symbol(L"dec", dec_v = make_builtin_function(_dec));
     push_symbol(L"add", add_v = make_builtin_function(_add));
@@ -66,23 +138,41 @@ void init_builtin()
     push_symbol(L"mul", mul_v = make_builtin_function(_mul));
     push_symbol(L"div", div_v = make_builtin_function(_div));
     push_symbol(L"mod", mod_v = make_builtin_function(_mod));
-
     push_symbol(L"zip_first", zip_first_v = make_builtin_function(_zip_first));
     push_symbol(L"zip_rest", zip_rest_v = make_builtin_function(_zip_rest));
     push_symbol(L"zip", zip_v = make_builtin_function(_zip));
-
     push_symbol(L"push_symbol", push_symbol_v = make_builtin_macro(_push_symbol));
     push_symbol(L"pop_symbol", pop_symbol_v = make_builtin_macro(_pop_symbol));
-
     push_symbol(L"to_char_code", to_char_code_v = make_builtin_function(_to_char_code));
     push_symbol(L"from_char_code", from_char_code_v = make_builtin_function(_from_char_code));
-
     push_symbol(L"progn", progn_v = make_builtin_macro(_progn));
     push_symbol(L"let", let_v = make_builtin_macro(_let));
     push_symbol(L"mapcar", mapcar_v = make_builtin_function(_mapcar));
-
     push_symbol(L"strcat", strcat_v = make_builtin_function(_strcat));
     push_symbol(L"substr", substr_v = make_builtin_function(_substr));
+
+    /* binary operator */
+    add_builtin_right_associative_operator_macro(L"=", _assign);
+    add_builtin_right_associative_operator_macro(L"=", _assign);
+    add_builtin_right_associative_operator_macro(L"=>", _unnamed_function);
+    add_builtin_left_associative_operator_function(L"<", _less_2op);
+    add_builtin_left_associative_operator_function(L"<=", _less_equal_2op);
+    add_builtin_left_associative_operator_function(L">", _greater_2op);
+    add_builtin_left_associative_operator_function(L">=", _greater_equal_2op);
+    add_builtin_left_associative_operator_function(L"==", _equal_2op);
+    add_builtin_left_associative_operator_function(L"!=", _not_equal_2op);
+    add_builtin_left_associative_operator_function(L"-", _sub_2op);
+    add_builtin_left_associative_operator_function(L"+", _add_2op);
+    add_builtin_left_associative_operator_function(L"%", _mod_2op);
+    add_builtin_left_associative_operator_function(L"/", _div_2op);
+    add_builtin_left_associative_operator_function(L"*", _mul_2op);
+    add_builtin_left_associative_operator_function(L"<<", _arithmetic_left_shift);
+    add_builtin_left_associative_operator_function(L">>", _arithmetic_right_shift);
+    add_builtin_left_associative_operator_function(L"<<<", _logical_left_shift);
+    add_builtin_left_associative_operator_function(L">>>", _logical_right_shift);
+
+    /* prefix operator */
+    add_builtin_prefix_operator_macro(L"\'", _quote);
 }
 
 /**************/

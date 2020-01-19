@@ -9,6 +9,7 @@ void init_builtin();
 /* Builtin function value */
 /**************************/
 extern data print_v;
+extern data print_line_v;
 extern data dump_symbol_v;
 extern data dump_heap_v;
 extern data gc_v;
@@ -139,6 +140,7 @@ data _not(data);
 /**************/
 data _eval(data);
 data _print(data);
+data _print_line(data);
 data _call(data);
 data _apply(data);
 data _bind_symbol(data);

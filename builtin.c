@@ -11,6 +11,7 @@
 /* Builtin function value */
 /**************************/
 data print_v;
+data print_line_v;
 data dump_symbol_v;
 data dump_heap_v;
 data gc_v;
@@ -95,6 +96,7 @@ void init_builtin()
     push_symbol(L"t", t);
     push_symbol(L"quote", quote);
     push_symbol(L"print", print_v = make_builtin_function(_print));
+    push_symbol(L"print_line", print_line_v = make_builtin_function(_print_line));
     push_symbol(L"dump_symbol", dump_symbol_v = make_builtin_function(_dump_symbol));
     push_symbol(L"dump_heap", dump_heap_v = make_builtin_function(_dump_heap));
     push_symbol(L"gc", gc_v = make_builtin_function(_gc));
@@ -645,7 +647,15 @@ data _eval(data d)
 
 data _print(data d)
 {
-    return(car(d));
+    print(car(d));
+    return(t);
+}
+
+data _print_line(data d)
+{
+    print(car(d));
+    wprintf(L"\n");
+    return(t);
 }
 
 // (call <macro | function> arg1 arg2 arg3 ...)
@@ -869,7 +879,7 @@ data _progn(data d)
 {
     data last;
     last = nil;
-    while (is_not_nil(car(d)))
+    while (is_not_nil(d))
     {
         last = eval(car(d));
         d = cdr(d);

@@ -267,23 +267,8 @@ int parse_paragraph(context * c)
     saved_context_t saved_context;
     context_save(c, &saved_context);
 
-    if (parse_list(c))
+    if (parse_list(c) || parse_block(c) || parse_statement(c))
         return(1);
-    
-    if (parse_curly_lparen(c))
-    {
-        context_clear_token(c);
-        if (parse_block_internal(c))
-        {
-            internal = context_get_token_data(c);
-            context_clear_token(c);
-            if (parse_curly_rparen(c))
-            {
-                context_set_token_data(c, internal);
-                return(1);
-            }
-        }
-    }
 
 restore:
     context_restore(c, &saved_context);
@@ -291,7 +276,7 @@ restore:
 }
 
 /* { <block internal> } */
-int parse_blcok(context * c)
+int parse_block(context * c)
 {
     data internal;
     saved_context_t saved_context;
@@ -434,15 +419,50 @@ int parse_argument(context * c)
     
 }
 
-/* <statement> ; */
-/* <token> , <statement> */
+/* <symbol> ( <argument> ) */
+int parse_c_function_call(context * c)
+{
+    data function_symbol, argument;
+    saved_context_t saved_context;
+    context_save(c, &saved_context);
+
+    if (parse_symbol(c))
+    {
+        function_symbol = context_get_token_data(c);
+        context_clear_token(c);
+        if (skip_space_and_at_eof(c))
+            goto restore;
+        if (parse_lparen(c))
+        {
+            context_clear_token(c);
+            if (skip_space_and_at_eof(c))
+                goto restore;
+            if (parse_argument(c))
+            {
+                argument = context_get_token_data(c);
+                context_clear_token(c);
+                if (skip_space_and_at_eof(c))
+                    goto restore;
+                context_set_token_data(c, make_pair(function_symbol, make_pair(argument, nil)));
+                return(1);
+            }
+        }
+    }
+
+restore:
+    context_restore(c, &saved_context);
+    return(0);
+}
+
+/* ; */
+/* <c function call> , <statement> */
 int parse_statement(context * c)
 {
     data first_token, rest_statement;
     saved_context_t saved_context;
     context_save(c, &saved_context);
 
-    if (parse_token(c))
+    if (parse_c_function_call(c))
     {
         first_token = context_get_token_data(c);
         context_clear_token(c);

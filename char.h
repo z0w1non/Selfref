@@ -21,6 +21,7 @@ int is_space(wint_t);
 int is_lparen(wint_t);
 int is_rparen(wint_t);
 int is_symbol_char(wint_t);
+int is_operator_char(wint_t);
 int is_dot(wint_t);
 int is_print(wint_t);
 int is_crlf(wint_t);

@@ -915,7 +915,7 @@ int parse_number_symbol(context_t * context)
 /* <unsigned number literal> */
 /* <c function call> */
 /* <number symbol> */
-/* <nexted expression> */
+/* <nested expression> */
 int parse_unsigned_number(context_t * context)
 {
     if (parse_unsigned_number_literal(context) || parse_c_function_call(context) || parse_number_symbol(context) || parse_nested_expression(context))

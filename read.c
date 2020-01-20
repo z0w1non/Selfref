@@ -751,9 +751,8 @@ restore:
     return(0);
 }
 
-/* "(" <expression> ")" */
-/* <polynominal> */
-int parse_expression(context_t * context)
+/* "(" <polynominal> ")" */
+int parse_nested_expression(context_t * context)
 {
     data expression;
     saved_context_t saved_context;
@@ -763,7 +762,7 @@ int parse_expression(context_t * context)
     {
         context_clear_token(context);
         skip_space(context);
-        if (parse_expression(context))
+        if (parse_polynominal(context))
         {
             expression = context_get_token_data(context);
             context_clear_token(context);
@@ -775,17 +774,18 @@ int parse_expression(context_t * context)
                 return(1);
             }
         }
-        context_restore(context, &saved_context);
-    }
-    
-    if (parse_polynominal(context))
-    {
-        return(1);
     }
 
 restore:
     context_restore(context, &saved_context);
     return(0);
+}
+
+/* <polynominal> */
+int parse_expression(context_t * context)
+{
+    if (parse_polynominal(context))
+        return(1);
 }
 
 /* <monominal> + <polynominal> */
@@ -815,7 +815,6 @@ int parse_polynominal(context_t * context)
                 context_set_token_data(context, make_pair(plus_or_minus_operator, make_pair(first_monominal, make_pair(rest_monominal, nil))));
                 return(1);
             }
-            goto restore;
         }
         context_clear_token(context);
         context_set_token_data(context, first_monominal);
@@ -862,7 +861,6 @@ int parse_monominal(context_t * context)
         context_set_token_data(context, left);
         return(1);
     }
-
     if (parse_string_expression(context))
         return(1);
 
@@ -886,9 +884,8 @@ int parse_signed_number(context_t * context)
         skip_space(context);
         if (parse_signed_number(context))
             return(1);
-        goto restore;
     }
-    else if (parse_single_char(context, L'-'))
+    if (parse_single_char(context, L'-'))
     {
         context_clear_token(context);
         skip_space(context);
@@ -899,9 +896,8 @@ int parse_signed_number(context_t * context)
             context_get_token_data(make_pair(_mul_2op_v, make_pair(signed_number, make_pair(make_int(-1), nil))));
             return(1);
         }
-        goto restore;
     }
-    else if (parse_unsigned_number(context))
+    if (parse_unsigned_number(context) || parse_nested_expression(context))
         return(1);
 
 restore:
@@ -919,9 +915,10 @@ int parse_number_symbol(context_t * context)
 /* <unsigned number literal> */
 /* <c function call> */
 /* <number symbol> */
+/* <nexted expression> */
 int parse_unsigned_number(context_t * context)
 {
-    if (parse_unsigned_number_literal(context) || parse_c_function_call(context) || parse_number_symbol(context))
+    if (parse_unsigned_number_literal(context) || parse_c_function_call(context) || parse_number_symbol(context) || parse_nested_expression(context))
         return(1);
     return(0);
 }

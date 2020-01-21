@@ -83,6 +83,7 @@ int parse_string_literal(context_t * context);
 int parse_symbol(context_t * context);
 int parse_binary_operator(context_t * context);
 int parse_prefix_operator(context_t * context);
+int parse_reserved_word(context_t * context, const wchar_t * reserved_word);
 
 /*******************/
 /* Public function */
@@ -308,13 +309,14 @@ int parse_semicolon(context_t * context)
 /* <list> */
 /* <block> */
 /* <statement> */
+/* <function declaration> */
 int parse_paragraph(context_t * context)
 {
     data internal;
     saved_context_t saved_context;
     context_save(context, &saved_context);
 
-    if (parse_list(context) || parse_block(context) || parse_statement(context))
+    if (parse_list(context) || parse_block(context) || parse_statement(context) || parse_function_declaration(context))
         return(1);
 
 restore:
@@ -639,6 +641,7 @@ int parse_dummy_argument_internal(context_t * context)
         if (parse_dummy_argument_internal(context))
         {
             rest = context_get_token_data(context);
+            skip_space(context);
             context_clear_token(context);
             context_set_token_data(context, make_pair(first, rest));
             return(1);
@@ -653,54 +656,58 @@ restore:
 /* "(" <dummy argument internal> */
 int parse_dummy_argument(context_t * context)
 {
+    saved_context_t saved_context;
+    context_save(context, &saved_context);
+
     if (parse_lparen(context))
-        return(1);
+    {
+        context_clear_token(context);
+        skip_space(context);
+        if (parse_dummy_argument_internal(context))
+            return(1);
+    }
+
+restore:
+    context_restore(context, &saved_context);
     return(0);
 }
 
-/* <symbol> <dummy argument> "{" <statement> "}" */
-int parse_c_function_declaration(context_t * context)
+/* "function" <symbol> <dummy argument> "{" <statement> "}" */
+int parse_function_declaration(context_t * context)
 {
     data type, symbol, dummy_argument, statement;
     saved_context_t saved_context;
     context_save(context, &saved_context);
 
-    if (parse_type(context))
+    if (parse_reserved_word(context, L"function"))
     {
-        type = context_get_token_data(context);
         context_clear_token(context);
         if (parse_symbol(context))
         {
             symbol = context_get_token_data(context);
             context_clear_token(context);
             skip_space(context);
-            if (parse_lparen(context))
+            if (parse_dummy_argument(context))
             {
+                dummy_argument = context_get_token_data(context);
                 context_clear_token(context);
                 skip_space(context);
-                if (parse_dummy_argument(context))
+                if (parse_curly_lparen(context))
                 {
-                    dummy_argument = context_get_token_data(context);
                     context_clear_token(context);
                     skip_space(context);
-                    if (parse_curly_lparen(context))
+                    if (parse_statement(context))
                     {
+                        statement = context_get_token_data(context);
                         context_clear_token(context);
                         skip_space(context);
-                        if (parse_statement(context))
+                        if (parse_curly_rparen(context))
                         {
-                            statement = context_get_token_data(context);
                             context_clear_token(context);
-                            skip_space(context);
-                            if (parse_curly_rparen(context))
-                            {
-                                context_clear_token(context);
-                                skip_space(context);
-                                context_set_token_data(context,
-                                    make_pair(_function, make_pair(symbol, make_pair(dummy_argument, make_pair(statement, nil))))
-                                );
-                                return(1);
-                            }
+                            //skip_space(context);
+                            context_set_token_data(context, make_pair(function_v, make_pair(symbol, make_pair(dummy_argument, make_pair(statement, nil)))));
+                            print(context_get_token_data(context));
+                            return(1);
                         }
                     }
                 }
@@ -1124,6 +1131,31 @@ int parse_prefix_operator(context_t * context)
         longest_matched_operator = find_prefix_operator(context_get_token_string(context));
         if (!longest_matched_operator)
             goto restore;
+    }
+
+restore:
+    context_restore(context, &saved_context);
+    return(0);
+}
+
+int parse_reserved_word(context_t * context, const wchar_t * reserved_word)
+{
+    wint_t last_char;
+    saved_context_t saved_context;
+    context_save(context, &saved_context);
+
+    while ((!is_eof(last_char = context_read_char(context))) && (is_symbol_char(last_char)))
+        context_push_char(context, (wchar_t)last_char);
+    context_read_back(context, 1);
+
+    if (context->token.length > 0)
+    {
+        if (wcscmp(context_get_token_string(context), reserved_word) == 0)
+        {
+            skip_space(context);
+            context_set_token_data(context, make_symbol(context_get_token_string(context)));
+            return(1);
+        }
     }
 
 restore:

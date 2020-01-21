@@ -7,6 +7,7 @@
 #include "eval.h"
 #include "sym.h"
 #include "builtin.h"
+#include "repl.h"
 
 enum
 {
@@ -62,6 +63,7 @@ data read_internal(context_t *);
 
 int at_eof(context_t * context);
 void skip_space(context_t * context);
+void discard_crlf(context_t * context);
 int parse_single_char(context_t * c, wchar_t context);
 int parse_single_char_binary_operator(context_t * c, wchar_t context);
 int parse_lparen(context_t * context);
@@ -100,9 +102,13 @@ FILE * get_input_stream()
 
 data read()
 {
-    context_t c;
-    context_init(&c);
-    return(read_internal(&c));
+    context_t context;
+    data result;
+    context_init(&context);
+    result = read_internal(&context);
+    if (interactive_mode()) //discard crlf
+        discard_crlf(&context);
+    return(result);
 }
 
 /******************/
@@ -237,8 +243,14 @@ int at_eof(context_t * context)
 void skip_space(context_t * context)
 {
     wint_t last_char;
-    while ((!is_eof(last_char = context_read_char(context))) && ((is_space(last_char) || (is_crlf(last_char)))));
+    while ((!is_eof(last_char = context_read_char(context))) && ((is_space(last_char) || (!interactive_mode() && is_crlf(last_char)))));
     context_read_back(context, 1);
+}
+
+void discard_crlf(context_t * context)
+{
+    if (interactive_mode())
+        context_read_char(context);
 }
 
 int parse_single_char(context_t * context, wchar_t wc)
@@ -704,9 +716,8 @@ int parse_function_declaration(context_t * context)
                         if (parse_curly_rparen(context))
                         {
                             context_clear_token(context);
-                            //skip_space(context);
+                            skip_space(context);
                             context_set_token_data(context, make_pair(function_v, make_pair(symbol, make_pair(dummy_argument, make_pair(statement, nil)))));
-                            print(context_get_token_data(context));
                             return(1);
                         }
                     }

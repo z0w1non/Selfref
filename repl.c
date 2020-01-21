@@ -13,6 +13,8 @@
 int parse_command_line_argment(int argc, const char ** argv);
 void close_file_stream();
 
+int _interactive_mode;
+
 /********/
 /* REPL */
 /********/
@@ -78,6 +80,11 @@ void escape()
     longjmp(jmpbuf, 1);
 }
 
+int interactive_mode()
+{
+    return(_interactive_mode);
+}
+
 int parse_command_line_argment(int argc, const char ** argv)
 {
     FILE * file;
@@ -85,6 +92,7 @@ int parse_command_line_argment(int argc, const char ** argv)
 
     if (argc < 2)
     {
+        _interactive_mode = 1;
         set_input_stream(stdin);
         return(1);
     }
@@ -94,6 +102,7 @@ int parse_command_line_argment(int argc, const char ** argv)
     if (file)
     {
         set_input_stream(file);
+        _interactive_mode = 0;
         return(0);
     }
 

@@ -89,6 +89,11 @@ extern data _arithmetic_left_shift_v;
 extern data _arithmetic_right_shift_v;
 extern data _logical_left_shift_v;
 extern data _logical_right_shift_v;
+extern data _logical_or_2op_v;
+extern data _logical_and_2op_v;
+extern data _bit_or_2op_v;
+extern data _bit_xor_2op_v;
+extern data _bit_and_2op_v;
 
 /**************/
 /* Arithmetic */
@@ -127,6 +132,8 @@ data _greater_2op(data);
 data _greater_equal_2op(data);
 data _equal_2op(data);
 data _not_equal_2op(data);
+data _logical_or_2op(data);
+data _logical_and_2op(data);
 
 data _assign(data);
 

@@ -91,6 +91,11 @@ data _arithmetic_left_shift_v;
 data _arithmetic_right_shift_v;
 data _logical_left_shift_v;
 data _logical_right_shift_v;
+data _logical_or_2op_v;
+data _logical_and_2op_v;
+data _bit_or_2op_v;
+data _bit_xor_2op_v;
+data _bit_and_2op_v;
 
 void init_builtin()
 {
@@ -179,6 +184,8 @@ void init_builtin()
     add_builtin_left_associative_operator_function(L">>", _arithmetic_right_shift);
     add_builtin_left_associative_operator_function(L"<<<", _logical_left_shift);
     add_builtin_left_associative_operator_function(L">>>", _logical_right_shift);
+    add_builtin_left_associative_operator_macro(L"||", _logical_or_2op);
+    add_builtin_left_associative_operator_macro(L"&&", _logical_and_2op);
 
     /* prefix operator */
     init_prefix_operator_list();
@@ -608,6 +615,31 @@ data _not_equal_2op(data d)
         return(nil_or_t(wcscmp(raw_string(car(d)), raw_string(cadr(d))) != 0));
     error(L"invalid argument");
     return(nil);
+}
+
+data _logical_or_2op(data d)
+{
+    
+}
+
+data _logical_and_2op(data d)
+{
+
+}
+
+data _bit_or_2op(data d)
+{
+
+}
+
+data _bit_xor_2op(data d)
+{
+
+}
+
+data _bit_and_2op(data d)
+{
+
 }
 
 data _assign(data d)

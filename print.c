@@ -14,7 +14,18 @@ data print(data d)
     if (!used(d))
         wprintf(L"<unused heap>");
     else if (is_pair(d))
-        print_list(d);
+    {
+        if (is_pair(cdr(d)))
+            print_list(d);
+        else
+        {
+            wprintf(L"(");
+            print(car(d));
+            wprintf(L" . ");
+            print(cdr(d));
+            wprintf(L")");
+        }
+    }
     else if (is_nil(d))
         wprintf(L"nil");
     else if (is_t(d))

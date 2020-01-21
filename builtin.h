@@ -187,9 +187,24 @@ data _pop_symbol(data);
 data _to_char_code(data);
 data _from_char_code(data);
 
+/********************/
+/* Association list */
+/********************/
+data acons(data);
+data assoc(data);
+
+/***************/
+/* Basic macro */
+/***************/
 data _progn(data);
 data _let(data);
+
+
 data _mapcar(data);
+
+/**********/
+/* String */
+/**********/
 data _strcat(data);
 data _substr(data);
 

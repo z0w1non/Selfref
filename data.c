@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "heap.h"
 #include "print.h"
+#include "hash_table.h"
 
 enum
 {

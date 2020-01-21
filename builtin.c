@@ -518,6 +518,8 @@ data _less_2op(data d)
         return(nil_or_t(raw_double(car(d)) < raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(nil_or_t(raw_double(car(d)) < raw_double(cadr(d))));
+    else if (is_string(car(d)) && is_string(cadr(d)))
+        return(nil_or_t(wcscmp(raw_string(car(d)), raw_string(cadr(d))) < 0));
     error(L"invalid argument");
     return(nil);
 }
@@ -532,6 +534,8 @@ data _less_equal_2op(data d)
         return(nil_or_t(raw_double(car(d)) <= raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(nil_or_t(raw_double(car(d)) <= raw_double(cadr(d))));
+    else if (is_string(car(d)) && is_string(cadr(d)))
+        return(nil_or_t(wcscmp(raw_string(car(d)), raw_string(cadr(d))) <= 0));
     error(L"invalid argument");
     return(nil);
 }
@@ -546,6 +550,8 @@ data _greater_2op(data d)
         return(nil_or_t(raw_double(car(d)) > raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(nil_or_t(raw_double(car(d)) > raw_double(cadr(d))));
+    else if (is_string(car(d)) && is_string(cadr(d)))
+        return(nil_or_t(wcscmp(raw_string(car(d)), raw_string(cadr(d))) > 0));
     error(L"invalid argument");
     return(nil);
 }
@@ -560,6 +566,8 @@ data _greater_equal_2op(data d)
         return(nil_or_t(raw_double(car(d)) >= raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(nil_or_t(raw_double(car(d)) >= raw_double(cadr(d))));
+    else if (is_string(car(d)) && is_string(cadr(d)))
+        return(nil_or_t(wcscmp(raw_string(car(d)), raw_string(cadr(d))) >= 0));
     error(L"invalid argument");
     return(nil);
 }
@@ -574,6 +582,8 @@ data _equal_2op(data d)
         return(nil_or_t(raw_double(car(d)) == raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(nil_or_t(raw_double(car(d)) == raw_double(cadr(d))));
+    else if (is_string(car(d)) && is_string(cadr(d)))
+        return(nil_or_t(wcscmp(raw_string(car(d)), raw_string(cadr(d))) == 0));
     error(L"invalid argument");
     return(nil);
 }
@@ -588,6 +598,8 @@ data _not_equal_2op(data d)
         return(nil_or_t(raw_double(car(d)) != raw_int(cadr(d))));
     else if (is_double(car(d)) && is_double(cadr(d)))
         return(nil_or_t(raw_double(car(d)) != raw_double(cadr(d))));
+    else if (is_string(car(d)) && is_string(cadr(d)))
+        return(nil_or_t(wcscmp(raw_string(car(d)), raw_string(cadr(d))) != 0));
     error(L"invalid argument");
     return(nil);
 }
@@ -877,6 +889,22 @@ data _from_char_code(data d)
     return(make_string(buf));
 }
 
+/********************/
+/* Association list */
+/********************/
+data acons(data d)
+{
+    return(make_pair(make_pair(car(d), cadr(d)), caddr(d)));
+}
+
+data assoc(data d)
+{
+
+}
+
+/***************/
+/* Basic macro */
+/***************/
 data _progn(data d)
 {
     data last;
@@ -924,6 +952,9 @@ data _mapcar(data d)
     return(make_pair(raw_function(car(d))(d), _mapcar(make_pair(car(d), cdr(d)))));
 }
 
+/**********/
+/* String */
+/**********/
 data _strcat(data d)
 {
     size_t a_length, b_length;
@@ -969,9 +1000,4 @@ data _substr(data d)
 error:
     error(L"substr failed");
     return(nil);
-}
-
-data _for(data d)
-{
-    
 }

@@ -164,32 +164,17 @@ void init_builtin()
     push_symbol(L"strcat", strcat_v = make_builtin_function(_strcat));
     push_symbol(L"substr", substr_v = make_builtin_function(_substr));
 
-    /* binary operator */
-    init_binary_operator_list();
-    add_builtin_right_associative_operator_macro(L"=", _assign);
-    add_builtin_right_associative_operator_macro(L"=", _assign);
-    add_builtin_right_associative_operator_macro(L"=>", _unnamed_function);
-    add_builtin_left_associative_operator_function(L"<", _less_2op);
-    add_builtin_left_associative_operator_function(L"<=", _less_equal_2op);
-    add_builtin_left_associative_operator_function(L">", _greater_2op);
-    add_builtin_left_associative_operator_function(L">=", _greater_equal_2op);
-    add_builtin_left_associative_operator_function(L"==", _equal_2op);
-    add_builtin_left_associative_operator_function(L"!=", _not_equal_2op);
-    add_builtin_left_associative_operator_function(L"-", _sub_2op);
-    add_builtin_left_associative_operator_function(L"+", _add_2op);
-    add_builtin_left_associative_operator_function(L"%", _mod_2op);
-    add_builtin_left_associative_operator_function(L"/", _div_2op);
-    add_builtin_left_associative_operator_function(L"*", _mul_2op);
-    add_builtin_left_associative_operator_function(L"<<", _arithmetic_left_shift);
-    add_builtin_left_associative_operator_function(L">>", _arithmetic_right_shift);
-    add_builtin_left_associative_operator_function(L"<<<", _logical_left_shift);
-    add_builtin_left_associative_operator_function(L">>>", _logical_right_shift);
-    add_builtin_left_associative_operator_macro(L"||", _logical_or_2op);
-    add_builtin_left_associative_operator_macro(L"&&", _logical_and_2op);
-
-    /* prefix operator */
-    init_prefix_operator_list();
-    add_builtin_prefix_operator_macro(L"\'", _quote);
+    _equal_2op_v = make_builtin_function(_equal_2op);
+    _not_equal_2op_v = make_builtin_function(_not_equal_2op);
+    _less_2op_v = make_builtin_function(_less_2op);
+    _less_equal_2op_v = make_builtin_function(_less_equal_2op);
+    _greater_2op_v = make_builtin_function(_greater_2op);
+    _greater_equal_2op_v = make_builtin_function(_greater_equal_2op);
+    _logical_or_2op_v = make_builtin_macro(_logical_or_2op);
+    _logical_and_2op_v = make_builtin_macro(_logical_and_2op);
+    _bit_or_2op_v = make_builtin_function(_bit_or_2op);
+    _bit_xor_2op_v = make_builtin_function(_bit_xor_2op);
+    _bit_and_2op_v = make_builtin_function(_bit_and_2op);
 }
 
 /**************/
@@ -619,27 +604,37 @@ data _not_equal_2op(data d)
 
 data _logical_or_2op(data d)
 {
-    
+    if (is_nil(eval(car(d))))
+        return(nil_or_t(is_nil(eval(cadr(d)))));
+    return(t);
 }
 
 data _logical_and_2op(data d)
 {
-
+    if (is_not_nil(eval(car(d))))
+        return(nil_or_t(is_not_nil(eval(cadr(d)))));
+    return(nil);
 }
 
 data _bit_or_2op(data d)
 {
-
+    if (!is_int(car(d)) || !is_int(cadr(d)))
+        error(L"bit or failed");
+    return(make_int(raw_int(car(d)) | raw_int(cadr(d))));
 }
 
 data _bit_xor_2op(data d)
 {
-
+    if (!is_int(car(d)) || !is_int(cadr(d)))
+        error(L"bit xor failed");
+    return(make_int(raw_int(car(d)) ^ raw_int(cadr(d))));
 }
 
 data _bit_and_2op(data d)
 {
-
+    if (!is_int(car(d)) || !is_int(cadr(d)))
+        error(L"bit and failed");
+    return(make_int(raw_int(car(d)) & raw_int(cadr(d))));
 }
 
 data _assign(data d)

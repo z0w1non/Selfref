@@ -63,7 +63,9 @@ data read_internal(context_t *);
 
 int at_eof(context_t * context);
 void skip_space(context_t * context);
-void discard_crlf(context_t * context);
+
+typedef int (*parse_function_t)(context_t *);
+
 int parse_single_char(context_t * c, wchar_t context);
 int parse_single_char_binary_operator(context_t * c, wchar_t context);
 int parse_lparen(context_t * context);
@@ -106,8 +108,8 @@ data read()
     data result;
     context_init(&context);
     result = read_internal(&context);
-    if (interactive_mode()) //discard crlf
-        discard_crlf(&context);
+    if (interactive_mode()) /* discard new line character */
+        context_read_char(&context);
     return(result);
 }
 
@@ -245,12 +247,6 @@ void skip_space(context_t * context)
     wint_t last_char;
     while ((!is_eof(last_char = context_read_char(context))) && ((is_space(last_char) || (!interactive_mode() && is_crlf(last_char)))));
     context_read_back(context, 1);
-}
-
-void discard_crlf(context_t * context)
-{
-    if (interactive_mode())
-        context_read_char(context);
 }
 
 int parse_single_char(context_t * context, wchar_t wc)
@@ -1085,6 +1081,64 @@ int parse_symbol(context_t * context)
 
 restore:
     context_restore(context, &saved_context);
+    return(0);
+}
+
+
+/* <specified rparen> */
+/* <token> <specified rparen> */
+/* <token> <specified separator> <comma list> */
+int parse_comma_list_internal(context_t * context, parse_function_t parse_function, wchar_t separator, wchar_t rparen)
+{
+    data first, rest;
+    saved_context_t saved_context;
+    context_save(context, &saved_context);
+
+    if (parse_single_char(context, rparen))
+    {
+        skip_space(context);
+        context_clear_token(context);
+        context_set_token_data(context, nil);
+        return(1);
+    }
+    else if (parse_function(context))
+    {
+        first = context_get_token_data(context);
+        skip_space(context);
+        context_clear_token(context);
+        if (parse_single_char(context, rparen))
+        {
+            skip_space(context);
+            context_clear_token(context);
+            context_set_token_data(context, first);
+            return(1);
+        }
+        else if (parse_single_char(context, separator))
+        {
+            skip_space(context);
+            context_clear_token(context);
+            if (parse_comma_list_internal(context, parse_function, separator, rparen))
+            {
+                rest = context_get_token_data(context);
+                skip_space(context);
+                context_clear_token(context);
+                context_set_token_data(context, make_pair(first, rest));
+                return(1);
+            }
+        }
+    }
+
+restore:
+    context_restore(context, &saved_context);
+    return(0);
+}
+
+/* <specified lparen> <comma list internal> */
+int parse_comma_list(context_t * context, wchar_t lparen, parse_function_t parse_function, wchar_t separator, wchar_t rparen)
+{
+    if (parse_single_char(context, lparen))
+        if (parse_comma_list_internal(context, parse_function, separator, rparen))
+            return(1);
     return(0);
 }
 

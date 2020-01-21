@@ -22,6 +22,7 @@ data set_first_v;
 data set_rest_v;
 data list_v;
 data length_v;
+data reverse_v;
 data if_v;
 data and_v;
 data or_v;
@@ -62,6 +63,8 @@ data push_symbol_v;
 data pop_symbol_v;
 data to_char_code_v;
 data from_char_code_v;
+data acons_v;
+data assoc_v;
 data progn_v;
 data let_v;
 data mapcar_v;
@@ -107,6 +110,7 @@ void init_builtin()
     push_symbol(L"set_rest", set_rest_v = make_builtin_function(_set_rest));
     push_symbol(L"list", list_v = make_builtin_function(_list));
     push_symbol(L"length", length_v = make_builtin_function(_length));
+    push_symbol(L"reverse", reverse_v = make_builtin_function(_reverse));
     push_symbol(L"if", if_v = make_builtin_macro(_if));
     push_symbol(L"and", and_v = make_builtin_macro(_and));
     push_symbol(L"or", or_v = make_builtin_macro(_or));
@@ -147,6 +151,8 @@ void init_builtin()
     push_symbol(L"pop_symbol", pop_symbol_v = make_builtin_macro(_pop_symbol));
     push_symbol(L"to_char_code", to_char_code_v = make_builtin_function(_to_char_code));
     push_symbol(L"from_char_code", from_char_code_v = make_builtin_function(_from_char_code));
+    push_symbol(L"acons", acons_v = make_builtin_function(_acons));
+    push_symbol(L"assoc", assoc_v = make_builtin_function(_assoc));
     push_symbol(L"progn", progn_v = make_builtin_macro(_progn));
     push_symbol(L"let", let_v = make_builtin_macro(_let));
     push_symbol(L"mapcar", mapcar_v = make_builtin_function(_mapcar));
@@ -806,6 +812,11 @@ data _length(data d)
     return(make_int(len));
 }
 
+data _reverse(data d)
+{
+
+}
+
 /******************/
 /* Zip algorithm */
 /******************/
@@ -892,14 +903,23 @@ data _from_char_code(data d)
 /********************/
 /* Association list */
 /********************/
-data acons(data d)
+data _acons(data d)
 {
     return(make_pair(make_pair(car(d), cadr(d)), caddr(d)));
 }
 
-data assoc(data d)
+data _assoc(data d)
 {
-
+    data key, list;
+    key = car(d);
+    list = cadr(d);
+    while (is_not_nil(list))
+    {
+        if (is_not_nil(_equal_2op(caar(list), key)))
+            return(car(list));
+        list = cdr(list);
+    }
+    return(nil);
 }
 
 /***************/

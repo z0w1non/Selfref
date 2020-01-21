@@ -20,6 +20,7 @@ extern data set_first_v;
 extern data set_rest_v;
 extern data list_v;
 extern data length_v;
+extern data reverse_v;
 extern data if_v;
 extern data and_v;
 extern data or_v;
@@ -60,6 +61,8 @@ extern data push_symbol_v;
 extern data pop_symbol_v;
 extern data to_char_code_v;
 extern data from_char_code_v;
+extern data acons_v;
+extern data assoc_v;
 extern data progn_v;
 extern data let_v;
 extern data mapcar_v;
@@ -167,6 +170,7 @@ data _set_rest(data);
 /*****************/
 data _list(data);
 data _length(data);
+data _reverse(data);
 
 /******************/
 /* Zip algorithm */
@@ -190,8 +194,8 @@ data _from_char_code(data);
 /********************/
 /* Association list */
 /********************/
-data acons(data);
-data assoc(data);
+data _acons(data);
+data _assoc(data);
 
 /***************/
 /* Basic macro */

@@ -652,7 +652,7 @@ restore:
 /**************/
 
 /* <symbol> <assignment operator> <assignment expression> */
-/* <expression> */
+/* <logical and expression> */
 int parse_assignment_expression(context_t * context)
 {
     data symbol, assign, expression;
@@ -680,7 +680,7 @@ int parse_assignment_expression(context_t * context)
         context_restore(context, &saved_context);
     }
 
-    if (parse_expression(context))
+    if (parse_logical_or_expression(context))
         return(1);
 
 restore:
@@ -714,6 +714,9 @@ int parse_logical_or_expression(context_t * context)
                 context_set_token_data(context, make_pair(operator, make_pair(first, make_pair(rest, nil))));
             }
         }
+        skip_space(context);
+        context_clear_token(context);
+        context_set_token_data(context, first);
         return(1);
     }
 
@@ -730,7 +733,7 @@ int parse_logical_and_expression(context_t * context)
     saved_context_t saved_context;
     context_save(context, &saved_context);
 
-    if (parse_logical_or_expression(context))
+    if (parse_bit_or_expression(context))
     {
         first = context_get_token_data(context);
         context_clear_token(context);
@@ -748,6 +751,9 @@ int parse_logical_and_expression(context_t * context)
                 context_set_token_data(context, make_pair(operator, make_pair(first, make_pair(rest, nil))));
             }
         }
+        skip_space(context);
+        context_clear_token(context);
+        context_set_token_data(context, first);
         return(1);
     }
 
@@ -782,6 +788,9 @@ int parse_bit_or_expression(context_t * context)
                 context_set_token_data(context, make_pair(operator, make_pair(first, make_pair(rest, nil))));
             }
         }
+        skip_space(context);
+        context_clear_token(context);
+        context_set_token_data(context, first);
         return(1);
     }
 
@@ -814,8 +823,12 @@ int parse_bit_xor_expression(context_t * context)
                 skip_space(context);
                 context_clear_token(context);
                 context_set_token_data(context, make_pair(operator, make_pair(first, make_pair(rest, nil))));
+                return(1);
             }
         }
+        skip_space(context);
+        context_clear_token(context);
+        context_set_token_data(context, first);
         return(1);
     }
 
@@ -832,7 +845,7 @@ int parse_bit_and_expression(context_t * context)
     saved_context_t saved_context;
     context_save(context, &saved_context);
 
-    if (parse_polynomial_expression(context))
+    if (parse_shift_expression(context))
     {
         first = context_get_token_data(context);
         context_clear_token(context);
@@ -842,14 +855,18 @@ int parse_bit_and_expression(context_t * context)
             operator = context_get_token_data(context);
             context_clear_token(context);
             skip_space(context);
-            if (parse_polynomial_expression(context))
+            if (parse_bit_and_expression(context))
             {
                 rest = context_get_token_data(context);
                 skip_space(context);
                 context_clear_token(context);
                 context_set_token_data(context, make_pair(operator, make_pair(first, make_pair(rest, nil))));
+                return(1);
             }
         }
+        skip_space(context);
+        context_clear_token(context);
+        context_set_token_data(context, first);
         return(1);
     }
 
@@ -906,11 +923,11 @@ restore:
     return(0);
 }
 
-/* <polyminal> <arithmetic right shift> <shift expression> */
-/* <polyminal> <arithmetic left shift> <shift expression> */
-/* <polyminal> <logical right shift> <shift expression> */
-/* <polyminal> <logical left shift> <shift expression> */
-/* <polyminal> */
+/* <polymial expression> <arithmetic right shift> <shift expression> */
+/* <polymial expression> <arithmetic left shift> <shift expression> */
+/* <polymial expression> <logical right shift> <shift expression> */
+/* <polymial expression> <logical left shift> <shift expression> */
+/* <polymial expression> */
 int parse_shift_expression(context_t * context)
 {
     data first, shift_operator, rest;
@@ -936,8 +953,10 @@ int parse_shift_expression(context_t * context)
                 skip_space(context);
                 context_clear_token(context);
                 context_set_token_data(context, make_pair(shift_operator, make_pair(first, make_pair(rest, nil))));
+                return(1);
             }
         }
+        skip_space(context);
         context_clear_token(context);
         context_set_token_data(context, first);
         return(1);
@@ -954,30 +973,32 @@ restore:
 /* <monomial expression> */
 int parse_polynomial_expression(context_t * context)
 {
-    data first_monomial, rest_monomial, plus_or_minus_operator;
+    data first, operator, rest;
     saved_context_t saved_context;
     context_save(context, &saved_context);
 
     if (parse_monomial_expression(context))
     {
-        first_monomial = context_get_token_data(context);
+        first = context_get_token_data(context);
         context_clear_token(context);
         skip_space(context);
         if (parse_addition_operator(context) || parse_substraction_operator(context))
         {
-            plus_or_minus_operator = context_get_token_data(context);
+            operator = context_get_token_data(context);
             context_clear_token(context);
             skip_space(context);
             if (parse_polynomial_expression(context))
             {
-                rest_monomial = context_get_token_data(context);
+                rest = context_get_token_data(context);
+                skip_space(context);
                 context_clear_token(context);
-                context_set_token_data(context, make_pair(plus_or_minus_operator, make_pair(first_monomial, make_pair(rest_monomial, nil))));
+                context_set_token_data(context, make_pair(operator, make_pair(first, make_pair(rest, nil))));
                 return(1);
             }
         }
+        skip_space(context);
         context_clear_token(context);
-        context_set_token_data(context, first_monomial);
+        context_set_token_data(context, first);
         return(1);
     }
 
@@ -993,32 +1014,34 @@ restore:
 /* <string expression> */
 int parse_monomial_expression(context_t * context)
 {
-    data left, right, binary_operator;
+    data first, operator, lest;
     saved_context_t saved_context;
     context_save(context, &saved_context);
 
     if (parse_signed_number(context) || parse_symbol(context))
     {
-        left = context_get_token_data(context);
+        first = context_get_token_data(context);
         context_clear_token(context);
         skip_space(context);
         if (parse_multiplication_operator(context)
             || parse_division_operator(context)
             || parse_modulo_operator(context))
         {
-            binary_operator = context_get_token_data(context);
+            operator = context_get_token_data(context);
             context_clear_token(context);
             skip_space(context);
             if (parse_monomial_expression(context))
             {
-                right = context_get_token_data(context);
+                lest = context_get_token_data(context);
+                skip_space(context);
                 context_clear_token(context);
-                context_set_token_data(context, make_pair(binary_operator, make_pair(left, make_pair(right, nil))));
+                context_set_token_data(context, make_pair(operator, make_pair(first, make_pair(lest, nil))));
                 return(1);
             }
         }
+        skip_space(context);
         context_clear_token(context);
-        context_set_token_data(context, left);
+        context_set_token_data(context, first);
         return(1);
     }
     if (parse_string_expression(context))
@@ -1029,31 +1052,26 @@ restore:
     return(0);
 }
 
-/* <addition operator> <signed number> */
-/* <substraction operator> <signed number> */
+/* <positive operator> <signed number> */
+/* <negative operator> <signed number> */
 /* <unsigned number> */
 int parse_signed_number(context_t * context)
 {
-    data signed_number;
+    data operator, signed_number;
     saved_context_t saved_context;
     context_save(context, &saved_context);
 
-    if (parse_single_char(context, L'+'))
+    if (parse_positive_operator(context) || parse_negative_operator(context))
     {
-        context_clear_token(context);
-        skip_space(context);
-        if (parse_signed_number(context))
-            return(1);
-    }
-    if (parse_single_char(context, L'-'))
-    {
+        operator = context_get_token_data(context);
         context_clear_token(context);
         skip_space(context);
         if (parse_signed_number(context))
         {
             signed_number = context_get_token_data(context);
+            skip_space(context);
             context_clear_token(context);
-            context_get_token_data(make_pair(_mul_2op_v, make_pair(signed_number, make_pair(make_int(-1), nil))));
+            context_get_token_data(make_pair(operator, make_pair(signed_number, nil)));
             return(1);
         }
     }
@@ -1122,6 +1140,7 @@ int parse_unsigned_number_literal(context_t * context)
             return(1);
         }
     }
+    context_clear_token(context);
 
 restore:
     context_restore(context, &saved_context);
@@ -1148,10 +1167,13 @@ int parse_string_expression(context_t * context)
             if (parse_string_expression(context))
             {
                 right = context_get_token_data(context);
+                skip_space(context);
+                context_clear_token(context);
                 context_set_token_data(context, make_pair(concatenate_operator, make_pair(left, make_pair(right, nil))));
                 return(1);
             }
         }
+        skip_space(context);
         context_clear_token(context);
         context_set_token_data(context, left);
         return(1);
@@ -1194,6 +1216,7 @@ int parse_string_literal(context_t * context)
         context_set_token_data(context, make_string(context_get_token_string(context)));
         return(1);
     }
+    context_clear_token(context);
 
 restore:
     context_restore(context, &saved_context);
@@ -1313,8 +1336,8 @@ int parse_function_declaration(context_t * context)
                         skip_space(context);
                         if (parse_curly_rparen(context))
                         {
-                            context_clear_token(context);
                             skip_space(context);
+                            context_clear_token(context);
                             context_set_token_data(context, make_pair(function_v, make_pair(symbol, make_pair(dummy_argument, make_pair(statement, nil)))));
                             return(1);
                         }
@@ -1355,6 +1378,7 @@ int parse_statement(context_t * context)
             if (parse_statement(context))
             {
                 rest_statement = context_get_token_data(context);
+                skip_space(context);
                 context_clear_token(context);
                 context_set_token_data(context, make_pair(progn_v, make_pair(first_token, make_pair(rest_statement, nil))));
                 return(1);
@@ -1508,6 +1532,7 @@ int parse_reserved_word(context_t * context, const wchar_t * reserved_word)
             return(1);
         }
     }
+    context_clear_token(context);
 
 restore:
     context_restore(context, &saved_context);
@@ -1517,15 +1542,18 @@ restore:
 int parse_abstract_operator(context_t * context, const wchar_t * operator_string, data builtin_operator)
 {
     wint_t last_char;
+    size_t specified_operator_string_length, read_string_length;
     saved_context_t saved_context;
     context_save(context, &saved_context);
 
-    while ((!is_eof(last_char = context_read_char(context))) && ((is_symbol_char(last_char) || is_operator_char(last_char))))
-        context_push_char(context, (wchar_t)last_char);
-    context_read_back(context, 1);
-
-    if (context->token.length > 0)
+    specified_operator_string_length = wcslen(operator_string);
+    read_string_length = 0;
+    while ((!is_eof(last_char = context_read_char(context))) && is_operator_char(last_char))
     {
+        context_push_char(context, (wchar_t)last_char);
+        read_string_length += 1;
+        if (read_string_length > specified_operator_string_length)
+            break;
         if (wcscmp(context_get_token_string(context), operator_string) == 0)
         {
             skip_space(context);
@@ -1533,6 +1561,7 @@ int parse_abstract_operator(context_t * context, const wchar_t * operator_string
             return(1);
         }
     }
+    context_clear_token(context);
 
 restore:
     context_restore(context, &saved_context);
@@ -1626,7 +1655,7 @@ int parse_addition_operator(context_t * context)
 
 int parse_substraction_operator(context_t * context)
 {
-    return(parse_abstract_operator(context, L"+", _sub_2op_v));
+    return(parse_abstract_operator(context, L"-", _sub_2op_v));
 }
 
 int parse_multiplication_operator(context_t * context)

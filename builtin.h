@@ -95,6 +95,9 @@ extern data _bit_or_2op_v;
 extern data _bit_xor_2op_v;
 extern data _bit_and_2op_v;
 
+extern data _positive_v;
+extern data _negative_v;
+
 /**************/
 /* Arithmetic */
 /**************/
@@ -122,6 +125,8 @@ data _logical_left_shift(data);
 data _logical_right_shift(data);
 data _arithmetic_left_shift(data);
 data _arithmetic_right_shift(data);
+data _positive(data);
+data _negative(data);
 
 /**************/
 /* Comparator */
@@ -134,6 +139,9 @@ data _equal_2op(data);
 data _not_equal_2op(data);
 data _logical_or_2op(data);
 data _logical_and_2op(data);
+data _bit_or_2op(data);
+data _bit_xor_2op(data);
+data _bit_and_2op(data);
 
 data _assign(data);
 

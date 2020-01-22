@@ -827,4 +827,5 @@ data forward_list_mark(data list)
         mark_data(car(list));
         list = cdr(list);
     }
+    return(list);
 }

@@ -97,6 +97,9 @@ data _bit_or_2op_v;
 data _bit_xor_2op_v;
 data _bit_and_2op_v;
 
+data _positive_v;
+data _negative_v;
+
 void init_builtin()
 {
     /* symbol */
@@ -164,17 +167,29 @@ void init_builtin()
     push_symbol(L"strcat", strcat_v = make_builtin_function(_strcat));
     push_symbol(L"substr", substr_v = make_builtin_function(_substr));
 
+    /* Binary operator */
+    _add_2op_v = make_builtin_function(_add_2op);
+    _sub_2op_v = make_builtin_function(_sub_2op);
+    _mul_2op_v = make_builtin_function(_mul_2op);
+    _div_2op_v = make_builtin_function(_div_2op);
+    _mod_2op_v = make_builtin_function(_mod_2op);
+
     _equal_2op_v = make_builtin_function(_equal_2op);
     _not_equal_2op_v = make_builtin_function(_not_equal_2op);
     _less_2op_v = make_builtin_function(_less_2op);
     _less_equal_2op_v = make_builtin_function(_less_equal_2op);
     _greater_2op_v = make_builtin_function(_greater_2op);
     _greater_equal_2op_v = make_builtin_function(_greater_equal_2op);
+
     _logical_or_2op_v = make_builtin_macro(_logical_or_2op);
     _logical_and_2op_v = make_builtin_macro(_logical_and_2op);
     _bit_or_2op_v = make_builtin_function(_bit_or_2op);
     _bit_xor_2op_v = make_builtin_function(_bit_xor_2op);
     _bit_and_2op_v = make_builtin_function(_bit_and_2op);
+
+    /* Unry operator */
+    _positive_v = make_builtin_function(_positive);
+    _negative_v = make_builtin_function(_negative);
 }
 
 /**************/
@@ -501,6 +516,26 @@ data _arithmetic_right_shift(data d)
     if (!is_int(car(d)) || !is_int(cadr(d)))
         error(L"logical left shift can not be applied to non-integer value");
     return(make_int(raw_int(car(d)) >> raw_int(cadr(d))));
+}
+
+data _positive(data d)
+{
+    if (is_int(d))
+        return(make_int(+raw_int(d)));
+    if (is_double(d))
+        return(make_double(+raw_double(d)));
+    error(L"positive operator failed");
+    return(nil);
+}
+
+data _negative(data d)
+{
+    if (is_int(d))
+        return(make_int(-raw_int(d)));
+    if (is_double(d))
+        return(make_double(-raw_double(d)));
+    error(L"positive operator failed");
+    return(nil);
 }
 
 /**************/
@@ -942,7 +977,7 @@ data _assoc(data d)
     list = cadr(d);
     while (is_not_nil(list))
     {
-        if (is_not_nil(_equal_2op(caar(list), key)))
+        if (is_not_nil(_equal_2op(make_pair(caar(list), make_pair(key, nil)))))
             return(car(list));
         list = cdr(list);
     }

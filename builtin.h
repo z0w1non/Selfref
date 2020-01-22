@@ -72,7 +72,12 @@ extern data substr_v;
 /*********************************/
 /* Builtin binary operator value */
 /*********************************/
-extern data _assign_v;
+extern data _assignment_v;
+extern data _addition_assignment_v;
+extern data _substraction_assignment_v;
+extern data _multiplication_assignment_v;
+extern data _division_assignment_v;
+extern data _modulo_assignment_v;
 extern data _unnamed_function_v;
 extern data _less_2op_v;
 extern data _less_equal_2op_v;
@@ -143,7 +148,12 @@ data _bit_or_2op(data);
 data _bit_xor_2op(data);
 data _bit_and_2op(data);
 
-data _assign(data);
+data _assignment(data);
+data _addition_assignment(data);
+data _substraction_assignment(data);
+data _multiplication_assignment(data);
+data _division_assignment(data);
+data _modulo_assignment(data);
 
 /***************/
 /* Conditional */

@@ -74,7 +74,12 @@ data substr_v;
 /*********************************/
 /* Builtin binary operator value */
 /*********************************/
-data _assign_v;
+data _assignment_v;
+data _addition_assignment_v;
+data _substraction_assignment_v;
+data _multiplication_assignment_v;
+data _division_assignment_v;
+data _modulo_assignment_v;
 data _unnamed_function_v;
 data _less_2op_v;
 data _less_equal_2op_v;
@@ -173,6 +178,13 @@ void init_builtin()
     _mul_2op_v = make_builtin_function(_mul_2op);
     _div_2op_v = make_builtin_function(_div_2op);
     _mod_2op_v = make_builtin_function(_mod_2op);
+
+    _assignment_v = make_builtin_macro(_assignment);
+    _addition_assignment_v = make_builtin_macro(_addition_assignment);
+    _substraction_assignment_v = make_builtin_macro(_substraction_assignment);
+    _multiplication_assignment_v = make_builtin_macro(_multiplication_assignment);
+    _division_assignment_v = make_builtin_macro(_division_assignment);
+    _modulo_assignment_v = make_builtin_macro(_modulo_assignment);
 
     _equal_2op_v = make_builtin_function(_equal_2op);
     _not_equal_2op_v = make_builtin_function(_not_equal_2op);
@@ -672,11 +684,101 @@ data _bit_and_2op(data d)
     return(make_int(raw_int(car(d)) & raw_int(cadr(d))));
 }
 
-data _assign(data d)
+data _assignment(data d)
 {
     if (!is_symbol(car(d)))
         error(L"An invalid value is specified as the assignment destination");
     override_symbol(raw_string(car(d)), eval(cadr(d)));
+    return(car(d));
+}
+
+data _addition_assignment(data d)
+{
+    data value, old_value;
+    if (!is_symbol(car(d)))
+        error(L"An invalid value is specified as the assignment destination");
+    value = eval(cadr(d));
+    old_value = find_symbol(raw_string(car(d)));
+    if (!old_value)
+        error(L"assignee dose not exist");
+    if (type_id(value) != type_id(old_value))
+        error(L"assign type and assigned type are different");
+    if (is_int(value) && is_int(old_value))
+        override_symbol(raw_string(car(d)), make_int(raw_int(value) + raw_int(old_value)));
+    else if (is_double(value) && is_double(old_value))
+        override_symbol(raw_string(car(d)), make_double(raw_double(value) + raw_double(old_value)));
+    return(car(d));
+}
+
+data _substraction_assignment(data d)
+{
+    data value, old_value;
+    if (!is_symbol(car(d)))
+        error(L"An invalid value is specified as the assignment destination");
+    value = eval(cadr(d));
+    old_value = find_symbol(raw_string(car(d)));
+    if (!old_value)
+        error(L"assignee dose not exist");
+    if (type_id(value) != type_id(old_value))
+        error(L"assign type and assigned type are different");
+    if (is_int(value) && is_int(old_value))
+        override_symbol(raw_string(car(d)), make_int(raw_int(value) - raw_int(old_value)));
+    else if (is_double(value) && is_double(old_value))
+        override_symbol(raw_string(car(d)), make_double(raw_double(value) - raw_double(old_value)));
+    return(car(d));
+}
+
+data _multiplication_assignment(data d)
+{
+    data value, old_value;
+    if (!is_symbol(car(d)))
+        error(L"An invalid value is specified as the assignment destination");
+    value = eval(cadr(d));
+    old_value = find_symbol(raw_string(car(d)));
+    if (!old_value)
+        error(L"assignee dose not exist");
+    if (type_id(value) != type_id(old_value))
+        error(L"assign type and assigned type are different");
+    if (is_int(value) && is_int(old_value))
+        override_symbol(raw_string(car(d)), make_int(raw_int(value) * raw_int(old_value)));
+    else if (is_double(value) && is_double(old_value))
+        override_symbol(raw_string(car(d)), make_double(raw_double(value) * raw_double(old_value)));
+    return(car(d));
+}
+
+data _division_assignment(data d)
+{
+    data value, old_value;
+    if (!is_symbol(car(d)))
+        error(L"An invalid value is specified as the assignment destination");
+    value = eval(cadr(d));
+    old_value = find_symbol(raw_string(car(d)));
+    if (!old_value)
+        error(L"assignee dose not exist");
+    if (type_id(value) != type_id(old_value))
+        error(L"assign type and assigned type are different");
+    if (is_int(value) && is_int(old_value))
+        override_symbol(raw_string(car(d)), make_int(raw_int(value) / raw_int(old_value)));
+    else if (is_double(value) && is_double(old_value))
+        override_symbol(raw_string(car(d)), make_double(raw_double(value) / raw_double(old_value)));
+    return(car(d));
+}
+
+data _modulo_assignment(data d)
+{
+    data value, old_value;
+    if (!is_symbol(car(d)))
+        error(L"An invalid value is specified as the assignment destination");
+    value = eval(cadr(d));
+    old_value = find_symbol(raw_string(car(d)));
+    if (!old_value)
+        error(L"assignee dose not exist");
+    if (type_id(value) != type_id(old_value))
+        error(L"assign type and assigned type are different");
+    if (is_int(value) && is_int(old_value))
+        override_symbol(raw_string(car(d)), make_int(raw_int(value) % raw_int(old_value)));
+    else if (is_double(value) && is_double(old_value))
+        error(L"modulo assignment faield");
     return(car(d));
 }
 

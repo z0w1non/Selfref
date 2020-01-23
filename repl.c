@@ -37,8 +37,6 @@ int repl(int argc, const char ** argv)
     {
         init_heap(0x400);
         init_symbol_stack();
-        init_binary_operator_list();
-        init_prefix_operator_list();
     }
 
 loop:

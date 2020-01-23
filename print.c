@@ -40,10 +40,6 @@ data print(data d)
         wprintf(L"<macro %04x>", heap_address(d));
     else if (is_unnamed_function(d))
         print_function(d);
-    else if (is_left_associative_operator(d))
-        wprintf(L"<left_associative_operator %s>", raw_string(d));
-    else if (is_right_associative_operator(d))
-        wprintf(L"<right_associative_operator %s>", raw_string(d));
     else if (is_int(d))
         wprintf(L"%d", raw_int(d));
     else if (is_double(d))

@@ -59,10 +59,6 @@ data make_quote();
 data make_int(int);
 data make_double(double);
 data make_string(const wchar_t *);
-data make_left_associative_operator(const wchar_t *, data);
-data make_right_associative_operator(const wchar_t *, data);
-data make_prefix_operator(const wchar_t *, data);
-data make_suffix_operator(const wchar_t *, data);
 
 /**********************/
 /* Cons-cell accesser */
@@ -115,10 +111,6 @@ data _is_double(data);
 data _is_number(data);
 data _is_string(data);
 data _is_zero(data);
-data _is_left_associative_operator(data);
-data _is_right_associative_operator(data);
-data _is_prefix_operator(data);
-data _is_suffix_operator(data);
 
 /****************************/
 /* Predicate function for C */
@@ -137,10 +129,6 @@ int is_double(data);
 int is_number(data);
 int is_string(data);
 int is_zero(data);
-int is_left_associative_operator(data);
-int is_right_associative_operator(data);
-int is_prefix_operator(data);
-int is_suffix_operator(data);
 
 /**************************************/
 /* Bidirectional linked list function */

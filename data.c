@@ -18,10 +18,6 @@ enum
     id_int,
     id_double,
     id_string,
-    id_left_associative_operator,
-    id_right_associative_operator,
-    id_prefix_operator,
-    id_suffix_operator,
 
     mask_used       = 0x0200,
     mask_marked     = 0x0400,
@@ -187,46 +183,6 @@ data make_string(const wchar_t * name)
     d = alloc();
     d->info |= id_string;
     d->buffer._string = clone_string(name);
-    return(d);
-}
-
-data make_left_associative_operator(const wchar_t * name, data impl)
-{
-    data d;
-    d = alloc();
-    d->info |= id_left_associative_operator;
-    d->buffer._string = clone_string(name);
-    d->buffer.impl = impl;
-    return(d);
-}
-
-data make_right_associative_operator(const wchar_t * name, data impl)
-{
-    data d;
-    d = alloc();
-    d->info |= id_right_associative_operator;
-    d->buffer._string = clone_string(name);
-    d->buffer.impl = impl;
-    return(d);
-}
-
-data make_prefix_operator(const wchar_t * name, data impl)
-{
-    data d;
-    d = alloc();
-    d->info |= id_prefix_operator;
-    d->buffer._string = clone_string(name);
-    d->buffer.impl = impl;
-    return(d);
-}
-
-data make_suffix_operator(const wchar_t * name, data impl)
-{
-    data d;
-    d = alloc();
-    d->info |= id_suffix_operator;
-    d->buffer._string = clone_string(name);
-    d->buffer.impl = impl;
     return(d);
 }
 
@@ -416,26 +372,6 @@ data _is_zero(data d)
     return(nil);
 }
 
-data _is_left_associative_operator(data d)
-{
-    return(nil_or_t(type_id(d) == id_left_associative_operator));
-}
-
-data _is_right_associative_operator(data d)
-{
-    return(nil_or_t(type_id(d) == id_right_associative_operator));
-}
-
-data _is_prefix_operator(data d)
-{
-    return(nil_or_t(type_id(d) == id_prefix_operator));
-}
-
-data _is_suffix_operator(data d)
-{
-    return(nil_or_t(type_id(d) == id_suffix_operator));
-}
-
 /****************************/
 /* Predicate function for C */
 /****************************/
@@ -511,26 +447,6 @@ int is_zero(data d)
     else if (is_double(d))
         return(raw_double(d) == 0.0);
     return(0);
-}
-
-int is_left_associative_operator(data d)
-{
-    return(type_id(d) == id_left_associative_operator);
-}
-
-int is_right_associative_operator(data d)
-{
-    return(type_id(d) == id_right_associative_operator);
-}
-
-int is_prefix_operator(data d)
-{
-    return(type_id(d) == id_prefix_operator);
-}
-
-int is_suffix_operator(data d)
-{
-    return(type_id(d) == id_suffix_operator);
 }
 
 /**************************************/

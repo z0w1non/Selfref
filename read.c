@@ -1474,67 +1474,6 @@ restore:
     return(0);
 }
 
-int parse_binary_operator(context_t * context)
-{
-    wint_t last_char;
-    data longest_matched_operator;
-    saved_context_t saved_context;
-    context_save(context, &saved_context);
-
-    longest_matched_operator = NULL;
-    while (1)
-    {
-        if (is_eof(last_char = context_read_char(context)) || !is_operator_char(last_char))
-        {
-            if (!longest_matched_operator)
-                goto restore;
-            context_set_token_data(context, longest_matched_operator);
-            context_read_back(context, 1);
-            return(1);
-        }
-
-        context_push_char(context, last_char);
-        longest_matched_operator = find_binary_operator(context_get_token_string(context));
-        if (!longest_matched_operator)
-            goto restore;
-    }
-
-restore:
-    context_restore(context, &saved_context);
-    return(0);
-}
-
-int parse_prefix_operator(context_t * context)
-{
-    wint_t last_char;
-    data longest_matched_operator;
-    saved_context_t saved_context;
-    context_save(context, &saved_context);
-
-    longest_matched_operator = NULL;
-    while (1)
-    {
-        if (is_eof(last_char = context_read_char(context)) || !is_operator_char(last_char))
-        {
-            if (!longest_matched_operator)
-                goto restore;
-            context_set_token_data(context, longest_matched_operator);
-            context_read_back(context, 1);
-            context_skip_space(context);
-            return(1);
-        }
-
-        context_push_char(context, last_char);
-        longest_matched_operator = find_prefix_operator(context_get_token_string(context));
-        if (!longest_matched_operator)
-            goto restore;
-    }
-
-restore:
-    context_restore(context, &saved_context);
-    return(0);
-}
-
 int parse_reserved_word(context_t * context, const wchar_t * reserved_word)
 {
     wint_t last_char;

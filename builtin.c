@@ -136,8 +136,6 @@ void init_builtin()
     push_symbol(L"unnamed_function", unnamed_function_v = make_builtin_macro(_unnamed_function));
     push_symbol(L"macro", macro_v = make_builtin_macro(_macro));
     push_symbol(L"function", function_v = make_builtin_macro(_function));
-    push_symbol(L"left_associative_operator", left_associative_operator_v = make_builtin_macro(_left_associative_operator));
-    push_symbol(L"right_associative_operator", right_associative_operator_v = make_builtin_macro(_right_associative_operator));
     push_symbol(L"is_cons", is_cons_v = make_builtin_function(_is_pair));
     push_symbol(L"is_builtin_macro", is_builtin_macro_v = make_builtin_function(_is_builtin_macro));
     push_symbol(L"is_builtin_function", is_builtin_function_v = make_builtin_function(_is_builtin_function));
@@ -907,27 +905,6 @@ data _function(data d)
     if (!is_symbol(car(d)))
         error(L"invalid function name");
     push_symbol(raw_string(car(d)), _unnamed_function(cdr(d)));
-    return(car(d));
-}
-
-/************************/
-/* Operator declaration */
-/************************/
-// (left_associative_operator => (args impl) (unnamed_function args impl))
-data _left_associative_operator(data d)
-{
-    if (!is_symbol(car(d)))
-        error(L"invalid operator name");
-    make_left_associative_operator(raw_string(car(d)), _unnamed_function(cdr(d)));
-    return(car(d));
-}
-
-// (right_associative_operator = (destination value) (push_symbol destination value))
-data _right_associative_operator(data d)
-{
-    if (!is_symbol(car(d)))
-        error(L"invalid operator name");
-    make_right_associative_operator(raw_string(car(d)), _unnamed_function(cdr(d)));
     return(car(d));
 }
 

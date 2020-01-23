@@ -52,7 +52,7 @@ void free_data(data d)
 {
     if (!used(d))
         error(L"invalid free data to unused heap\n");
-    if (is_symbol(d) || is_string(d) || is_left_associative_operator(d) || is_right_associative_operator(d))
+    if (is_symbol(d) || is_string(d))
         free(d->buffer._string);
     init_data(d);
     insert_node(unused_heap, d);
@@ -106,8 +106,6 @@ data _gc(data d)
 {
     unmark_heap();
     mark_symbol();
-    mark_binary_operator_list();
-    mark_prefix_operator_list();
     return(sweep_unmarked(nil));
 }
 

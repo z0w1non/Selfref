@@ -124,7 +124,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="builtin.h" />
-    <ClInclude Include="char.h" />
+    <ClInclude Include="string.h" />
     <ClInclude Include="data.h" />
     <ClInclude Include="eval.h" />
     <ClInclude Include="hash_table.h" />
@@ -136,7 +136,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="builtin.c" />
-    <ClCompile Include="char.c" />
+    <ClCompile Include="string.c" />
     <ClCompile Include="data.c" />
     <ClCompile Include="eval.c" />
     <ClCompile Include="hash_table.c" />

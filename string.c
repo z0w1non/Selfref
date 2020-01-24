@@ -1,6 +1,6 @@
 #include "string.h"
-
-#include "wctype.h"
+#include <wctype.h>
+#include <stdlib.h>
 
 int chartype(wint_t wi)
 {
@@ -130,7 +130,6 @@ void string_copy_buffer_to_heap(string * str)
         return;
     }
     wcscpy_s(str->heap, str->heap_size, str->buffer);
-    free(str->heap);
     str->buffer[0] = L'\0';
 }
 

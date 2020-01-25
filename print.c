@@ -3,6 +3,7 @@
 #include "repl.h"
 #include "heap.h"
 
+data print_pair(data);
 data print_list_internal(data);
 data print_function(data);
 
@@ -14,18 +15,7 @@ data print(data d)
     if (!used(d))
         wprintf(L"<unused heap>");
     else if (is_pair(d))
-    {
-        if (is_pair(cdr(d)))
-            print_list(d);
-        else
-        {
-            wprintf(L"(");
-            print(car(d));
-            wprintf(L" . ");
-            print(cdr(d));
-            wprintf(L")");
-        }
-    }
+        return(print_pair(d));
     else if (is_nil(d))
         wprintf(L"nil");
     else if (is_t(d))
@@ -48,6 +38,18 @@ data print(data d)
         wprintf(L"\"%s\"", raw_string(d));
     else if (is_unnamed_function(d))
         wprintf(L"<lambda %04x>", heap_address(d));
+    return(d);
+}
+
+data print_pair(data d)
+{
+    if (is_pair(cdr(d)))
+        return(print_list(d));
+    wprintf(L"(");
+    print(car(d));
+    wprintf(L" . ");
+    print(cdr(d));
+    wprintf(L")");
     return(d);
 }
 
@@ -93,4 +95,5 @@ data print_function(data d)
     wprintf(L" ");
     print(get_impl(d));
     wprintf(L">");
+    return(d);
 }

@@ -1353,12 +1353,12 @@ int parse_greater_equal_operator(context_t * context)
 
 int parse_arithmetic_left_shift(context_t * context)
 {
-    return(parse_abstract_operator(context, L"<<<", _arithmetic_left_shift_v));
+    return(parse_abstract_operator(context, L"<<", _arithmetic_left_shift_v));
 }
 
 int parse_arithmetic_right_shift(context_t * context)
 {
-    return(parse_abstract_operator(context, L">>>", _arithmetic_right_shift_v));
+    return(parse_abstract_operator(context, L">>", _arithmetic_right_shift_v));
 }
 
 int parse_logical_left_shift(context_t * context)

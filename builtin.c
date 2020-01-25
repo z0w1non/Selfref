@@ -197,6 +197,11 @@ void init_builtin()
     _bit_xor_2op_v = make_builtin_function(_bit_xor_2op);
     _bit_and_2op_v = make_builtin_function(_bit_and_2op);
 
+    _arithmetic_left_shift_v = make_builtin_function(_arithmetic_left_shift);
+    _arithmetic_right_shift_v = make_builtin_function(_arithmetic_right_shift);
+    _logical_left_shift_v = make_builtin_function(_logical_left_shift);
+    _logical_right_shift_v = make_builtin_function(_logical_right_shift);
+
     /* Unry operator */
     _positive_v = make_builtin_function(_positive);
     _negative_v = make_builtin_function(_negative);

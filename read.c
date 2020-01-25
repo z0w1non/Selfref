@@ -1433,7 +1433,7 @@ int parse_dummy_argument_internal(context_t * context)
         first = context_get_parsed_data(context);
         if (parse_rparen(context))
         {
-            context_set_parsed_data(context, first);
+            context_set_parsed_data(context, make_pair(first, nil));
             return(1);
         }
         else if (parse_comma(context))
@@ -1469,7 +1469,7 @@ int parse_function_literal(context_t * context)
                 statement = context_get_parsed_data(context);
                 if (parse_curly_rparen(context))
                 {
-                    context_set_parsed_data(context, make_pair(unnamed_function_v, make_pair(make_pair(dummy_argument, nil), make_pair(statement, nil))));
+                    context_set_parsed_data(context, make_pair(unnamed_function_v, make_pair(dummy_argument, make_pair(statement, nil))));
                     return(1);
                 }
             }

@@ -46,7 +46,7 @@ loop:
             wprintf(L"> "); fflush(stdout); fflush(stdin);
             d = read();
 
-#if 0
+#if 1
             wprintf(L"read: ");
             print(d);
             wprintf(L"\n");

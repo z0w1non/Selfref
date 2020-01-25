@@ -1378,7 +1378,7 @@ int parse_logical_or_operator(context_t * context)
 
 int parse_logical_and_operator(context_t * context)
 {
-    return(parse_abstract_operator(context, L"&%", _logical_and_2op_v));
+    return(parse_abstract_operator(context, L"&&", _logical_and_2op_v));
 }
 
 int parse_bit_or_operator(context_t * context)

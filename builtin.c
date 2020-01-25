@@ -170,13 +170,14 @@ void init_builtin()
     push_symbol(L"strcat", strcat_v = make_builtin_function(_strcat));
     push_symbol(L"substr", substr_v = make_builtin_function(_substr));
 
-    /* Binary operator */
+    /* Arithmetic operator */
     _add_2op_v = make_builtin_function(_add_2op);
     _sub_2op_v = make_builtin_function(_sub_2op);
     _mul_2op_v = make_builtin_function(_mul_2op);
     _div_2op_v = make_builtin_function(_div_2op);
     _mod_2op_v = make_builtin_function(_mod_2op);
 
+    /* Assignment operator */
     _assignment_v = make_builtin_macro(_assignment);
     _addition_assignment_v = make_builtin_macro(_addition_assignment);
     _substraction_assignment_v = make_builtin_macro(_substraction_assignment);
@@ -184,6 +185,7 @@ void init_builtin()
     _division_assignment_v = make_builtin_macro(_division_assignment);
     _modulo_assignment_v = make_builtin_macro(_modulo_assignment);
 
+    /* Relational operator */
     _equal_2op_v = make_builtin_function(_equal_2op);
     _not_equal_2op_v = make_builtin_function(_not_equal_2op);
     _less_2op_v = make_builtin_function(_less_2op);
@@ -191,12 +193,14 @@ void init_builtin()
     _greater_2op_v = make_builtin_function(_greater_2op);
     _greater_equal_2op_v = make_builtin_function(_greater_equal_2op);
 
+    /* Logical / bit operator */
     _logical_or_2op_v = make_builtin_macro(_logical_or_2op);
     _logical_and_2op_v = make_builtin_macro(_logical_and_2op);
     _bit_or_2op_v = make_builtin_function(_bit_or_2op);
     _bit_xor_2op_v = make_builtin_function(_bit_xor_2op);
     _bit_and_2op_v = make_builtin_function(_bit_and_2op);
 
+    /* Shift operator */
     _arithmetic_left_shift_v = make_builtin_function(_arithmetic_left_shift);
     _arithmetic_right_shift_v = make_builtin_function(_arithmetic_right_shift);
     _logical_left_shift_v = make_builtin_function(_logical_left_shift);

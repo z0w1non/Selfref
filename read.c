@@ -57,6 +57,7 @@ typedef int (*parse_function_t)(context_t *);
 /* Block */
 /*********/
 int parse_block(context_t * context);
+int parse_block_internal(context_t * context);
 
 /********/
 /* List */
@@ -155,6 +156,8 @@ int parse_dummy_argument_internal(context_t * context);
 int parse_function_literal(context_t * context);
 
 int parse_paragraph(context_t * context);
+int parse_paragraph_internal(context_t * context);
+int parse_chapter(context_t * context);
 int parse_element(context_t * context);
 int parse_argument(context_t * context);
 int parse_argument_internal(context_t * context);
@@ -290,17 +293,57 @@ data read_internal(context_t * context)
     return(nil);
 }
 
-/* <list> */
-/* <statement> */
-/* <block> */
-/* <function declaration> */
+/* <chapter> <paragraph internal> */
+/* <chapter> */
 int parse_paragraph(context_t * context)
 {
-    data internal;
+    data first, rest;
     saved_context_t saved_context;
     context_save(context, &saved_context);
 
-    if (parse_list(context) || parse_block(context) || parse_statement(context))
+    if (parse_chapter(context))
+    {
+        first = context_get_parsed_data(context);
+        if (parse_paragraph_internal(context))
+        {
+            rest = context_get_parsed_data(context);
+            context_set_parsed_data(context, make_pair(progn_v, make_pair(first, rest)));
+            return(1);
+        }
+    }
+
+restore:
+    context_restore(context, &saved_context);
+    return(0);
+}
+
+/* <chapter> <paragraph internal> */
+/* <empty> */
+int parse_paragraph_internal(context_t * context)
+{
+    data first, rest;
+    if (parse_chapter(context))
+    {
+        first = context_get_parsed_data(context);
+        if (parse_paragraph_internal(context))
+        {
+            rest = context_get_parsed_data(context);
+            context_set_parsed_data(context, make_pair(first, rest));
+            return(1);
+        }
+    }
+    context_set_parsed_data(context, nil);
+    return(1);
+}
+
+/* <statement> */
+/* <block> */
+int parse_chapter(context_t * context)
+{
+    saved_context_t saved_context;
+    context_save(context, &saved_context);
+
+    if (parse_statement(context) || parse_block(context))
         return(1);
 
 restore:
@@ -308,10 +351,30 @@ restore:
     return(0);
 }
 
-/* <lparen> <block internal> <rparen> */
+/* <curly lparen> <paragraph> <curly rparen> */
+/* <curly lparen> <curly rparen> */
 int parse_block(context_t * context)
 {
-    return(parse_abstract_list(context, parse_curly_lparen, parse_statement, parse_empty, parse_curly_rparen));
+    data paragraph;
+    saved_context_t saved_context;
+    context_save(context, &saved_context);
+
+    if (parse_curly_lparen(context))
+    {
+        if (parse_paragraph(context))
+        {
+            paragraph = context_get_parsed_data(context);
+            if (parse_curly_rparen(context))
+            {
+                context_set_parsed_data(context, paragraph);
+                return(1);
+            }
+        }
+    }
+
+restore:
+    context_restore(context, &saved_context);
+    return(0);
 }
 
 /* <lparen> <list internal> */
@@ -403,32 +466,26 @@ int parse_argument_internal(context_t * context)
 
     if (parse_rparen(context))
     {
-        context_skip_space(context);
         context_set_parsed_data(context, nil);
         return(1);
     }
     else if (parse_assignment_expression(context))
     {
         first = context_get_parsed_data(context);
-        context_skip_space(context);
         if (parse_rparen(context))
         {
-            context_skip_space(context);
             context_set_parsed_data(context, make_pair(first, nil));
             return(1);
         }
         else if (parse_comma(context))
         {
-            context_skip_space(context);
             if (parse_argument_internal(context))
             {
                 rest = context_get_parsed_data(context);
-                context_skip_space(context);
                 context_set_parsed_data(context, make_pair(first, rest));
                 return(1);
             }
         }
-        context_skip_space(context);
         context_set_parsed_data(context, make_pair(first, nil));
         return(1);
     }
@@ -451,7 +508,6 @@ int parse_c_function_call(context_t * context)
         if (parse_argument(context))
         {
             argument = context_get_parsed_data(context);
-            context_skip_space(context);
             context_set_parsed_data(context, make_pair(function_symbol, argument));
             return(1);
         }
@@ -473,7 +529,6 @@ int parse_statement(context_t * context)
     if (parse_assignment_expression(context))
     {
         first_token = context_get_parsed_data(context);
-        context_skip_space(context);
         if (parse_semicolon(context))
         {
             context_set_parsed_data(context, first_token);
@@ -481,11 +536,9 @@ int parse_statement(context_t * context)
         }
         else if (parse_comma(context))
         {
-            context_skip_space(context);
             if (parse_statement(context))
             {
                 rest_statement = context_get_parsed_data(context);
-                context_skip_space(context);
                 context_set_parsed_data(context, make_pair(progn_v, make_pair(first_token, make_pair(rest_statement, nil))));
                 return(1);
             }
@@ -516,7 +569,6 @@ int parse_assignment_expression(context_t * context)
     if (parse_symbol(context))
     {
         symbol = context_get_parsed_data(context);
-        context_skip_space(context);
         if (parse_assignment_operator(context)
             || parse_addition_assignment_operator(context)
             || parse_substraction_assignment_operator(context)

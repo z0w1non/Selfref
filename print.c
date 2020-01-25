@@ -23,9 +23,9 @@ data print(data d)
     else if (is_symbol(d))
         wprintf(L"<symbol %s>", raw_string(d));
     else if (is_builtin_macro(d))
-        wprintf(L"<builtin_macro %04x>", heap_address(d));
+        wprintf(L"<builtin macro %s>", raw_string(d));
     else if (is_builtin_function(d))
-        wprintf(L"<builtin_function %04x>", heap_address(d));
+        wprintf(L"<builtin function %s>", raw_string(d));
     else if (is_unnamed_macro(d))
         wprintf(L"<macro %04x>", heap_address(d));
     else if (is_unnamed_function(d))

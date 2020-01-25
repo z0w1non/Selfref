@@ -22,7 +22,7 @@ typedef struct dataimpl_tag
         struct named
         {
             wchar_t * _string;
-            data impl;
+            void * impl;
         };
         struct pair
         {
@@ -47,8 +47,8 @@ void mark_data(data d);
 /* Make function */
 /*****************/
 data make_pair(data, data);
-data make_builtin_macro(function_t);
-data make_builtin_function(function_t);
+data make_builtin_macro(function_t, const wchar_t * name);
+data make_builtin_function(function_t, const wchar_t * name);
 data make_macro(data, data);
 data make_function(data, data);
 data make_symbol(const wchar_t *);

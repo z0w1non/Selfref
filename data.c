@@ -93,19 +93,21 @@ data make_pair(data first, data rest)
     return(d);
 }
 
-data make_builtin_macro(function_t f)
+data make_builtin_macro(function_t f, const wchar_t * name)
 {
     data d = alloc();
     d->info |= id_builtin_macro;
-    d->buffer.function = f;
+    d->buffer._string = clone_string(name);
+    d->buffer.impl = f;
     return(d);
 }
 
-data make_builtin_function(function_t f)
+data make_builtin_function(function_t f, const wchar_t * name)
 {
     data d = alloc();
     d->info |= id_builtin_function;
-    d->buffer.function = f;
+    d->buffer._string = clone_string(name);
+    d->buffer.impl = f;
     return(d);
 }
 
@@ -158,7 +160,7 @@ data _quote(data d)
 
 data make_quote()
 {
-    return(make_builtin_macro(_quote));
+    return(make_builtin_macro(_quote, L"\'"));
 }
 
 data make_int(int value)
@@ -248,12 +250,12 @@ data cdar(data d)
 /*********************/
 function_t raw_function(data d)
 {
-    return(d->buffer.function);
+    return(d->buffer.impl);
 }
 
 function_t raw_macro(data d)
 {
-    return(d->buffer.function);
+    return(d->buffer.impl);
 }
 
 data get_args(data d)

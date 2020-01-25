@@ -52,7 +52,7 @@ void free_data(data d)
 {
     if (!used(d))
         error(L"invalid free data to unused heap\n");
-    if (is_symbol(d) || is_string(d))
+    if (is_symbol(d) || is_string(d) || is_builtin_macro(d) || is_builtin_macro(d))
         free(d->buffer._string);
     init_data(d);
     insert_node(unused_heap, d);

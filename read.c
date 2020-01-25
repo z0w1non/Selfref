@@ -643,19 +643,15 @@ int parse_logical_and_expression(context_t * context)
     if (parse_bit_or_expression(context))
     {
         first = context_get_parsed_data(context);
-        context_skip_space(context);
         if (parse_logical_and_operator(context))
         {
             operator = context_get_parsed_data(context);
-            context_skip_space(context);
             if (parse_logical_and_expression(context))
             {
                 rest = context_get_parsed_data(context);
-                context_skip_space(context);
                 context_set_parsed_data(context, make_pair(operator, make_pair(first, make_pair(rest, nil))));
             }
         }
-        context_skip_space(context);
         context_set_parsed_data(context, first);
         return(1);
     }
@@ -676,19 +672,15 @@ int parse_bit_or_expression(context_t * context)
     if (parse_bit_xor_expression(context))
     {
         first = context_get_parsed_data(context);
-        context_skip_space(context);
         if (parse_bit_or_operator(context))
         {
             operator = context_get_parsed_data(context);
-            context_skip_space(context);
             if (parse_bit_or_expression(context))
             {
                 rest = context_get_parsed_data(context);
-                context_skip_space(context);
                 context_set_parsed_data(context, make_pair(operator, make_pair(first, make_pair(rest, nil))));
             }
         }
-        context_skip_space(context);
         context_set_parsed_data(context, first);
         return(1);
     }
@@ -709,20 +701,16 @@ int parse_bit_xor_expression(context_t * context)
     if (parse_bit_and_expression(context))
     {
         first = context_get_parsed_data(context);
-        context_skip_space(context);
         if (parse_bit_xor_operator(context))
         {
             operator = context_get_parsed_data(context);
-            context_skip_space(context);
             if (parse_bit_xor_expression(context))
             {
                 rest = context_get_parsed_data(context);
-                context_skip_space(context);
                 context_set_parsed_data(context, make_pair(operator, make_pair(first, make_pair(rest, nil))));
                 return(1);
             }
         }
-        context_skip_space(context);
         context_set_parsed_data(context, first);
         return(1);
     }
@@ -743,20 +731,16 @@ int parse_bit_and_expression(context_t * context)
     if (parse_shift_expression(context))
     {
         first = context_get_parsed_data(context);
-        context_skip_space(context);
         if (parse_bit_and_operator(context))
         {
             operator = context_get_parsed_data(context);
-            context_skip_space(context);
             if (parse_bit_and_expression(context))
             {
                 rest = context_get_parsed_data(context);
-                context_skip_space(context);
                 context_set_parsed_data(context, make_pair(operator, make_pair(first, make_pair(rest, nil))));
                 return(1);
             }
         }
-        context_skip_space(context);
         context_set_parsed_data(context, first);
         return(1);
     }
@@ -782,7 +766,6 @@ int parse_relational_expression(context_t * context)
     if (parse_shift_expression(context))
     {
         first = context_get_parsed_data(context);
-        context_skip_space(context);
         if (parse_equal_operator(context)
             || parse_not_equal_operator(context)
             || parse_less_operator(context)
@@ -791,16 +774,13 @@ int parse_relational_expression(context_t * context)
             || parse_greater_equal_operator(context))
         {
             relational_operator = context_get_parsed_data(context);
-            context_skip_space(context);
             if (parse_relational_expression(context))
             {
                 rest = context_get_parsed_data(context);
-                context_skip_space(context);
                 context_set_parsed_data(context, make_pair(relational_operator, make_pair(first, make_pair(rest, nil))));
                 return(1);
             }
         }
-        context_skip_space(context);
         context_set_parsed_data(context, first);
         return(1);
     }
@@ -824,18 +804,15 @@ int parse_shift_expression(context_t * context)
     if (parse_polynomial_expression(context))
     {
         first = context_get_parsed_data(context);
-        context_skip_space(context);
         if (parse_arithmetic_left_shift(context)
             || parse_arithmetic_right_shift(context)
             || parse_logical_left_shift(context)
             || parse_logical_right_shift(context))
         {
             shift_operator = context_get_parsed_data(context);
-            context_skip_space(context);
             if (parse_shift_expression(context))
             {
                 rest = context_get_parsed_data(context);
-                context_skip_space(context);
                 context_set_parsed_data(context, make_pair(shift_operator, make_pair(first, make_pair(rest, nil))));
                 return(1);
             }
@@ -863,20 +840,16 @@ int parse_polynomial_expression(context_t * context)
     if (parse_monomial_expression(context))
     {
         first = context_get_parsed_data(context);
-        context_skip_space(context);
         if (parse_addition_operator(context) || parse_substraction_operator(context))
         {
             operator = context_get_parsed_data(context);
-            context_skip_space(context);
             if (parse_polynomial_expression(context))
             {
                 rest = context_get_parsed_data(context);
-                context_skip_space(context);
                 context_set_parsed_data(context, make_pair(operator, make_pair(first, make_pair(rest, nil))));
                 return(1);
             }
         }
-        context_skip_space(context);
         context_set_parsed_data(context, first);
         return(1);
     }
@@ -900,22 +873,18 @@ int parse_monomial_expression(context_t * context)
     if (parse_signed_number(context) || parse_symbol(context))
     {
         first = context_get_parsed_data(context);
-        context_skip_space(context);
         if (parse_multiplication_operator(context)
             || parse_division_operator(context)
             || parse_modulo_operator(context))
         {
             operator = context_get_parsed_data(context);
-            context_skip_space(context);
             if (parse_monomial_expression(context))
             {
                 lest = context_get_parsed_data(context);
-                context_skip_space(context);
                 context_set_parsed_data(context, make_pair(operator, make_pair(first, make_pair(lest, nil))));
                 return(1);
             }
         }
-        context_skip_space(context);
         context_set_parsed_data(context, first);
         return(1);
     }
@@ -939,11 +908,9 @@ int parse_signed_number(context_t * context)
     if (parse_positive_operator(context) || parse_negative_operator(context))
     {
         operator = context_get_parsed_data(context);
-        context_skip_space(context);
         if (parse_signed_number(context))
         {
             signed_number = context_get_parsed_data(context);
-            context_skip_space(context);
             context_get_parsed_data(make_pair(operator, make_pair(signed_number, nil)));
             return(1);
         }
@@ -978,20 +945,16 @@ int parse_string_expression(context_t * context)
     if (parse_string_literal(context))
     {
         left = context_get_parsed_data(context);
-        context_skip_space(context);
         if (parse_addition_operator(context))
         {
             concatenate_operator = context_get_parsed_data(context);
-            context_skip_space(context);
             if (parse_string_expression(context))
             {
                 right = context_get_parsed_data(context);
-                context_skip_space(context);
                 context_set_parsed_data(context, make_pair(concatenate_operator, make_pair(left, make_pair(right, nil))));
                 return(1);
             }
         }
-        context_skip_space(context);
         context_set_parsed_data(context, left);
         return(1);
     }

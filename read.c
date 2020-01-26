@@ -196,7 +196,7 @@ void context_init(context_t * context)
     context->total_count = 0;
 }
 
-// returs value ignoring comments
+// returns value ignoring comments
 wint_t context_read_char(context_t * context)
 {
     wint_t last_char;

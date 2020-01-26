@@ -5,7 +5,7 @@
 #include "string.h"
 #include "print.h"
 #include "eval.h"
-#include "sym.h"
+#include "symbol.h"
 #include "builtin.h"
 #include "repl.h"
 

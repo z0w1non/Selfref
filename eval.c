@@ -1,7 +1,7 @@
 #include "eval.h"
 
 #include <stdlib.h>
-#include "sym.h"
+#include "symbol.h"
 #include "builtin.h"
 #include "print.h"
 #include "heap.h"

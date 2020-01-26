@@ -132,7 +132,7 @@
     <ClInclude Include="print.h" />
     <ClInclude Include="read.h" />
     <ClInclude Include="repl.h" />
-    <ClInclude Include="sym.h" />
+    <ClInclude Include="symbol.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="builtin.c" />
@@ -145,7 +145,7 @@
     <ClCompile Include="print.c" />
     <ClCompile Include="read.c" />
     <ClCompile Include="repl.c" />
-    <ClCompile Include="sym.c" />
+    <ClCompile Include="symbol.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "print.h"
 #include "eval.h"
-#include "sym.h"
+#include "symbol.h"
 #include "heap.h"
 #include "eval.h"
 

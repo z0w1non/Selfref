@@ -8,7 +8,7 @@
 #include "eval.h"
 #include "print.h"
 #include "heap.h"
-#include "sym.h"
+#include "symbol.h"
 
 int parse_command_line_argment(int argc, const char ** argv);
 void close_file_stream();

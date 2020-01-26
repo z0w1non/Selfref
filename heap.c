@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "string.h"
 #include "print.h"
-#include "sym.h"
+#include "symbol.h"
 #include "eval.h"
 
 /************************/

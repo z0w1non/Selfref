@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sym.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="repl.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -45,6 +42,9 @@
     <ClInclude Include="string.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="symbol.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="data.c">
@@ -68,9 +68,6 @@
     <ClCompile Include="repl.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="sym.c">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="builtin.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -78,6 +75,9 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="string.c">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="symbol.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>

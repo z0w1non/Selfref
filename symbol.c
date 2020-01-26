@@ -1,4 +1,4 @@
-#include "sym.h"
+#include "symbol.h"
 
 #include <stdlib.h>
 #include "builtin.h"

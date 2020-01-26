@@ -47,7 +47,7 @@ loop:
             d = read();
 
 #if 1
-            wprintf(L"read: ");
+            wprintf(L"READ: ");
             print(d);
             wprintf(L"\n");
 #endif

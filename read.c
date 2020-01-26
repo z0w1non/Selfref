@@ -40,6 +40,7 @@ FILE * input_stream;
 /********************************/
 void   context_init(context_t * context);
 wint_t context_read_char(context_t * context);
+wint_t context_read_char_internal(context_t * context);
 void   context_read_back(context_t * context, int count);
 data   context_get_parsed_data(context_t * context);
 void   context_set_parsed_data(context_t * context, data);
@@ -57,7 +58,6 @@ typedef int (*parse_function_t)(context_t *);
 /* Block */
 /*********/
 int parse_block(context_t * context);
-int parse_block_internal(context_t * context);
 
 /********/
 /* List */
@@ -196,7 +196,44 @@ void context_init(context_t * context)
     context->total_count = 0;
 }
 
+// returs value ignoring comments
 wint_t context_read_char(context_t * context)
+{
+    wint_t last_char;
+    last_char = context_read_char_internal(context);
+    if (last_char == L'/')
+    {
+        last_char = context_read_char_internal(context);
+        if (last_char == L'/')
+        {
+            while (!is_eof(last_char = context_read_char_internal(context)) && !is_crlf(last_char));
+            return(last_char);
+        }
+        else if (last_char == L'*')
+        {
+            while (!is_eof(last_char = context_read_char_internal(context)))
+            {
+                if (last_char == L'*')
+                {
+                    if (is_eof(last_char = context_read_char_internal(context)))
+                        return(last_char);
+                    if (last_char == L'/')
+                        return(context_read_char(context));
+                }
+            }
+            return(last_char);
+        }
+        else
+        {
+            context_read_back(context, 1);
+            return(L'/');
+        }
+    }
+    return(last_char);
+}
+
+// returns value considering readback
+wint_t context_read_char_internal(context_t * context)
 {
     if (context->read_back_count > 0)
     {

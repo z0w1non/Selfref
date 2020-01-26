@@ -509,7 +509,10 @@ wchar_t * clone_string(const wchar_t * s)
     len = wcslen(s) + 1;
     newstr = (wchar_t *)malloc(sizeof(wchar_t) * len);
     if (!newstr)
+    {
         error(L"Heap memory allocation failed");
+        return(NULL);
+    }
     wcscpy_s(newstr, len, s);
     return(newstr);
 }

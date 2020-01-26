@@ -30,7 +30,7 @@ data eval(data d)
             return(call_unnamed_macro(make_pair(value, cdr(d))));
         else if (is_unnamed_function(value))
             return(call_unnamed_function(make_pair(value, cdr(d))));
-        error(L"The first token in the list is must be callable or a symbol that bound to a callable");
+        error(L"first element in list must be a function or macro");
     }
    return(d);
 }

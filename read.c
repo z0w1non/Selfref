@@ -154,6 +154,9 @@ int parse_modulo_assignment_operator(context_t * context);
 int parse_dummy_argument(context_t * context);
 int parse_dummy_argument_internal(context_t * context);
 int parse_function_literal(context_t * context);
+int parse_let_statement(context_t * context);
+int parse_let_statement_internal(context_t * context);
+int parse_let(context_t * context);
 
 int parse_paragraph(context_t * context);
 int parse_paragraph_internal(context_t * context);
@@ -557,6 +560,7 @@ restore:
 
 /* <assignment expression> <semicolon> */
 /* <assignment expression> <comma> <statement> */
+/* <let statement> */
 int parse_statement(context_t * context)
 {
     data first_token, rest_statement;
@@ -580,7 +584,11 @@ int parse_statement(context_t * context)
                 return(1);
             }
         }
+        context_restore(context, &saved_context);
     }
+
+    if (parse_let_statement(context))
+        return(1);
 
 restore:
     context_restore(context, &saved_context);
@@ -1516,6 +1524,116 @@ int parse_function_literal(context_t * context)
 restore:
     context_restore(context, &saved_context);
     return(0);
+}
+
+/* <let> <symbol> <semicolon> <paragraph> */
+/* <let> <symbol> <assignment operator> <assignment expression> <semicolon> <paragraph> */
+/* <let> <symbol> <assignment operator> <assignment expression> <comma> <let statement internal> <paragraph> */
+int parse_let_statement(context_t * context)
+{
+    data key, value, rest_binds, implementation;
+    saved_context_t saved_context;
+    context_save(context, &saved_context);
+
+    if (parse_let(context))
+    {
+        if (parse_symbol(context))
+        {
+            key = context_get_parsed_data(context);
+            if (parse_semicolon(context))
+            {
+                if (parse_paragraph(context))
+                {
+                    implementation = context_get_parsed_data(context);
+                    context_set_parsed_data(context, make_pair(let_v, make_pair(make_pair(key, nil), implementation)));
+                    return(1);
+                }
+            }
+            else if (parse_assignment_operator(context))
+            {
+                if (parse_assignment_expression(context))
+                {
+                    value = context_get_parsed_data(context);
+                    if (parse_semicolon(context))
+                    {
+                        if (parse_paragraph(context))
+                        {
+                            implementation = context_get_parsed_data(context);
+                            context_set_parsed_data(context, make_pair(let_v, make_pair(make_pair(make_pair(key, make_pair(value, nil)), nil), make_pair(implementation, nil))));
+                            return(1);
+                        }
+                    }
+                    else if (parse_comma(context))
+                    {
+                        if (parse_let_statement_internal(context))
+                        {
+                            rest_binds = context_get_parsed_data(context);
+                            if (parse_paragraph(context))
+                            {
+                                implementation = context_get_parsed_data(context);
+                                context_set_parsed_data(context, make_pair(let_v, make_pair(make_pair(make_pair(key, make_pair(value, nil)), rest_binds), rest_binds)));
+                                return(1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+restore:
+    context_restore(context, &saved_context);
+    return(0);
+}
+
+/* <symbol> <semicolon> */
+/* <symbol> <assignment operator> <assignment expression> <semicolon> */
+/* <symbol> <assignment operator> <assignment expression> <comma> <let statement internal> */
+int parse_let_statement_internal(context_t * context)
+{
+    data key, value, rest;
+    saved_context_t saved_context;
+    context_save(context, &saved_context);
+
+    if (parse_symbol(context))
+    {
+        key = context_get_parsed_data(context);
+        if (parse_semicolon(context))
+        {
+            context_set_parsed_data(context, make_pair(key, nil));
+            return(1);
+        }
+        else if (parse_assignment_operator(context))
+        {
+            if (parse_assignment_expression(context))
+            {
+                value = context_get_parsed_data(context);
+                if (parse_semicolon(context))
+                {
+                    context_set_parsed_data(context, make_pair(key, make_pair(value, nil)));
+                    return(1);
+                }
+                else if (parse_comma(context))
+                {
+                    if (parse_let_statement_internal(context))
+                    {
+                        rest = context_get_parsed_data(context);
+                        context_set_parsed_data(context, make_pair(make_pair(key, make_pair(value, nil)), rest));
+                        return(1);
+                    }
+                }
+            }
+        }
+    }
+
+restore:
+    context_restore(context, &saved_context);
+    return(0);
+}
+
+int parse_let(context_t * context)
+{
+    return(parse_reserved_word(context, L"let"));
 }
 
 /* "(" <polynomial expression> ")" */

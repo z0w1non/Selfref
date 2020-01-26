@@ -43,7 +43,7 @@ data print(data d)
 
 data print_pair(data d)
 {
-    if (is_pair(cdr(d)) && !is_nil(cdr(d)))
+    if (is_pair(cdr(d)) || is_nil(cdr(d)))
         return(print_list(d));
     wprintf(L"(");
     print(car(d));

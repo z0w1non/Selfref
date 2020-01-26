@@ -157,6 +157,10 @@ int parse_function_literal(context_t * context);
 int parse_let_statement(context_t * context);
 int parse_let_statement_internal(context_t * context);
 int parse_let(context_t * context);
+int parse_condition(context_t * context);
+int parse_if_else_statement(context_t * context);
+int parse_if(context_t * context);
+int parse_else(context_t * context);
 
 int parse_paragraph(context_t * context);
 int parse_paragraph_internal(context_t * context);
@@ -561,6 +565,7 @@ restore:
 /* <assignment expression> <semicolon> */
 /* <assignment expression> <comma> <statement> */
 /* <let statement> */
+/* <if else statement> */
 int parse_statement(context_t * context)
 {
     data first_token, rest_statement;
@@ -587,7 +592,7 @@ int parse_statement(context_t * context)
         context_restore(context, &saved_context);
     }
 
-    if (parse_let_statement(context))
+    if (parse_let_statement(context) || parse_if_else_statement(context))
         return(1);
 
 restore:
@@ -1634,6 +1639,78 @@ restore:
 int parse_let(context_t * context)
 {
     return(parse_reserved_word(context, L"let"));
+}
+
+/* <lparen> <relational expression> <rparen> */
+int parse_condition(context_t * context)
+{
+    data condition;
+    saved_context_t saved_context;
+    context_save(context, &saved_context);
+
+    if (parse_lparen(context))
+    {
+        if (parse_relational_expression(context))
+        {
+            condition = context_get_parsed_data(context);
+            if (parse_rparen(context))
+            {
+                context_set_parsed_data(context, condition);
+                return(1);
+            }
+        }
+    }
+
+restore:
+    context_restore(context, &saved_context);
+    return(0);
+}
+
+/* <if> <condition> <chapter> <else> <chapter> */
+/* <if> <condition> <chapter> */
+int parse_if_else_statement(context_t * context)
+{
+    data condition, true_case, false_case;
+    saved_context_t saved_context;
+    context_save(context, &saved_context);
+
+    if (parse_if(context))
+    {
+        if (parse_condition(context))
+        {
+            condition = context_get_parsed_data(context);
+            if (parse_chapter(context))
+            {
+                true_case = context_get_parsed_data(context);
+                if (parse_else(context))
+                {
+                    if (parse_chapter(context))
+                    {
+                        false_case = context_get_parsed_data(context);
+                        context_set_parsed_data(context, make_pair(if_v, make_pair(condition, make_pair(true_case, make_pair(false_case, nil)))));
+                        return(1);
+                    }
+                    goto restore;
+                }
+                context_set_parsed_data(context, make_pair(if_v, make_pair(condition, make_pair(true_case, nil))));
+                return(1);
+            }
+        }
+    }
+
+restore:
+    context_restore(context, &saved_context);
+    return(0);
+}
+
+int parse_if(context_t * context)
+{
+    return(parse_reserved_word(context, L"if"));
+}
+
+int parse_else(context_t * context)
+{
+    return(parse_reserved_word(context, L"else"));
 }
 
 /* "(" <polynomial expression> ")" */

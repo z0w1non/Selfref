@@ -123,7 +123,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="allocator.h" />
     <ClInclude Include="builtin.h" />
+    <ClInclude Include="fileio.h" />
+    <ClInclude Include="object.h" />
     <ClInclude Include="string.h" />
     <ClInclude Include="data.h" />
     <ClInclude Include="eval.h" />
@@ -133,9 +136,13 @@
     <ClInclude Include="read.h" />
     <ClInclude Include="repl.h" />
     <ClInclude Include="symbol.h" />
+    <ClInclude Include="unicode.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="allocator.cpp" />
     <ClCompile Include="builtin.c" />
+    <ClCompile Include="fileio.c" />
+    <ClCompile Include="object.c" />
     <ClCompile Include="string.c" />
     <ClCompile Include="data.c" />
     <ClCompile Include="eval.c" />
@@ -146,6 +153,7 @@
     <ClCompile Include="read.c" />
     <ClCompile Include="repl.c" />
     <ClCompile Include="symbol.c" />
+    <ClCompile Include="unicode.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

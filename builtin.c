@@ -6,6 +6,7 @@
 #include "symbol.h"
 #include "heap.h"
 #include "eval.h"
+#include "fileio.h"
 
 /**************************/
 /* Builtin function value */
@@ -67,9 +68,12 @@ data acons_v;
 data assoc_v;
 data progn_v;
 data let_v;
+data while_v;
 data mapcar_v;
 data strcat_v;
 data substr_v;
+data read_file_v;
+data write_file_v;
 
 /*********************************/
 /* Builtin binary operator value */
@@ -166,9 +170,12 @@ void init_builtin()
     push_symbol(L"assoc", assoc_v = make_builtin_function(_assoc, L"assoc"));
     push_symbol(L"progn", progn_v = make_builtin_macro(_progn, L"progn"));
     push_symbol(L"let", let_v = make_builtin_macro(_let, L"let"));
+    push_symbol(L"while", while_v = make_builtin_macro(_while, L"while"));
     push_symbol(L"mapcar", mapcar_v = make_builtin_function(_mapcar, L"mapcar"));
     push_symbol(L"strcat", strcat_v = make_builtin_function(_strcat, L"strcat"));
     push_symbol(L"substr", substr_v = make_builtin_function(_substr, L"substr"));
+    push_symbol(L"read_file", read_file_v = make_builtin_function(_read_file, L"read_file"));
+    push_symbol(L"write_file", write_file_v = make_builtin_function(_write_file, L"write_file"));
 
     /* Arithmetic operator */
     _add_2op_v = make_builtin_function(_add_2op, L"+");
@@ -1102,7 +1109,6 @@ data _let(data d)
 {
     data last, args;
     args = complement_args(car(d));
-    debug(args);
     _push_args(args);
     d = cdr(d);
     last = nil;
@@ -1113,6 +1119,18 @@ data _let(data d)
     }
     _pop_args(args);
     return(last);
+}
+
+// (while condition impl)
+data _while(data d)
+{
+    data last;
+    last = nil;
+    while (is_not_nil(eval(car(d))))
+    {
+        last = eval(cadr(d));
+    }
+    return last;
 }
 
 data _mapcar(data d)

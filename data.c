@@ -18,6 +18,7 @@ enum
     id_int,
     id_double,
     id_string,
+    id_object,
 
     mask_used       = 0x0200,
     mask_marked     = 0x0400,
@@ -179,12 +180,21 @@ data make_double(double value)
     return(d);
 }
 
-data make_string(const wchar_t * name)
+data make_string(const char * name)
 {
     data d;
     d = alloc();
     d->info |= id_string;
     d->buffer._string = clone_string(name);
+    return(d);
+}
+
+data make_object()
+{
+    data d;
+    d = alloc();
+    d->info |= id_object;
+    object_init(d);
     return(d);
 }
 
@@ -365,6 +375,11 @@ data _is_string(data d)
     return(nil_or_t(type_id(car(d)) == id_string));
 }
 
+data _is_object(data d)
+{
+    return(nil_or_t(type_id(car(d)) == id_object));
+}
+
 data _is_zero(data d)
 {
     if (is_int(car(d)))
@@ -440,6 +455,11 @@ int is_number(data d)
 int is_string(data d)
 {
     return(type_id(d) == id_string);
+}
+
+int is_object(data d)
+{
+    return(type_id(d) == id_object);
 }
 
 int is_zero(data d)

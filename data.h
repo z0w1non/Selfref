@@ -59,6 +59,7 @@ data make_quote();
 data make_int(int);
 data make_double(double);
 data make_string(const wchar_t *);
+data make_object();
 
 /**********************/
 /* Cons-cell accesser */
@@ -110,6 +111,7 @@ data _is_int(data);
 data _is_double(data);
 data _is_number(data);
 data _is_string(data);
+data _is_object(data);
 data _is_zero(data);
 
 /****************************/
@@ -128,6 +130,7 @@ int is_int(data);
 int is_double(data);
 int is_number(data);
 int is_string(data);
+int is_object(data);
 int is_zero(data);
 
 /**************************************/

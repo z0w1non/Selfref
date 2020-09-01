@@ -4,6 +4,7 @@
 #include "print.h"
 #include "symbol.h"
 #include "eval.h"
+#include "object.h"
 
 /************************/
 /* Heap memory function */
@@ -54,6 +55,8 @@ void free_data(data d)
         error(L"invalid free data to unused heap\n");
     if (is_symbol(d) || is_string(d) || is_builtin_macro(d) || is_builtin_macro(d))
         free(d->buffer._string);
+    if (is_object(d))
+        object_cleanup(d);
     init_data(d);
     insert_node(unused_heap, d);
     heap_used_count -= 1;

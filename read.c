@@ -79,6 +79,8 @@ int parse_abstract_list_internal(
     parse_function_t parse_rparen);
 
 int parse_statement(context_t * context);
+int parse_scope(context_t * context);
+int parse_assignment_statement(context_t * context);
 
 /**************/
 /* Expression */
@@ -157,10 +159,15 @@ int parse_function_literal(context_t * context);
 int parse_let_statement(context_t * context);
 int parse_let_statement_internal(context_t * context);
 int parse_let(context_t * context);
-int parse_condition(context_t * context);
+int parse_if_condition(context_t * context);
 int parse_if_else_statement(context_t * context);
 int parse_if(context_t * context);
 int parse_else(context_t * context);
+int parse_for_statement(context_t * context);
+int parse_for_argument(context_t * context);
+int parse_for_initializer(context_t * context);
+int parse_for_iterator(context_t * context);
+int parse_for(context_t * context);
 
 int parse_paragraph(context_t * context);
 int parse_paragraph_internal(context_t * context);
@@ -168,6 +175,12 @@ int parse_chapter(context_t * context);
 int parse_element(context_t * context);
 int parse_argument(context_t * context);
 int parse_argument_internal(context_t * context);
+
+/***********/
+/* Utility */
+/***********/
+data if_list_progn(data d);
+data sequential_execution(data a, data b);
 
 /*******************/
 /* Public function */
@@ -562,11 +575,43 @@ restore:
     return(0);
 }
 
-/* <assignment expression> <semicolon> */
-/* <assignment expression> <comma> <statement> */
+/* <assignment statement> */
 /* <let statement> */
 /* <if else statement> */
+/* <for statement> */
 int parse_statement(context_t * context)
+{
+    if (parse_assignment_statement(context) || parse_let_statement(context) || parse_if_else_statement(context) || parse_for_statement(context))
+        return(1);
+}
+
+/* <let statement> <paragraph> */
+int parse_scope(context_t * context)
+{
+    data let_statement, implementation;
+    saved_context_t saved_context;
+    context_save(context, &saved_context);
+
+    if (parse_let_statement(context))
+    {
+        let_statement = context_get_parsed_data(context);
+        if (parse_paragraph(context))
+        {
+            implementation = context_get_parsed_data(context);
+            set_cdr(let_statement, make_pair(implementation, nil));
+            context_set_parsed_data(context, let_statement);
+            return(1);
+        }
+    }
+
+restore:
+    context_restore(context, &saved_context);
+    return(0);
+}
+
+/* <assignment expression> <semicolon> */
+/* <assignment expression> <comma> <statement> */
+int parse_assignment_statement(context_t * context)
 {
     data first_token, rest_statement;
     saved_context_t saved_context;
@@ -591,9 +636,6 @@ int parse_statement(context_t * context)
         }
         context_restore(context, &saved_context);
     }
-
-    if (parse_let_statement(context) || parse_if_else_statement(context))
-        return(1);
 
 restore:
     context_restore(context, &saved_context);
@@ -1531,12 +1573,12 @@ restore:
     return(0);
 }
 
-/* <let> <symbol> <semicolon> <paragraph> */
-/* <let> <symbol> <assignment operator> <assignment expression> <semicolon> <paragraph> */
-/* <let> <symbol> <assignment operator> <assignment expression> <comma> <let statement internal> <paragraph> */
+/* <let> <symbol> <semicolon> */
+/* <let> <symbol> <assignment operator> <assignment expression> <semicolon> */
+/* <let> <symbol> <assignment operator> <assignment expression> <comma> <let statement internal> */
 int parse_let_statement(context_t * context)
 {
-    data key, value, rest_binds, implementation;
+    data key, value, rest_binds;
     saved_context_t saved_context;
     context_save(context, &saved_context);
 
@@ -1547,12 +1589,8 @@ int parse_let_statement(context_t * context)
             key = context_get_parsed_data(context);
             if (parse_semicolon(context))
             {
-                if (parse_paragraph(context))
-                {
-                    implementation = context_get_parsed_data(context);
-                    context_set_parsed_data(context, make_pair(let_v, make_pair(make_pair(key, nil), implementation)));
-                    return(1);
-                }
+                context_set_parsed_data(context, make_pair(let_v, make_pair(make_pair(key, nil), nil)));
+                return(1);
             }
             else if (parse_assignment_operator(context))
             {
@@ -1561,24 +1599,16 @@ int parse_let_statement(context_t * context)
                     value = context_get_parsed_data(context);
                     if (parse_semicolon(context))
                     {
-                        if (parse_paragraph(context))
-                        {
-                            implementation = context_get_parsed_data(context);
-                            context_set_parsed_data(context, make_pair(let_v, make_pair(make_pair(make_pair(key, make_pair(value, nil)), nil), make_pair(implementation, nil))));
-                            return(1);
-                        }
+                        context_set_parsed_data(context, make_pair(let_v, make_pair(make_pair(make_pair(key, make_pair(value, nil)), nil), nil)));
+                        return(1);
                     }
                     else if (parse_comma(context))
                     {
                         if (parse_let_statement_internal(context))
                         {
                             rest_binds = context_get_parsed_data(context);
-                            if (parse_paragraph(context))
-                            {
-                                implementation = context_get_parsed_data(context);
-                                context_set_parsed_data(context, make_pair(let_v, make_pair(make_pair(make_pair(key, make_pair(value, nil)), rest_binds), rest_binds)));
-                                return(1);
-                            }
+                            context_set_parsed_data(context, make_pair(let_v, make_pair(make_pair(make_pair(key, make_pair(value, nil)), rest_binds), rest_binds)));
+                            return(1);
                         }
                     }
                 }
@@ -1642,7 +1672,7 @@ int parse_let(context_t * context)
 }
 
 /* <lparen> <relational expression> <rparen> */
-int parse_condition(context_t * context)
+int parse_if_condition(context_t * context)
 {
     data condition;
     saved_context_t saved_context;
@@ -1676,7 +1706,7 @@ int parse_if_else_statement(context_t * context)
 
     if (parse_if(context))
     {
-        if (parse_condition(context))
+        if (parse_if_condition(context))
         {
             condition = context_get_parsed_data(context);
             if (parse_chapter(context))
@@ -1713,6 +1743,119 @@ int parse_else(context_t * context)
     return(parse_reserved_word(context, L"else"));
 }
 
+/* <for> <for argument> <chapter> */
+int parse_for_statement(context_t * context)
+{
+    data argument, impl, initializer, condition, iterator;
+    saved_context_t saved_context;
+    context_save(context, &saved_context);
+
+    if (parse_for(context))
+    {
+        if (parse_for_argument(context))
+        {
+            argument = context_get_parsed_data(context);
+            if (parse_chapter(context))
+            {
+                impl = context_get_parsed_data(context);
+                initializer = car(argument);
+                condition = cadr(argument);
+                iterator = caddr(argument);
+                if (let_v == car(initializer))
+                {
+                    set_cdr(cddr(initializer), make_pair(make_pair(while_v, make_pair(condition, sequential_execution(impl, iterator)), nil), nil));
+                    context_set_parsed_data(context, initializer);
+                }
+                else
+                {
+                    context_set_parsed_data(context, sequential_execution(initializer, (make_pair(while_v, make_pair(condition, sequential_execution(impl, iterator)), nil), nil)));
+                }
+                return(1);
+            }
+        }
+    }
+
+restore:
+    context_restore(context, &saved_context);
+    return(0);
+}
+
+/* <lparen> <parse_for_initializer> <relational expression> <semicolon> <for iterator> <rparen> */
+int parse_for_argument(context_t * context)
+{
+    data initializer, condition, iterator;
+    saved_context_t saved_context;
+    context_save(context, &saved_context);
+
+    if (parse_lparen(context))
+    {
+        if (parse_statement(context))
+        {
+            initializer = context_get_parsed_data(context);
+            if (parse_relational_expression(context))
+            {
+                condition = context_get_parsed_data(context);
+                if (parse_semicolon(context))
+                {
+                    if (parse_for_iterator(context))
+                    {
+                        iterator = if_list_progn(context_get_parsed_data(context));
+                        debug(iterator);
+                        context_set_parsed_data(context, make_pair(initializer, make_pair(condition, make_pair(iterator, nil))));
+                        return(1);
+                    }
+                }
+            }
+        }
+    }
+
+restore:
+    context_restore(context, &saved_context);
+    return(0);
+}
+
+/* <let statement> */
+/* <assignment statement> */
+int parse_for_initializer(context_t * context)
+{
+    if (parse_let_statement(context) || parse_assignment_statement(context));
+        return(1);
+}
+
+/* <assignment expression> <comma> <for iterator> */
+/* <assignment expression> */
+int parse_for_iterator(context_t * context)
+{
+    data first, rest;
+    saved_context_t saved_context;
+    context_save(context, &saved_context);
+
+    if (parse_assignment_expression(context))
+    {
+        first = context_get_parsed_data(context);
+        if (parse_comma(context))
+        {
+            if (parse_for_iterator(context))
+            {
+                rest = context_get_parsed_data(context);
+                context_set_parsed_data(context, make_pair(first, make_pair(rest, nil)));
+                return(1);
+            }
+            goto restore;
+        }
+        return(1);
+    }
+
+restore:
+    context_restore(context, &saved_context);
+    return(0);
+}
+
+int parse_for(context_t * context)
+{
+    return(parse_reserved_word(context, L"for"));
+}
+
 /* "(" <polynomial expression> ")" */
 int parse_nested_expression(context_t * context)
 {
@@ -1736,4 +1879,31 @@ int parse_nested_expression(context_t * context)
 restore:
     context_restore(context, &saved_context);
     return(0);
+}
+
+/***********/
+/* Utility */
+/***********/
+// (if_list_to_progn (a b c)) -> (progn a b c)
+data if_list_progn(data d)
+{
+    data progn;
+    if (is_pair(d) && (is_pair(cdr(d)) || is_nil(cdr(d))))
+    {
+        progn = make_pair(progn_v, nil);
+        while (is_pair(d))
+        {
+            set_cdr(progn, make_pair(car(d), nil));
+            d = cdr(d);
+        }
+        return(progn);
+    }
+    return(d);
+}
+
+// (progn a b)
+data sequential_execution(data a, data b)
+{
+    //if (car(a) != progn_v && car(b) != progn_v)
+        return(make_pair(progn_v, make_pair(a, make_pair(b, nil))));
 }

@@ -65,6 +65,7 @@ extern data acons_v;
 extern data assoc_v;
 extern data progn_v;
 extern data let_v;
+extern data while_v;
 extern data mapcar_v;
 extern data strcat_v;
 extern data substr_v;
@@ -227,7 +228,7 @@ data _assoc(data);
 /***************/
 data _progn(data);
 data _let(data);
-
+data _while(data);
 
 data _mapcar(data);
 

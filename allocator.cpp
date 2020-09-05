@@ -8,6 +8,7 @@
 #include <list>
 #include <array>
 #include <algorithm>
+#include <memory>
 
 //////////////////////
 // Macro definition //
@@ -16,397 +17,439 @@ constexpr static std::size_t default_memory_pool_size = 0x100000;
 constexpr static int N = 5;
 constexpr static std::size_t first_level_index_max = sizeof(size_t) * CHAR_BIT - N;
 constexpr static std::size_t second_level_index_max = 2 << N;
-constexpr static std::size_t total_tag_size = sizeof(size_t) * 2 + sizeof(int);
 constexpr static int mask_used_flag = 0x00000001;
 constexpr static int mask_marked_flag = 0x00000002;
 
-constexpr static std::size_t initial_overhead = sizeof(std::size_t) * 2 + total_tag_size;
-constexpr static std::size_t min_page_size = 4096;
+constexpr static std::size_t block_overhead = sizeof(std::size_t) * 2;
+constexpr static std::size_t pool_overhead = sizeof(std::size_t) * 3;
+constexpr static std::size_t initial_overhead = pool_overhead + block_overhead;
+constexpr static std::size_t min_page_size = 4096 - initial_overhead;
 
 /////////////////////
 // Type definition //
 /////////////////////
 
-//   sizeof(size_t)   sizeof(size_t)   sizeof(iny)   N        sizeof(size_t)   sizeof(size_t)
-// +----------------+----------------+-------------+--------+----------------+----------------+
-// | 0              | FRONT SIZE (N) | USED FLAG   | ENTITY | BACK SIZE (N)  | 0              |
-// +----------------+----------------+-------------+--------+----------------+----------------+
-class memory_block_t
+// +---+----------------+-----------+--------------+---------------+---+
+// | 0 | FRONT SIZE (N) | USED FLAG | ENTITY (ptr) | BACK SIZE (N) | 0 |
+// +---+----------------+-----------+--------------+---------------+---+
+class block_t
 {
 public:
-    memory_block_t();
-    memory_block_t(void * ptr);
-    memory_block_t & operator =(const memory_block_t & mb) = default;
+    block_t(void * ptr);
+    block_t(const block_t & b) = default;
+    block_t & operator =(const block_t & b) = default;
     operator void * () const;
 
-    int *           flag();
-    void            set_size(size_t size);
-    size_t          get_size();
-    void            set_used_flag(int used_flag);
+    void *          get_entity();
+    void            clear_entity();
+    std::size_t &   flag();
+    void            set_size(std::size_t size);
+    std::size_t     get_size();
+    void            set_used_flag(bool used_flag);
     int             get_used_flag();
-    void            set_marked_flag(int marked_flag);
+    void            set_marked_flag(bool marked_flag);
     int             get_marked_flag();
-    memory_block_t  prev();
-    memory_block_t  next();
-    memory_block_t  divide(size_t size);
-    memory_block_t  join_free_blocks();
-    void            for_each(void (*callback)(memory_block_t));
-
-    static void *   allocate(size_t size);
-    static void     destroy(void * ptr);
+    block_t         prev();
+    block_t         next();
+    block_t         divide(std::size_t size);
+    block_t         join_free_blocks();
 
 private:
-    size_t * front_size();
-    size_t * back_size();
+    block_t();
+    std::size_t & front_size();
+    std::size_t & back_size();
     void * ptr;
 };
 
-/////////////////////
-// Global variable //
-/////////////////////
+class page_t
+{
+public:
+    page_t(std::size_t size);
+    block_t front_memory_block();
+    std::size_t get_committed_memory();
 
-typedef std::vector<memory_block_t> memory_pool_t;
-memory_pool_t memory_pool;
+private:
+    std::unique_ptr<char[]> ptr;
+    std::size_t size;
+};
 
-typedef std::list<memory_block_t> free_block_list_t;
-std::array<free_block_list_t, first_level_index_max * second_level_index_max> free_block_lists;
+class pool_t : public std::list<page_t>
+{
+public:
+    pool_t();
+    void commit(std::size_t size);
+    void * allocate(std::size_t size);
+    void destroy(void * ptr);
+    std::size_t get_used_memory();
+    std::size_t get_committed_memory();
+    void gc_begin();
+    void gc_mark(void * ptr);
+    void gc_end();
 
-free_block_list_t & get_free_block_list(size_t first_level_index, size_t second_level_index);
-int add_free_block(memory_block_t ptr);
+private:
+    using free_block_list_t = std::list<block_t>;
+    std::array<free_block_list_t, first_level_index_max * second_level_index_max> free_block_lists;
+    std::size_t get_first_level_index(std::size_t value);
+    std::size_t get_second_level_index(std::size_t value, std::size_t msb);
+    free_block_list_t & get_free_block_list(std::size_t first_level_index, std::size_t second_level_index);
+    void add_free_block(block_t ptr);
+    void * allocate_internal(std::size_t size);
+
+    template<typename function_type>
+    void for_each(function_type callback);
+
+    std::size_t used_memory;
+    std::size_t committed_memory;
+};
+
+class gc_allocator::impl_t {
+public:
+    pool_t pool;
+};
+
+/////////////
+// Utility //
+/////////////
 void * offset(void * ptr, std::ptrdiff_t offset);
 
-/////////////////////////////
-// GC function declaration //
-/////////////////////////////
-void allocator_gc_begin();
-void allocator_gc_mark(void * ptr);
-void allocator_gc_end();
-void allocator_gc_begin_callback(memory_block_t);
-void allocator_gc_end_callback(memory_block_t);
-
-std::mutex allocator_init_mtx;
-int allocator_init_impl()
+page_t::page_t(std::size_t size)
 {
-    std::lock_guard<decltype(allocator_init_mtx)> lock{ allocator_init_mtx };
+    this->size = size + initial_overhead;
+    ptr.reset(new char[this->size]);
 
-    int i;
-    void * ptr = memory_block_t::allocate(default_memory_pool_size);
-    if (!ptr)
-        goto error;
+    *(std::size_t *)offset(ptr.get(), 0) = 0;
+    *(std::size_t *)offset(ptr.get(), this->size - sizeof(std::size_t)) = 0;
 
-    memory_pool.push_back(ptr);
-    add_free_block(ptr);
-
-    return 0;
-
-error:
-    return 1;
+    block_t front = front_memory_block();
+    front.set_size(size);
+    front.set_used_flag(true);
+    front.set_marked_flag(false);
+    memset(front, 0, size);
 }
 
-extern "C" int allocator_init()
+block_t page_t::front_memory_block()
 {
-    return allocator_init_impl();
+    return offset(ptr.get(), sizeof(std::size_t) * 3);
 }
 
-std::mutex allocator_cleanup_mtx;
-int allocator_cleanup_impl()
+std::size_t page_t::get_committed_memory()
 {
-    std::lock_guard<decltype(allocator_cleanup_mtx)> lock{ allocator_cleanup_mtx };
-
-    for (auto ptr : memory_pool)
-        memory_block_t::destroy(ptr);
-    memory_pool.clear();
-    return 0;
+    return size;
 }
 
-extern "C" int allocator_cleanup()
+pool_t::pool_t()
+    : used_memory{ 0 }
+    , committed_memory{ 0 }
 {
-    return allocator_cleanup_impl();
+    commit(default_memory_pool_size);
 }
 
-size_t get_first_level_index(size_t value)
+void pool_t::commit(std::size_t size)
 {
-    int i;
-    for (i = sizeof(size_t) * CHAR_BIT - 1; (value & ((size_t)1 << i)) == 0; --i);
+    size = std::max(min_page_size, size);
+    push_back(size);
+    add_free_block(back().front_memory_block());
+    committed_memory += back().get_committed_memory();
+}
+
+void * pool_t::allocate(std::size_t size)
+{
+    void * ptr = allocate_internal(size);
+    if (ptr)
+        return ptr;
+    commit(committed_memory);
+    ptr = allocate_internal(size);
+    return ptr;
+}
+
+void * pool_t::allocate_internal(std::size_t size)
+{
+    std::size_t first_level_index = get_first_level_index(size);
+    std::size_t second_level_index = get_second_level_index(size, first_level_index);
+    for (std::size_t i = first_level_index; i < first_level_index_max; ++i)
+    {
+        for (std::size_t j = first_level_index; j < first_level_index_max; ++j)
+        {
+            free_block_list_t & list = get_free_block_list(i, j);
+            if (!list.empty())
+            {
+                block_t allocated_mamory_block = list.front();
+                list.pop_front();
+                block_t rest_memory_block = allocated_mamory_block.divide(size);
+                used_memory += allocated_mamory_block.get_size();
+                if (rest_memory_block)
+                    add_free_block(rest_memory_block);
+                return allocated_mamory_block;
+            }
+        }
+    }
+    return nullptr;
+}
+
+void pool_t::destroy(void * ptr)
+{
+    block_t b = ptr;
+    if (b.get_used_flag())
+    {
+        used_memory -= b.get_size();
+        b = b.join_free_blocks();
+        add_free_block(b);
+        b.set_used_flag(false);
+        b.set_marked_flag(false);
+    }
+}
+
+std::size_t pool_t::get_used_memory()
+{
+    return used_memory;
+}
+
+
+std::size_t pool_t::get_committed_memory()
+{
+    return committed_memory;
+}
+
+std::size_t pool_t::get_first_level_index(std::size_t value)
+{
+    std::size_t i;
+    for (i = sizeof(size_t) * CHAR_BIT - 1; (value & ((std::size_t)1 << i)) == 0; --i);
     return i;
 }
 
-size_t get_second_level_index(size_t value, int msb)
+std::size_t pool_t::get_second_level_index(std::size_t value, std::size_t msb)
 {
-    return (value & ((1 << msb) ^ msb)) >> (msb - N);
+    return (value & ((static_cast<std::size_t>(1) << msb) ^ msb)) >> (msb - N);
 }
 
-free_block_list_t & get_free_block_list(size_t first_level_index, size_t second_level_index)
+pool_t::free_block_list_t & pool_t::get_free_block_list(std::size_t first_level_index, std::size_t second_level_index)
 {
     return free_block_lists[first_level_index_max * first_level_index + second_level_index];
 }
 
-int add_free_block(memory_block_t memory_block)
+void pool_t::add_free_block(block_t memory_block)
 {
-    auto first_level_index = get_first_level_index(memory_block.get_size());
-    auto second_level_index = get_second_level_index(memory_block.get_size(), first_level_index);
-    auto & list = get_free_block_list(first_level_index, second_level_index);
+    std::size_t first_level_index = get_first_level_index(memory_block.get_size());
+    std::size_t second_level_index = get_second_level_index(memory_block.get_size(), first_level_index);
+    free_block_list_t & list = get_free_block_list(first_level_index, second_level_index);
     list.push_back(memory_block);
-    return 0;
 }
 
 void * offset(void * ptr, std::ptrdiff_t offset)
 {
-    return (void *)((char *)ptr + offset);
+    return reinterpret_cast<void *>(reinterpret_cast<char *>(ptr) + offset);
 }
 
-memory_block_t::memory_block_t()
-    : ptr{}
+block_t::block_t(void * ptr)
+    : ptr{ ptr }
 {
 }
 
-memory_block_t::memory_block_t(void * ptr)
-    : ptr{ptr}
-{
-}
-
-memory_block_t::operator void * () const
+block_t::operator void * () const
 {
     return ptr;
 }
 
-size_t * memory_block_t::front_size()
+std::size_t & block_t::front_size()
 {
-    return (size_t *)offset(ptr, sizeof(size_t) * -1 + sizeof(int) * -1);
+    return *(std::size_t *)offset(ptr, sizeof(std::size_t) * -2);
 }
 
-size_t * memory_block_t::back_size()
+std::size_t & block_t::back_size()
 {
-    return (size_t *)offset(ptr, *front_size());
+    return *(std::size_t *)offset(ptr, front_size());
 }
 
-int * memory_block_t::flag()
+void * block_t::get_entity()
 {
-    return (int *)offset(ptr, sizeof(int) * -1);
+    return offset(ptr, sizeof(std::size_t));
 }
 
-void memory_block_t::set_size(size_t size)
+void block_t::clear_entity()
 {
-    *front_size() = size;
-    *back_size() = size;
+    memset(get_entity(), 0, get_size());
 }
 
-size_t memory_block_t::get_size()
+std::size_t & block_t::flag()
 {
-    return *front_size();
+    return *(std::size_t *)offset(ptr, sizeof(std::size_t) * -1);
 }
 
-void memory_block_t::set_used_flag(int used_flag)
+void block_t::set_size(std::size_t size)
+{
+    front_size() = size;
+    back_size() = size;
+}
+
+std::size_t block_t::get_size()
+{
+    return front_size();
+}
+
+void block_t::set_used_flag(bool used_flag)
 {
     if (used_flag)
-        *flag() |= mask_used_flag;
+        flag() |= mask_used_flag;
     else
-        *flag() &= ~mask_used_flag;
+        flag() &= ~mask_used_flag;
 }
 
-int memory_block_t::get_used_flag()
+int block_t::get_used_flag()
 {
-    return (*flag() | mask_used_flag) != 0;
+    return (flag() | mask_used_flag) != 0;
 }
 
-void memory_block_t::set_marked_flag(int marked_flag)
+void block_t::set_marked_flag(bool marked_flag)
 {
     if (marked_flag)
-        *flag() |= mask_marked_flag;
+        flag() |= mask_marked_flag;
     else
-        *flag() &= ~mask_marked_flag;
+        flag() &= ~mask_marked_flag;
 }
 
-int memory_block_t::get_marked_flag()
+int block_t::get_marked_flag()
 {
-    return (*flag() | mask_marked_flag) != 0;
+    return (flag() | mask_marked_flag) != 0;
 }
 
-void * memory_block_t::allocate(size_t size)
+block_t block_t::prev()
 {
-    void * temp;
-    size_t total_size;
-
-    total_size = size + total_tag_size + sizeof(size_t) * 2;
-    temp = malloc(total_size);
-    if (!temp)
-        return NULL;
-
-    *(size_t *)offset(temp, 0) = 0;
-    *(size_t *)offset(temp, total_size - sizeof(size_t)) = 0;
-
-    memory_block_t mb = offset(temp, sizeof(size_t) * 2 + sizeof(int));
-    mb.set_size(size);
-    mb.set_used_flag(1);
-    mb.set_marked_flag(0);
-    memset(mb, 0, size);
-
-    return mb;
+    std::size_t * prev_block_back_size;
+    prev_block_back_size = (std::size_t *)offset(ptr, sizeof(std::size_t) * -2);
+    if (ptr && *prev_block_back_size)
+        return offset(ptr, -(ptrdiff_t)*prev_block_back_size - sizeof(std::size_t));
+    return nullptr;
 }
 
-void memory_block_t::destroy(void * ptr)
+block_t block_t::next()
 {
-    if (ptr)
-        free(offset(ptr, sizeof(size_t) * -2 + sizeof(int) * -1));
+    std::size_t * next_block_front_size;
+    next_block_front_size = (std::size_t *)offset(&back_size(), sizeof(std::size_t));
+    if (ptr && *next_block_front_size)
+        return offset(next_block_front_size, sizeof(std::size_t));
+    return nullptr;
 }
 
-memory_block_t memory_block_t::prev()
+block_t block_t::divide(std::size_t size)
 {
-    size_t * prev_back_size_tag;
-    prev_back_size_tag = (size_t *)offset(ptr, sizeof(size_t) * -2);
-    if (ptr && *prev_back_size_tag)
-        return offset(ptr, -(ptrdiff_t)*prev_back_size_tag - sizeof(size_t));
-    return NULL;
-}
+    std::size_t old_size, new_size;
+    if (front_size() < size - block_overhead)
+        return nullptr;
 
-memory_block_t memory_block_t::next()
-{
-    size_t * next_front_size_tag;
-    next_front_size_tag = (size_t *)offset(back_size(), sizeof(size_t));
-    if (ptr && *next_front_size_tag)
-        return offset(next_front_size_tag, sizeof(size_t));
-    return NULL;
-}
-
-memory_block_t memory_block_t::divide(size_t size)
-{
-    size_t old_size, new_size;
-    if (*front_size() < size - total_tag_size)
-        return NULL;
-    
-    old_size = *front_size();
-    new_size = *front_size() - size - total_tag_size;
-    *front_size() = size;
-    *back_size() = size;
-    *(size_t *)offset(back_size(), sizeof(size_t)) = new_size;
-    *(size_t *)offset(back_size(), sizeof(size_t) + new_size) = new_size;
+    old_size = front_size();
+    new_size = front_size() - size - block_overhead;
+    front_size() = size;
+    back_size() = size;
+    *(std::size_t *)offset(&back_size(), sizeof(std::size_t)) = new_size;
+    *(std::size_t *)offset(&back_size(), sizeof(std::size_t) + new_size) = new_size;
     return next();
 }
 
-memory_block_t memory_block_t::join_free_blocks()
+block_t block_t::join_free_blocks()
 {
-    memory_block_t prev_block, next_block;
-    size_t total_size;
+    std::size_t total_size;
 
-    prev_block = prev();
-    next_block = next();
+    block_t prev_block = prev();
+    block_t next_block = next();
 
     if (prev_block && !prev_block.get_used_flag())
     {
-        total_size = get_size() + prev_block.get_size() + total_tag_size;
+        total_size = get_size() + prev_block.get_size() + block_overhead;
         prev_block.set_size(total_size);
         ptr = prev_block.ptr;
     }
 
     if (next_block && !next_block.get_used_flag())
     {
-        total_size = get_size() + next_block.get_size() + total_tag_size;
+        total_size = get_size() + next_block.get_size() + block_overhead;
         set_size(total_size);
     }
 
     return *this;
 }
 
-void memory_block_t::for_each(void (*callback)(memory_block_t))
+template<typename function_type>
+void pool_t::for_each(function_type callback)
 {
-    memory_block_t mb = ptr;
-    while (mb)
-    {
-        callback(mb);
-        mb = mb.next();
-    }
+    for (page_t & page : *this)
+        for (block_t b = page.front_memory_block(); b; b = b.next())
+            callback(b);
 }
 
-extern "C" void * allocate(size_t bytes)
+gc_allocator::gc_allocator()
 {
-    size_t first_level_index, second_level_index, i, j;
-    void * ptr;
-
-    if (bytes == 0)
-        return NULL;
-
-    first_level_index = get_first_level_index(bytes);
-    second_level_index = get_second_level_index(bytes, first_level_index);
-
-    for (i = first_level_index; i < first_level_index_max; ++i)
-    {
-        for (j = first_level_index; j < first_level_index_max; ++j)
-        {
-            auto & list = get_free_block_list(i, j);
-            if (!list.empty())
-            {
-                ptr = list.front();
-                list.pop_front();
-                return ptr;
-            }
-        }
-    }
-
-    memory_block_t mb = memory_block_t::allocate(std::max(bytes, min_page_size));
-    memory_pool.push_back(mb);
-    auto rest = mb.divide(bytes);
-    add_free_block(rest);
-    return (void *)mb;
+    impl = std::make_unique<impl_t>();
 }
 
-extern "C" void destroy(void * ptr)
+gc_allocator::~gc_allocator()
 {
-    memory_block_t mb = ptr;
-
-    if (mb.get_used_flag())
-    {
-        mb = mb.join_free_blocks();
-        add_free_block(mb);
-        mb.set_used_flag(0);
-        mb.set_marked_flag(0);
-    }
 }
 
-std::mutex allocator_gc_begin_mtx;
-void allocator_gc_begin_impl()
+void * gc_allocator::allocate(gc_allocator::size_type size)
 {
-    std::lock_guard<decltype(allocator_gc_begin_mtx)> lock{ allocator_gc_begin_mtx };
-    for (auto & mb : memory_pool)
-        mb.for_each(allocator_gc_begin_callback);
+    return impl->pool.allocate(size);
 }
 
-extern "C" void allocator_gc_begin()
+void gc_allocator::deallocate(gc_allocator::pointer ptr)
 {
-    return allocator_gc_begin_impl();
+    impl->pool.destroy(ptr);
 }
 
-std::mutex allocator_gc_mark_mtx;
-void allocator_gc_mark_impl(void * ptr)
+void pool_t::gc_begin()
 {
-    std::lock_guard<decltype(allocator_gc_mark_mtx)> lock{ allocator_gc_mark_mtx };
-    memory_block_t{ptr}.set_marked_flag(1);
+    for_each([](block_t block) {
+        block.set_marked_flag(0);
+    });
 }
 
-extern "C" void allocator_gc_mark(void * ptr)
+void gc_allocator::gc_begin()
 {
-    return allocator_gc_mark_impl(ptr);
+    static std::mutex mtx;
+    std::lock_guard<decltype(mtx)> lock{ mtx };
+
+    return impl->pool.gc_begin();
 }
 
-std::mutex allocator_gc_end_mtx;
-void allocator_gc_end_impl()
+void pool_t::gc_mark(void * ptr)
 {
-    std::lock_guard<decltype(allocator_gc_end_mtx)> lock{ allocator_gc_end_mtx };
-    for (auto & mb : memory_pool)
-        mb.for_each(allocator_gc_end_callback);
+    block_t{ ptr }.set_marked_flag(1);
 }
 
-extern "C" void allocator_gc_end()
+void gc_allocator::gc_mark(gc_allocator::pointer ptr)
 {
-    return allocator_gc_end_impl();
+    static std::mutex mtx;
+    std::lock_guard<decltype(mtx)> lock{ mtx };
+
+    return impl->pool.gc_mark(ptr);
 }
 
-void allocator_gc_begin_callback(memory_block_t memory_block)
+void pool_t::gc_end()
+{
+    for_each([this](block_t block) {
+        if (!block.get_marked_flag())
+            this->destroy(block);
+    });
+}
+
+void gc_allocator::gc_end()
+{
+    static std::mutex mtx;
+    std::lock_guard<decltype(mtx)> lock{ mtx };
+
+    return impl->pool.gc_end();
+}
+
+void gc_begin_callback(block_t memory_block)
 {
     memory_block.set_marked_flag(0);
 }
 
-void allocator_gc_end_callback(memory_block_t memory_block)
+gc_allocator::size_type gc_allocator::get_used_memory()
 {
-    if (!memory_block.get_marked_flag())
-        destroy(memory_block);
+    return impl->pool.get_used_memory();
+}
+
+gc_allocator::size_type gc_allocator::get_committed_memory()
+{
+    return impl->pool.get_committed_memory();
 }
